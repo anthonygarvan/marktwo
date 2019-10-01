@@ -1,0 +1,16 @@
+.m2-page {
+  @import './themes/github.scss';
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 2rem;
+  &:focus {
+    outline: none;
+  }
+
+  pre {
+    padding: 0;
+    font-size: 1rem;
+    font-family: inherit;
+    background-color: inherit;
+  }
+}
