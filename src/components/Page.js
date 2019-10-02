@@ -4,6 +4,8 @@ import $ from 'jquery';
 import showdown from 'showdown';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
+import _ from 'lodash';
+import marked from 'marked';
 
 
 class Page extends React.Component {
@@ -13,7 +15,10 @@ class Page extends React.Component {
 
   componentDidMount() {
     const converter = new showdown.Converter();
-    const turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-' });
+    const turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
+    marked.setOptions({
+      smartLists: true,
+    })
     turndownService.use(gfm);
 
     let selectedBlock;
@@ -50,10 +55,12 @@ class Page extends React.Component {
       // reset the old node upon exit
       if(oldSelectedBlock && oldSelectedBlock[0] && selectedBlock && selectedBlock[0] && !oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
         console.log('rendered markdown:')
-        console.log(oldSelectedBlock[0].innerHTML);
+        let markdown = oldSelectedBlock[0].innerText;
+        console.log(markdown);
         console.log('html:');
-        console.log(converter.makeHtml(oldSelectedBlock[0].innerHTML));
-        oldSelectedBlock.replaceWith(converter.makeHtml(oldSelectedBlock[0].innerHTML).replace(/\\/g, ''));
+        let html = marked(markdown);
+        console.log(html);
+        oldSelectedBlock.replaceWith(html.replace(/\\/g, '') || '<p><br /></p>');
       }
 
     });
