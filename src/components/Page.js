@@ -33,6 +33,24 @@ class Page extends React.Component {
       console.log('selectedBlock:');
       console.log(selectedBlock);
 
+      if(e.code === 'Enter' && e.type === 'keydown' && selectedBlock && selectedBlock[0] && !selectedBlock[0].innerText.endsWith('\n\u200B')) {
+        console.log(e);
+        e.preventDefault();
+
+        let sel, range;
+        if (window.getSelection) {
+            sel = window.getSelection();
+            if (sel.getRangeAt && sel.rangeCount) {
+                range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode('\n\u200B'));
+                sel.collapse(sel.anchorNode.nextSibling, 2);
+            }
+        } else if (document.selection && document.selection.createRange) {
+            document.selection.createRange().text = '\n\u200B';
+        }
+      }
+
       // make sure selected block is in edit mode
       console.log(selectedBlock.data('editMode'));
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
@@ -55,7 +73,7 @@ class Page extends React.Component {
       // reset the old node upon exit
       if(oldSelectedBlock && oldSelectedBlock[0] && selectedBlock && selectedBlock[0] && !oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
         console.log('rendered markdown:')
-        let markdown = oldSelectedBlock[0].innerText;
+        let markdown = oldSelectedBlock[0].innerText.replace(/\u200B/g, '');
         console.log(markdown);
         console.log('html:');
         let html = marked(markdown);
