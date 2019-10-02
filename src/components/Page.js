@@ -15,6 +15,7 @@ class Page extends React.Component {
 
   componentDidMount() {
     const converter = new showdown.Converter();
+    TurndownService.prototype.escape = text => text; // disable escaping characters
     const turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
     marked.setOptions({
       smartLists: true,
@@ -29,25 +30,23 @@ class Page extends React.Component {
       if(selectedBlock) {
         oldSelectedBlock = selectedBlock;
       }
-      selectedBlock = $(window.getSelection().anchorNode).closest('#m2-page > *');
+
+      let sel = window.getSelection();
+      selectedBlock = $(sel.anchorNode).closest('#m2-page > *');
       console.log('selectedBlock:');
       console.log(selectedBlock);
 
-      if(e.code === 'Enter' && e.type === 'keydown' && selectedBlock && selectedBlock[0] && !selectedBlock[0].innerText.endsWith('\n\u200B')) {
+      console.log(sel);
+      if(e.code === 'Enter' && e.type === 'keydown' && selectedBlock && selectedBlock[0] && !(sel.anchorNode.data === '\n\u200B')) {
         console.log(e);
         e.preventDefault();
 
-        let sel, range;
-        if (window.getSelection) {
-            sel = window.getSelection();
-            if (sel.getRangeAt && sel.rangeCount) {
+        let range;
+        if(sel.getRangeAt && sel.rangeCount) {
                 range = sel.getRangeAt(0);
                 range.deleteContents();
                 range.insertNode(document.createTextNode('\n\u200B'));
-                sel.collapse(sel.anchorNode.nextSibling, 2);
-            }
-        } else if (document.selection && document.selection.createRange) {
-            document.selection.createRange().text = '\n\u200B';
+                sel.anchorNode.nextSibling && sel.collapse(sel.anchorNode.nextSibling, sel.anchorNode.nextSibling.length);
         }
       }
 
@@ -60,7 +59,6 @@ class Page extends React.Component {
         selectedBlock.html(turndownService.turndown(selectedBlock[0].outerHTML) || '<br />');
 
         var range = document.createRange();
-        var sel = window.getSelection();
         range.setStart(selectedBlock[0], 0);
         range.collapse(true);
         sel.removeAllRanges();
