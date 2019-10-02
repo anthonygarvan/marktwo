@@ -37,7 +37,7 @@ class Page extends React.Component {
       console.log(selectedBlock);
 
       console.log(sel);
-      if(e.code === 'Enter' && e.type === 'keydown' && selectedBlock && selectedBlock[0] && !(sel.anchorNode.data === '\n\u200B')) {
+      if(e.key === 'Enter' && e.type === 'keydown' && selectedBlock && selectedBlock[0] && !(sel.anchorNode.data === '\n\u200B')) {
         console.log(e);
         e.preventDefault();
 
