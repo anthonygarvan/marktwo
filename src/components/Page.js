@@ -23,21 +23,25 @@ class Page extends React.Component {
     turndownService.use(gfm);
 
     let selectedBlock;
-    $('#m2-page').on('keydown keyup mousedown mouseup', (e) => {
-      console.log('anchorNode:');
-      console.log(window.getSelection().anchorNode);
+    $('#m2-page').on('keyup keydown mouseup', (e) => {
+      console.log(e);
       let oldSelectedBlock;
       if(selectedBlock) {
         oldSelectedBlock = selectedBlock;
       }
 
       let sel = window.getSelection();
+      console.log('selection:');
+      console.log(sel);
+      console.log('anchorNode:');
+      console.log(sel.anchorNode);
+      const originalAnchorText = sel.anchorNode.data;
       selectedBlock = $(sel.anchorNode).closest('#m2-page > *');
       console.log('selectedBlock:');
       console.log(selectedBlock);
 
-      console.log(sel);
-      if(e.key === 'Enter' && e.type === 'keydown' && selectedBlock && selectedBlock[0] && !(sel.anchorNode.data === '\n\u200B')) {
+      if(e.key === 'Enter' && e.type === 'keydown' && selectedBlock
+          && selectedBlock[0] && !(sel.anchorNode.data === '\n\u200B' || (sel.anchorNode.tagName === 'BR'))) {
         console.log(e);
         e.preventDefault();
 
@@ -55,11 +59,23 @@ class Page extends React.Component {
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
         console.log('markdown:');
         console.log(selectedBlock[0] && turndownService.turndown(selectedBlock[0].outerHTML));
-        //let editMode = $(`<pre>${turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'}</pre>`);
-        selectedBlock.html(turndownService.turndown(selectedBlock[0].outerHTML) || '<br />');
 
+        console.log('selection before toggling to edit');
+        console.log(sel)
+        const anchorOffset = sel.anchorOffset;
+        selectedBlock.html(turndownService.turndown(selectedBlock[0].outerHTML) || '<br />');
+        console.log('selection after toggling to edit');
+        console.log(sel)
         var range = document.createRange();
-        range.setStart(selectedBlock[0], 0);
+        let offset;
+        if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
+          const stringMatch = selectedBlock[0].firstChild.data.match(new RegExp(originalAnchorText));
+          const stringIndex = stringMatch ? stringMatch.index : 0;
+          offset = stringIndex + anchorOffset;
+        } else {
+          offset = 0;
+        }
+        range.setStart(selectedBlock[0].firstChild, offset);
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
