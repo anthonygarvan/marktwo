@@ -2,6 +2,8 @@ import React from 'react';
 import getGoogleApi from 'google-client-api';
 import Page from './Page';
 import './Splash.scss';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 
 
 class Splash extends React.Component {
@@ -52,7 +54,7 @@ class Splash extends React.Component {
         <p>A seamless, secure, syncing markdown editor.</p>
         <div className="m2-cta">
           <button className="button is-primary">Try it now</button>
-          <button className="button" onClick={this.handleLogin} >Log in with Google</button>
+          <button className="button" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
         </div></div>
   }
 }

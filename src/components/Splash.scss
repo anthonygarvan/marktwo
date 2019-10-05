@@ -1,12 +1,18 @@
+@import './themes/base.scss';
+
 .m2-splash {
   max-width: 800px;
   margin: 20vh auto;
+  padding: 1.5rem;
 
   .m2-cta {
-    margin-top: 3rem;
+    margin-top: 2rem;
     button {
-      width: 10rem;
-      margin-right: 2rem;
-    }
+      width: 100%;
+      margin-top: 1rem;
+      @include tablet {
+        width: 15rem;
+        margin-right: 2rem;
+    }}
   }
 }
