@@ -6,6 +6,7 @@ import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 import _ from 'lodash';
 import marked from 'marked';
+import Shelf from './Shelf';
 
 
 class Page extends React.Component {
@@ -35,7 +36,7 @@ class Page extends React.Component {
       console.log(sel);
       console.log('anchorNode:');
       console.log(sel.anchorNode);
-      const originalAnchorText = sel.anchorNode.data;
+      const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data : 0;
       selectedBlock = $(sel.anchorNode).closest('#m2-page > *');
       console.log('selectedBlock:');
       console.log(selectedBlock);
@@ -98,11 +99,17 @@ class Page extends React.Component {
     });
   }
 
+  handleLogout() {
+
+  }
+
   render() {
-    return <div id="m2-page" className="m2-page content" contentEditable="true">
+    return <div><div id="m2-page" className="m2-page content" contentEditable="true">
     <h1>beef</h1>
     <div>cow</div>
-      </div>
+    </div>
+    <Shelf handleLogout={this.props.handleLogout} handleSwitchUser={this.props.handleSwitchUser} gapi={this.props.gapi}/>
+  </div>
   }
 }
 

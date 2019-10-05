@@ -1,0 +1,62 @@
+@import '../bulma.scss';
+
+.m2-chevron {
+  position: fixed;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  @media(min-width: 768px) {
+    left: 1.5rem;
+    bottom: 1.5rem;
+  }
+  font-size: 2rem;
+}
+
+.m2-shelf {
+  width: 20rem;
+  height: 100vh;
+  background-color: #fafafa;
+  position: fixed;
+  top: 0px;
+
+  .m2-profile {
+    position: inherit;
+    padding: 1.5rem;
+    width: 20rem;
+
+    .m2-profile-photo {
+      margin-top: 1.5rem;
+      width: 4rem;
+      height: 4rem;
+      img {
+        border-radius: 2rem;
+      }
+    }
+
+    .m2-username {
+      font-weight: bold;
+      margin-top: 1.5rem;
+    }
+
+    .m2-email {
+      margin-top: 0.5rem;
+    }
+
+    .m2-switch-user {
+      margin-top: 1.5rem;
+
+      button {
+        width: 45%;
+        &:first-child {
+          margin-right: 10%;
+        }
+      }
+    }
+  }
+}
+
+.m2-close {
+  position: absolute;
+  top: 0.3rem;
+  right: 1rem;
+  font-size: 1.5rem;
+}
