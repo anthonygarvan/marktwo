@@ -1,3 +1,3 @@
 # MarkTwo
 
-A seamless, secure, cross platform markdown editor.
+A seamless, secure, syncing markdown editor.
