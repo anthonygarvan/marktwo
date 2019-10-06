@@ -36,7 +36,7 @@ class Page extends React.Component {
       console.log(sel);
       console.log('anchorNode:');
       console.log(sel.anchorNode);
-      const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data : 0;
+      const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
       selectedBlock = $(sel.anchorNode).closest('#m2-page > *');
       console.log('selectedBlock:');
       console.log(selectedBlock);
@@ -96,6 +96,11 @@ class Page extends React.Component {
         oldSelectedBlock.replaceWith(html.replace(/\\/g, '') || '<p><br /></p>');
       }
 
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+          if(!document.querySelector('#m2-page > *')) {
+            document.querySelector('#m2-page').innerHTML = '<div><br /></div>';
+          }
+      }
     });
   }
 
