@@ -25,7 +25,7 @@ class Page extends React.Component {
 
     let selectedBlock;
     $('#m2-page').on('keyup keydown mouseup', (e) => {
-      console.log(e);
+
       let oldSelectedBlock;
       if(selectedBlock) {
         oldSelectedBlock = selectedBlock;
@@ -96,16 +96,13 @@ class Page extends React.Component {
         oldSelectedBlock.replaceWith(html.replace(/\\/g, '') || '<p><br /></p>');
       }
 
+      // fixes bug with contenteditable where you completely empty the div if the document is empty
       if (e.key === 'Backspace' || e.key === 'Delete') {
           if(!document.querySelector('#m2-page > *')) {
             document.querySelector('#m2-page').innerHTML = '<div><br /></div>';
           }
       }
     });
-  }
-
-  handleLogout() {
-
   }
 
   render() {
