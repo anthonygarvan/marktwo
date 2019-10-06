@@ -12,7 +12,7 @@ class Splash extends React.Component {
     this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
     this.handleSwitchUser = this.handleSwitchUser.bind(this);
-    this.state = {};
+    this.state = { tryItNow: false };
   }
 
   componentWillMount() {
@@ -48,12 +48,19 @@ class Splash extends React.Component {
   }
 
   render() {
-    return this.state.isAuthenticated ?
-          <Page gapi={this.state.gapi} handleLogout={this.handleLogout} handleSwitchUser={this.handleSwitchUser}/>
+    return this.state.tryItNow ? <Page gapi={this.state.gapi}
+        handleLogout={() => this.setState({ tryItNow: false })}
+        handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
+        tryItNow={true} />
+      : this.state.isAuthenticated ?
+          <Page gapi={this.state.gapi}
+            handleLogout={this.handleLogout}
+            handleSwitchUser={this.handleSwitchUser}
+            tryItNow={false} />
         : <div className="m2-splash"><h1 className="title is-1">MarkTwo</h1>
         <p>A seamless, secure, syncing markdown editor.</p>
         <div className="m2-cta">
-          <button className="button is-primary">Try it now</button>
+          <button className="button is-primary" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
           <button className="button" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
         </div></div>
   }

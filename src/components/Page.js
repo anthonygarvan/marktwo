@@ -108,7 +108,7 @@ class Page extends React.Component {
     <h1>beef</h1>
     <div>cow</div>
     </div>
-    <Shelf handleLogout={this.props.handleLogout} handleSwitchUser={this.props.handleSwitchUser} gapi={this.props.gapi}/>
+    <Shelf handleLogout={this.props.handleLogout} handleSwitchUser={this.props.handleSwitchUser} gapi={this.props.gapi} tryItNow={this.props.tryItNow} />
   </div>
   }
 }

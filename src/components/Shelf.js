@@ -15,8 +15,12 @@ class Shelf extends React.Component {
   }
 
   getUserProfile() {
-    const profile = this.props.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
-    this.setState({ userEmail: profile.getEmail(), photoUrl: profile.getImageUrl(), userName: profile.getName() })
+    if(this.props.tryItNow) {
+      this.setState({ userEmail: 'anonymous.bunny@gmail.com', photoUrl: '/img/anonymous.png', userName: 'Anonymous Bunny' });
+    } else {
+      const profile = this.props.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
+      this.setState({ userEmail: profile.getEmail(), photoUrl: profile.getImageUrl(), userName: profile.getName() })
+    }
   }
 
   render() {
