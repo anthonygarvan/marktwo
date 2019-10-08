@@ -8,26 +8,70 @@ import _ from 'lodash';
 import marked from 'marked';
 import Shelf from './Shelf';
 import shortid from 'shortid';
-
+import stringify from 'json-stringify-deterministic';
+import md5 from 'md5';
 
 class Page extends React.Component {
   constructor(props) {
     super(props);
 
-    this.doc = {};
-  }
+    this.sync = this.sync.bind(this);
+    this.debouncedSync = _.debounce(this.sync, 5000);
 
-  componentDidMount() {
-    const converter = new showdown.Converter();
     TurndownService.prototype.escape = text => text; // disable escaping characters
-    const turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
+    this.turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
+    this.turndownService.use(gfm);
     marked.setOptions({
       smartLists: true,
     })
-    turndownService.use(gfm);
+  }
+
+  sync() {
+    console.log('syncing');
+    let lines = [];
+    $('#m2-page > *').each((i, el) => {
+      if(!el.id) {
+        el.id = shortid.generate();
+        this.doc[el.id] = this.turndownService.turndown(el.outerHTML);
+      }
+      lines.push(el.id);
+    })
+
+    const sel = window.getSelection();
+    let caretAt = $(sel.anchorNode).closest('#m2-page > *').attr('id');
+
+    localStorage.setItem('document_name', JSON.stringify({ doc: this.doc, lines, caretAt }));
+
+    // sync to gdrive
+
+    // get metadata. if local matches version, update new.
+    // if remote is ahead, fast forward
+    _.chunk(lines.map(id => ({ id, text: this.doc[id]})), 5).map(page => {
+      const pageContent = stringify(page);
+      const hash = md5(pageContent);
+      console.log(hash);
+      //TODO if hash does not exist in google drive, save it. if there are stale hashes, remove them
+    });
+  }
+
+  componentDidMount() {
+    if(localStorage.getItem('document_name')) {
+      const data = JSON.parse(localStorage.getItem('document_name'));
+      this.doc = data.doc;
+      document.querySelector('#m2-page').innerHTML = marked(data.lines.map(l => this.doc[l]).join('\n'))
+      Array.from(document.querySelector('#m2-page').children).forEach((el, i) => {
+        el.id = data.lines[i];
+      });
+      window.getSelection().collapse(document.getElementById(data.caretAt), 0);
+      this.sync();
+    } else {
+      this.doc = {};
+    }
+
 
     let selectedBlock;
     $('#m2-page').on('keyup keydown mouseup', (e) => {
+      this.debouncedSync();
 
       let oldSelectedBlock;
       if(selectedBlock) {
@@ -71,7 +115,7 @@ class Page extends React.Component {
       console.log(selectedBlock.data('editMode'));
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
         console.log('markdown:');
-        console.log(selectedBlock[0] && turndownService.turndown(selectedBlock[0].outerHTML));
+        console.log(selectedBlock[0] && this.turndownService.turndown(selectedBlock[0].outerHTML));
 
         console.log('selection before toggling to edit');
         console.log(sel)
@@ -80,7 +124,7 @@ class Page extends React.Component {
         if(selectedBlock.attr('id')) {
           renderedMarkdown = this.doc[selectedBlock.attr('id')];
         } else {
-          renderedMarkdown = turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
+          renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
         }
         selectedBlock.html(renderedMarkdown);
         console.log('selection after toggling to edit');
@@ -94,7 +138,7 @@ class Page extends React.Component {
         } else {
           offset = 0;
         }
-        range.setStart(selectedBlock[0].firstChild, offset);
+        range.setStart(selectedBlock[0].firstChild, Math.min(offset, selectedBlock[0].firstChild.length));
         range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
