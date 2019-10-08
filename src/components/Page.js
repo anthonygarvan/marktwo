@@ -1,7 +1,6 @@
 import React from 'react';
 import './Page.scss'
 import $ from 'jquery';
-import showdown from 'showdown';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 import _ from 'lodash';
@@ -22,12 +21,29 @@ class Page extends React.Component {
     this.turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
     this.turndownService.use(gfm);
     marked.setOptions({
+      breaks: true,
       smartLists: true,
     })
+
+    this.documentId = localStorage.getItem('currentDoc');
+    if(!this.documentId) {
+      this.documentId = shortid.generate();
+      localStorage.setItem('currentDoc', this.documentId);
+    }
+
+    this.state = {};
   }
 
   sync() {
     console.log('syncing');
+    // get doc
+    if(!localStorage.getItem('currentDoc')) {
+      this.documentId = shortid.generate();
+      localStorage.setItem('currentDoc', this.documentId);
+    } else {
+      this.documentId = localStorage.getItem('currentDoc');
+    }
+
     let lines = [];
     $('#m2-page > *').each((i, el) => {
       if(!el.id) {
@@ -40,30 +56,55 @@ class Page extends React.Component {
     const sel = window.getSelection();
     let caretAt = $(sel.anchorNode).closest('#m2-page > *').attr('id');
 
-    localStorage.setItem('document_name', JSON.stringify({ doc: this.doc, lines, caretAt }));
+    const oldDocMetadata = localStorage.getItem(this.documentId) ? JSON.parse(localStorage.getItem(this.documentId))
+                            : { pageIds: [] };
 
-    // sync to gdrive
 
-    // get metadata. if local matches version, update new.
-    // if remote is ahead, fast forward
-    _.chunk(lines.map(id => ({ id, text: this.doc[id]})), 5).map(page => {
-      const pageContent = stringify(page);
-      const hash = md5(pageContent);
-      console.log(hash);
-      //TODO if hash does not exist in google drive, save it. if there are stale hashes, remove them
+    // creates the authoritative definition of the document, a list of ids with text,
+    // and stores as blocks of data keyed by the hash of the data.
+    const pages = {};
+    const pageIds = []
+    _.chunk(lines.map(id => ({ id, text: this.doc[id]})), 100).map(page => {
+      const value = stringify(page);
+      const hash = md5(value);
+      const id = `${this.documentId}.${hash}`;
+      pages[id] = value;
+      pageIds.push(id);
+    })
+
+    // update doc meta data
+    localStorage.setItem(this.documentId, JSON.stringify({ caretAt,
+      version: (this.version || 0) + 1,
+      pageIds,
+      lastModified: new Date().toISOString() }));
+
+    // update page caches
+    // if the page isn't cached, cache it
+    _.difference(pageIds, oldDocMetadata.pageIds).map(pageId => {
+      localStorage.setItem(pageId, pages[pageId]);
+    })
+
+    // if the page has been removed, remove it
+    _.difference(oldDocMetadata.pageIds, pageIds).map(pageId => {
+       localStorage.removeItem(pageId);
     });
   }
 
   componentDidMount() {
-    if(localStorage.getItem('document_name')) {
-      const data = JSON.parse(localStorage.getItem('document_name'));
-      this.doc = data.doc;
-      document.querySelector('#m2-page').innerHTML = marked(data.lines.map(l => this.doc[l]).join('\n'))
+    if(localStorage.getItem(this.documentId)) {
+      const docMetadata = JSON.parse(localStorage.getItem(this.documentId));
+      this.documentId = docMetadata.documentId;
+      this.version = docMetadata.version;
+      // assemble document
+      const docList = _.flatten(docMetadata.pageIds.map(id => JSON.parse(localStorage.getItem(id))))
+
+      document.querySelector('#m2-page').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
       Array.from(document.querySelector('#m2-page').children).forEach((el, i) => {
-        el.id = data.lines[i];
+        el.id = docList[i].id;
       });
-      window.getSelection().collapse(document.getElementById(data.caretAt), 0);
-      this.sync();
+      this.doc = {};
+      docList.forEach(entry => this.doc[entry.id] = entry.text);
+      document.getElementById(docMetadata.caretAt).scrollIntoView();
     } else {
       this.doc = {};
     }
@@ -104,7 +145,7 @@ class Page extends React.Component {
         }
         } else {
           // if the line is empty, start a new paragraph
-          const newBlock = $(`<div id=${shortid.generate()}><br /></div>`);
+          const newBlock = $(`<p id=${shortid.generate()}><br /></p>`);
           newBlock.insertAfter(selectedBlock);
           sel.collapse(newBlock[0], 0);
         }
@@ -122,7 +163,7 @@ class Page extends React.Component {
         const anchorOffset = sel.anchorOffset;
         let renderedMarkdown;
         if(selectedBlock.attr('id')) {
-          renderedMarkdown = this.doc[selectedBlock.attr('id')];
+          renderedMarkdown = this.doc[selectedBlock.attr('id')] || '<br />';
         } else {
           renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
         }
@@ -155,31 +196,30 @@ class Page extends React.Component {
         console.log('html:');
         let html = marked(markdown);
         console.log(html);
-        const renderedNode = $(html.replace(/\\/g, '') || '<div><br /></div>');
+        const renderedNode = $(html.replace(/\\/g, '') || '<p><br /></p>');
         let id = oldSelectedBlock.attr('id');
         if(!id) {
           id = shortid.generate();
         }
         renderedNode.attr('id', id);
-        this.doc[id] = markdown;
+        this.doc[id] = markdown.trim();
         console.log(this.doc);
         oldSelectedBlock.replaceWith(renderedNode);
       }
 
-      // fixes bug with contenteditable where you completely empty the div if the document is empty
+      // fixes bug with contenteditable where you completely empty the p if the document is empty
       if (e.key === 'Backspace' || e.key === 'Delete') {
           if(!document.querySelector('#m2-page > *')) {
-            document.querySelector('#m2-page').innerHTML = `<div id="${shortid.generate()}"><br /></div>`;
+            document.querySelector('#m2-page').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
           }
       }
     });
+
+    //this.sync();
   }
 
   render() {
-    return <div><div id="m2-page" className="m2-page content" contentEditable="true">
-    <h1>beef</h1>
-    <div>cow</div>
-    </div>
+    return <div><div id="m2-page" className="m2-page content" contentEditable="true" dangerouslySetInnerHTML={ {__html: '<p><br /></p>'} }></div>
     <Shelf handleLogout={this.props.handleLogout} handleSwitchUser={this.props.handleSwitchUser} gapi={this.props.gapi} tryItNow={this.props.tryItNow} />
   </div>
   }
