@@ -1,5 +1,6 @@
 @import './themes/base.scss';
 
+$background: #fafafa;
 .m2-chevron {
   position: fixed;
   bottom: 0.5rem;
@@ -14,7 +15,7 @@
 .m2-shelf {
   width: 20rem;
   height: 100vh;
-  background-color: #fafafa;
+  background-color: $background;
   position: fixed;
   top: 0px;
 
@@ -50,6 +51,27 @@
         &:first-child {
           margin-right: 10%;
         }
+      }
+    }
+  }
+}
+
+.m2-menu-links {
+  margin-top: 18rem;
+  div {
+    padding: 1.5rem;
+    padding-bottom: 0;
+    a {
+      padding-bottom: 1.5rem;
+      font-size: 1.1rem;
+      border-bottom: 1px solid darken($background, 8%);
+      display: block;
+    }
+    &:first-child {
+      padding-top: 0;
+      a {
+        padding-top: 1.5rem;
+        border-top: 1px solid darken($background, 8%);
       }
     }
   }

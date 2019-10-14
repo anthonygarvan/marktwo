@@ -34,6 +34,11 @@ class Shelf extends React.Component {
         <button className="button is-clear" onClick={this.props.handleLogout}>Sign out</button>
       </div>
     </div>
+    <div className="m2-menu-links">
+      <div><a onClick={() => this.props.showFiles(true)}>Files</a></div>
+      <div><a onClick={this.props.showSearch}>Search</a></div>
+      <div><a onClick={this.props.showSettings}>Settings</a></div>
+    </div>
       <a className="m2-close" onClick={() => this.setState({ showShelf: false })}><FontAwesomeIcon icon={faTimes} /></a>
     </div>
     : <div className="m2-chevron"><a onClick={() => this.setState({ showShelf: true })}><FontAwesomeIcon icon={faChevronRight} /></a></div>

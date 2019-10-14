@@ -1,0 +1,16 @@
+.m2-files {
+  section div {
+    text-align: right;
+    margin-bottom: 1rem;
+  }
+
+  td input {
+    border: none;
+    border-bottom: 1px dotted gray;
+    font-size: 1rem;
+    background-color: inherit;
+    &:focus {
+      outline: none;
+    }
+  }
+}

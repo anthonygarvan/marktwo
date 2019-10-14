@@ -1,6 +1,6 @@
 import React from 'react';
 import getGoogleApi from 'google-client-api';
-import Page from './Page';
+import MarkTwo from './MarkTwo';
 import './Splash.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
@@ -48,12 +48,12 @@ class Splash extends React.Component {
   }
 
   render() {
-    return this.state.tryItNow ? <Page gapi={this.state.gapi}
+    return this.state.tryItNow ? <MarkTwo gapi={this.state.gapi}
         handleLogout={() => this.setState({ tryItNow: false })}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
         tryItNow={true} />
       : this.state.isAuthenticated ?
-          <Page gapi={this.state.gapi}
+          <MarkTwo gapi={this.state.gapi}
             handleLogout={this.handleLogout}
             handleSwitchUser={this.handleSwitchUser}
             tryItNow={false} />

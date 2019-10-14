@@ -1,16 +1,16 @@
 import React from 'react';
-import './Page.scss'
+import './Doc.scss'
 import $ from 'jquery';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
 import _ from 'lodash';
 import marked from 'marked';
-import Shelf from './Shelf';
-import shortid from 'shortid';
 import stringify from 'json-stringify-deterministic';
 import md5 from 'md5';
+import moment from 'moment';
+import shortid from 'shortid';
 
-class Page extends React.Component {
+class Doc extends React.Component {
   constructor(props) {
     super(props);
 
@@ -24,28 +24,13 @@ class Page extends React.Component {
       breaks: true,
       smartLists: true,
     })
-
-    this.documentId = localStorage.getItem('currentDoc');
-    if(!this.documentId) {
-      this.documentId = shortid.generate();
-      localStorage.setItem('currentDoc', this.documentId);
-    }
-
-    this.state = {};
   }
 
   sync() {
     console.log('syncing');
-    // get doc
-    if(!localStorage.getItem('currentDoc')) {
-      this.documentId = shortid.generate();
-      localStorage.setItem('currentDoc', this.documentId);
-    } else {
-      this.documentId = localStorage.getItem('currentDoc');
-    }
 
     let lines = [];
-    $('#m2-page > *').each((i, el) => {
+    $('#m2-doc > *').each((i, el) => {
       if(!el.id) {
         el.id = shortid.generate();
         this.doc[el.id] = this.turndownService.turndown(el.outerHTML);
@@ -54,9 +39,9 @@ class Page extends React.Component {
     })
 
     const sel = window.getSelection();
-    let caretAt = $(sel.anchorNode).closest('#m2-page > *').attr('id');
+    let caretAt = $(sel.anchorNode).closest('#m2-doc > *').attr('id');
 
-    const oldDocMetadata = localStorage.getItem(this.documentId) ? JSON.parse(localStorage.getItem(this.documentId))
+    const oldDocMetadata = localStorage.getItem(this.props.currentDoc) ? JSON.parse(localStorage.getItem(this.props.currentDoc))
                             : { pageIds: [] };
 
 
@@ -67,13 +52,13 @@ class Page extends React.Component {
     _.chunk(lines.map(id => ({ id, text: this.doc[id]})), 100).map(page => {
       const value = stringify(page);
       const hash = md5(value);
-      const id = `${this.documentId}.${hash}`;
+      const id = `${this.props.currentDoc}.${hash}`;
       pages[id] = value;
       pageIds.push(id);
     })
 
     // update doc meta data
-    localStorage.setItem(this.documentId, JSON.stringify({ caretAt,
+    localStorage.setItem(this.props.currentDoc, JSON.stringify({ caretAt,
       version: (this.version || 0) + 1,
       pageIds,
       lastModified: new Date().toISOString() }));
@@ -91,27 +76,27 @@ class Page extends React.Component {
   }
 
   componentDidMount() {
-    if(localStorage.getItem(this.documentId)) {
-      const docMetadata = JSON.parse(localStorage.getItem(this.documentId));
-      this.documentId = docMetadata.documentId;
+    if(localStorage.getItem(this.props.currentDoc)) {
+      const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
+      this.setState({currentDoc: docMetadata.currentDoc});
       this.version = docMetadata.version;
       // assemble document
       const docList = _.flatten(docMetadata.pageIds.map(id => JSON.parse(localStorage.getItem(id))))
 
-      document.querySelector('#m2-page').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
-      Array.from(document.querySelector('#m2-page').children).forEach((el, i) => {
+      document.querySelector('#m2-doc').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
+      Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
         el.id = docList[i].id;
       });
       this.doc = {};
       docList.forEach(entry => this.doc[entry.id] = entry.text);
-      document.getElementById(docMetadata.caretAt).scrollIntoView();
+      document.getElementById(docMetadata.caretAt) && document.getElementById(docMetadata.caretAt).scrollIntoView();
     } else {
       this.doc = {};
     }
 
 
     let selectedBlock;
-    $('#m2-page').on('keyup keydown mouseup', (e) => {
+    $('#m2-doc').on('keyup keydown mouseup', (e) => {
       this.debouncedSync();
 
       let oldSelectedBlock;
@@ -125,7 +110,7 @@ class Page extends React.Component {
       console.log('anchorNode:');
       console.log(sel.anchorNode);
       const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
-      selectedBlock = $(sel.anchorNode).closest('#m2-page > *');
+      selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
       console.log('selectedBlock:');
       console.log(selectedBlock);
 
@@ -209,8 +194,8 @@ class Page extends React.Component {
 
       // fixes bug with contenteditable where you completely empty the p if the document is empty
       if (e.key === 'Backspace' || e.key === 'Delete') {
-          if(!document.querySelector('#m2-page > *')) {
-            document.querySelector('#m2-page').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
+          if(!document.querySelector('#m2-doc > *')) {
+            document.querySelector('#m2-doc').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
           }
       }
     });
@@ -218,11 +203,10 @@ class Page extends React.Component {
     //this.sync();
   }
 
+
   render() {
-    return <div><div id="m2-page" className="m2-page content" contentEditable="true" dangerouslySetInnerHTML={ {__html: '<p><br /></p>'} }></div>
-    <Shelf handleLogout={this.props.handleLogout} handleSwitchUser={this.props.handleSwitchUser} gapi={this.props.gapi} tryItNow={this.props.tryItNow} />
-  </div>
+    return <div><div id="m2-doc" className="m2-doc content" contentEditable="true" dangerouslySetInnerHTML={ {__html: '<p><br /></p>'} }></div></div>
   }
 }
 
-export default Page;
+export default Doc;
