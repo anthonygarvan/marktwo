@@ -6,7 +6,7 @@ import Doc from './Doc';
 import stringify from 'json-stringify-deterministic';
 import './MarkTwo.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faCheck, faTimes, faTrash, faTrashRestore } from '@fortawesome/free-solid-svg-icons';
 
 class MarkTwo extends React.Component {
   constructor(props) {
@@ -14,7 +14,8 @@ class MarkTwo extends React.Component {
 
     this.openFile = this.openFile.bind(this);
     this.startNewFile = this.startNewFile.bind(this);
-
+    this.handleImport = this.handleImport.bind(this);
+    this.toggleTrash = this.toggleTrash.bind(this);
 
     let appData;
     if(localStorage.getItem('appData')) {
@@ -43,7 +44,7 @@ class MarkTwo extends React.Component {
    const appData = JSON.parse(localStorage.getItem('appData'));
    const id = shortid.generate();
    appData.files.unshift({ id, title: false, lastModified: new Date() });
-   this.setState({ files: appData.files, currentDoc: id, showFiles: false });
+   this.setState({ files: appData.files, currentDoc: id, showFiles: false, initialData: false });
    localStorage.setItem('appData', stringify(appData));
   }
 
@@ -58,6 +59,31 @@ class MarkTwo extends React.Component {
     localStorage.setItem('appData', stringify(appData));
   }
 
+  handleImport(e) {
+    console.log(e.target.files);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      console.log(e.target.result);
+      const appData = JSON.parse(localStorage.getItem('appData'));
+      const id = shortid.generate();
+      appData.files.unshift({ id, title: false, lastModified: new Date() });
+      this.setState({ files: appData.files, currentDoc: id, initialData: e.target.result, showFiles: false });
+      localStorage.setItem('appData', stringify(appData));
+    }
+    reader.readAsText(e.target.files[0]);
+  }
+
+  toggleTrash(id) {
+    const appData = JSON.parse(localStorage.getItem('appData'));
+    appData.file = appData.files.map(f => {
+      if(f.id === id) {
+        f.trashed = !f.trashed;
+      }
+    });
+    this.setState({ files: appData.files, newTitle: false, editTitle: false });
+    localStorage.setItem('appData', stringify(appData));
+  }
+
   render() {
     return <div>
     <Doc key={this.state.currentDoc}
@@ -65,12 +91,13 @@ class MarkTwo extends React.Component {
       gapi={this.props.gapi}
       handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
-      tryItNow={this.props.tryItNow} />
+      tryItNow={this.props.tryItNow}
+      initialData={this.state.initialData} />
     <Shelf handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
       tryItNow={this.props.tryItNow}
-      showFiles={(val) => this.setState({ showFiles: val })} />
+      showFiles={(val) => this.setState({ showFiles: val, viewTrash: false })} />
 
     <div className={`m2-files modal ${this.state.showFiles && 'is-active'}`}>
     <div className="modal-background" onClick={() => this.setState({showFiles: false})}></div>
@@ -80,16 +107,22 @@ class MarkTwo extends React.Component {
         <button className="delete" aria-label="close" onClick={() => this.setState({showFiles: false})}></button>
       </header>
       <section className="modal-card-body">
-        <div><button className="button is-outline" onClick={this.startNewFile}>New</button></div>
+        <div>
+          <label className="m2-import">
+            <span className="button is-text is-clear">Import</span>
+            <input type="file" onChange={this.handleImport} accept=".txt,.md" />
+          </label>
+          <button className="button is-outline" onClick={this.startNewFile}>New</button></div>
         <table className="table is-striped is-fullwidth">
           <thead>
             <tr>
               <th><abbr title="File name">Name</abbr></th>
               <th><abbr title="Last modified">Last modified</abbr></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {this.state.files.map(f =>
+            {this.state.files.filter(f => (!!f.trashed == this.state.viewTrash)).map(f =>
               <tr key={f.id}>
                 <td>{this.state.editTitle !== f.id ? <span><a onClick={() => this.openFile(f.id)}>{f.title ? <abbr title={f.title}>{f.title.substring(0,20)}</abbr>: 'Untitled'}</a>
                 <a className="is-pulled-right" onClick={() => this.setState({ editTitle: f.id, newTitle: f.title })}> <FontAwesomeIcon icon={faEdit} /></a></span>
@@ -98,10 +131,14 @@ class MarkTwo extends React.Component {
                 <a onClick={() => this.setState({ editTitle: false, newTitle: false })}><FontAwesomeIcon icon={faTimes} /></a></span></span>}
                 </td>
                 <td>{moment(f.lastModified).fromNow()}</td>
+                <td><a onClick={() => this.toggleTrash(f.id)}><FontAwesomeIcon icon={this.state.viewTrash ? faTrashRestore : faTrash} /></a></td>
               </tr>
             )}
           </tbody>
         </table>
+        <div className="m2-footer">
+          <a onClick={() => this.setState({ viewTrash: !this.state.viewTrash })}>{this.state.viewTrash ? 'View files' : 'View trash'}</a>
+        </div>
       </section>
     </div>
     </div></div>

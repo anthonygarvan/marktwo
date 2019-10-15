@@ -13,4 +13,17 @@
       outline: none;
     }
   }
+
+  .m2-import {
+    input {
+      display: none;
+    }
+  }
+
+  .m2-footer {
+    text-align: right;
+    a {
+      color: lightgrey;
+    }
+  }
 }

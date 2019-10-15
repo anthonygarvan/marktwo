@@ -24,6 +24,8 @@ class Doc extends React.Component {
       breaks: true,
       smartLists: true,
     })
+
+    this.state = { initialHtml: props.initialData ? marked(props.initialData) : '<p><br /></p>' };
   }
 
   sync() {
@@ -200,12 +202,12 @@ class Doc extends React.Component {
       }
     });
 
-    //this.sync();
+    this.sync();
   }
 
 
   render() {
-    return <div><div id="m2-doc" className="m2-doc content" contentEditable="true" dangerouslySetInnerHTML={ {__html: '<p><br /></p>'} }></div></div>
+    return <div><div id="m2-doc" className="m2-doc content" contentEditable="true" dangerouslySetInnerHTML={ {__html: this.state.initialHtml} }></div></div>
   }
 }
 
