@@ -23,9 +23,10 @@ class Splash extends React.Component {
               const initSettings = {
                 client_id: '346746556737-32h3br6e6beeerm71norabl2icv4rl7e.apps.googleusercontent.com',
                 scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
+                discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
                 response_type: 'id_token permission'}
 
-              gapi.auth2.init(initSettings).then(() => {
+              gapi.client.init(initSettings).then(() => {
                   let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
                   this.setState({ isAuthenticated, gapi });
             });

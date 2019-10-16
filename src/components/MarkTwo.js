@@ -3,9 +3,9 @@ import moment from 'moment';
 import Shelf from './Shelf';
 import shortid from 'shortid';
 import Doc from './Doc';
-import stringify from 'json-stringify-deterministic';
 import './MarkTwo.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import syncUtils from './syncUtils';
 import { faEdit, faCheck, faTimes, faTrash, faTrashRestore } from '@fortawesome/free-solid-svg-icons';
 
 class MarkTwo extends React.Component {
@@ -16,6 +16,7 @@ class MarkTwo extends React.Component {
     this.startNewFile = this.startNewFile.bind(this);
     this.handleImport = this.handleImport.bind(this);
     this.toggleTrash = this.toggleTrash.bind(this);
+    this.sync = this.sync.bind(this);
 
     let appData;
     if(localStorage.getItem('appData')) {
@@ -25,27 +26,59 @@ class MarkTwo extends React.Component {
       appData = { currentDoc, files: [ {id: currentDoc, title: false, lastModified: new Date()} ], revision: 0 };
     }
 
-    localStorage.setItem('appData', stringify(appData));
+    localStorage.setItem('appData', JSON.stringify(appData));
+
     this.state = {
       newTitle: false,
-      ...appData
+      ...appData,
+      gapi: this.props.gapi,
     };
 
+  }
+
+  componentDidMount() {
+    this.syncUtils = syncUtils(this.state.gapi);
+
+    const appData = JSON.parse(localStorage.getItem('appData'));
+    this.syncUtils.find('appData', file => {
+      if(file) {
+        console.log(file);
+      } else {
+        this.syncUtils.create('appData', appData, response => {
+          console.log(response);
+          appData.fileId = response.id;
+          this.sync(appData);
+        });
+      }
+    })
+  }
+
+  sync(appData) {
+    appData.revision = appData.revision + 1;
+    this.setState({ ...appData });
+    localStorage.setItem('appData', JSON.stringify(appData));
+    this.syncUtils.find('appData', remoteAppData => {
+      if(remoteAppData.revision > appData.revision) {
+        localStorage.setItem('appData', JSON.stringify(appData));
+      } else {
+        this.syncUtils.update(appData.fileId, appData, result => console.log(result));
+      }
+    });
   }
 
   openFile(id) {
     const appData = JSON.parse(localStorage.getItem('appData'));
     appData.currentDoc = id;
-    this.setState({ currentDoc: id, showFiles: false })
-    localStorage.setItem('appData', stringify(appData));
+    this.setState({ showFiles: false });
+    this.sync(appData);
   }
 
   startNewFile() {
    const appData = JSON.parse(localStorage.getItem('appData'));
    const id = shortid.generate();
    appData.files.unshift({ id, title: false, lastModified: new Date() });
-   this.setState({ files: appData.files, currentDoc: id, showFiles: false, initialData: false });
-   localStorage.setItem('appData', stringify(appData));
+   this.setState({ showFiles: false, initialData: false });
+   this.sync(appData);
   }
 
   setTitle(id, title) {
@@ -55,8 +88,8 @@ class MarkTwo extends React.Component {
         f.title = this.state.newTitle;
       }
     });
-    this.setState({ files: appData.files, newTitle: false, editTitle: false });
-    localStorage.setItem('appData', stringify(appData));
+    this.setState({ newTitle: false, editTitle: false });
+    this.sync(appData);
   }
 
   handleImport(e) {
@@ -67,8 +100,8 @@ class MarkTwo extends React.Component {
       const appData = JSON.parse(localStorage.getItem('appData'));
       const id = shortid.generate();
       appData.files.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ files: appData.files, currentDoc: id, initialData: e.target.result, showFiles: false });
-      localStorage.setItem('appData', stringify(appData));
+      this.setState({ initialData: e.target.result, showFiles: false });
+      this.sync(appData);
     }
     reader.readAsText(e.target.files[0]);
   }
@@ -80,8 +113,8 @@ class MarkTwo extends React.Component {
         f.trashed = !f.trashed;
       }
     });
-    this.setState({ files: appData.files, newTitle: false, editTitle: false });
-    localStorage.setItem('appData', stringify(appData));
+    this.setState({ newTitle: false, editTitle: false });
+    this.sync(appData);
   }
 
   render() {
