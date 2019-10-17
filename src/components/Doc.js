@@ -9,6 +9,7 @@ import stringify from 'json-stringify-deterministic';
 import md5 from 'md5';
 import moment from 'moment';
 import shortid from 'shortid';
+import syncUtils from './syncUtils';
 
 class Doc extends React.Component {
   constructor(props) {
@@ -16,6 +17,8 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.debouncedSync = _.debounce(this.sync, 5000);
+    this.assembleDocFromMetaData = this.assembleDocFromMetaData.bind(this);
+    this.initializeEditor = this.initializeEditor.bind(this);
 
     TurndownService.prototype.escape = text => text; // disable escaping characters
     this.turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
@@ -25,7 +28,27 @@ class Doc extends React.Component {
       smartLists: true,
     })
 
+    this.doc = {};
+
     this.state = { initialHtml: props.initialData ? marked(props.initialData) : '<p><br /></p>' };
+  }
+
+  assembleDocFromMetaData(docMetadata) {
+    // assemble document
+    return new Promise(resolve => {
+      Promise.all(docMetadata.pageIds.map(pageId => this.syncUtils.findOrFetch(pageId)))
+      .then(pages => {
+        const docList = _.flatten(pages)
+        document.querySelector('#m2-doc').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
+        Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
+          el.id = docList[i].id;
+        });
+        this.doc = {};
+        docList.forEach(entry => this.doc[entry.id] = entry.text);
+        document.getElementById(docMetadata.caretAt) && document.getElementById(docMetadata.caretAt).scrollIntoView();
+        resolve();
+      });
+    })
   }
 
   sync() {
@@ -43,60 +66,47 @@ class Doc extends React.Component {
     const sel = window.getSelection();
     let caretAt = $(sel.anchorNode).closest('#m2-doc > *').attr('id');
 
-    const oldDocMetadata = localStorage.getItem(this.props.currentDoc) ? JSON.parse(localStorage.getItem(this.props.currentDoc))
-                            : { pageIds: [] };
-
-
     // creates the authoritative definition of the document, a list of ids with text,
     // and stores as blocks of data keyed by the hash of the data.
     const pages = {};
     const pageIds = []
     _.chunk(lines.map(id => ({ id, text: this.doc[id]})), 100).map(page => {
-      const value = stringify(page);
-      const hash = md5(value);
+      const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
-      pages[id] = value;
+      pages[id] = page;
       pageIds.push(id);
     })
 
-    // update doc meta data
-    localStorage.setItem(this.props.currentDoc, JSON.stringify({ caretAt,
-      version: (this.version || 0) + 1,
-      pageIds,
-      lastModified: new Date().toISOString() }));
+
+    const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
+
+    // cache all pageIds
+    pageIds.map(pageId => localStorage.setItem(pageId, JSON.stringify(pages[pageId])))
 
     // update page caches
     // if the page isn't cached, cache it
-    _.difference(pageIds, oldDocMetadata.pageIds).map(pageId => {
-      localStorage.setItem(pageId, pages[pageId]);
-    })
+    _.difference(pageIds, docMetadata.pageIds).map(pageId => {
+      this.syncUtils.create(pageId, pages[pageId]);
+    });
 
     // if the page has been removed, remove it
-    _.difference(oldDocMetadata.pageIds, pageIds).map(pageId => {
+    _.difference(docMetadata.pageIds, pageIds).map(pageId => {
        localStorage.removeItem(pageId);
+       // TODO, remove old pages from server
+    });
+
+    docMetadata.caretAt = caretAt;
+    docMetadata.pageIds = pageIds;
+    docMetadata.lastModified = new Date().toISOString();
+
+    this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+      if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+        this.assembleDocFromMetaData(validatedDocMetadata);
+      }
     });
   }
 
-  componentDidMount() {
-    if(localStorage.getItem(this.props.currentDoc)) {
-      const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
-      this.setState({currentDoc: docMetadata.currentDoc});
-      this.version = docMetadata.version;
-      // assemble document
-      const docList = _.flatten(docMetadata.pageIds.map(id => JSON.parse(localStorage.getItem(id))))
-
-      document.querySelector('#m2-doc').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
-      Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
-        el.id = docList[i].id;
-      });
-      this.doc = {};
-      docList.forEach(entry => this.doc[entry.id] = entry.text);
-      document.getElementById(docMetadata.caretAt) && document.getElementById(docMetadata.caretAt).scrollIntoView();
-    } else {
-      this.doc = {};
-    }
-
-
+  initializeEditor() {
     let selectedBlock;
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
       this.debouncedSync();
@@ -201,8 +211,18 @@ class Doc extends React.Component {
           }
       }
     });
+  }
 
-    this.sync();
+  componentDidMount() {
+    this.syncUtils = syncUtils(this.props.gapi);
+
+    let docMetadataDefault = { pageIds: [], revision: 0 };
+
+    this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
+      this.assembleDocFromMetaData(docMetadata).then(this.sync);
+    });
+
+    this.initializeEditor();
   }
 
 

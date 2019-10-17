@@ -7,7 +7,7 @@ function initialize(gapi) {
     const metadata = {
       name,
       mimeType: 'application/json',
-      parents: [{id: 'appDataFolder'}]
+      parents: ['appDataFolder']
     };
 
     const multipartRequestBody =
@@ -72,17 +72,95 @@ function initialize(gapi) {
   }
 
   function find(name, callback) {
-    gapi.client.drive.files.list({q: `name = '${name}'`, spaces: 'appDataFolder' })
+    gapi.client.drive.files.list({q: `name='${name}'`, spaces: 'appDataFolder' })
       .then(response => {
+          console.log(response);
           if(response.result.files.length) {
-            callback(response.result.files[0]);
+            gapi.client.drive.files.get({ fileId: response.result.files[0].id, alt: 'media' }).then(response => {
+              callback(response.result);
+            });
           } else {
             callback(false);
           }
       })
   }
 
-  return { create, update, find }
+  function findOrFetch(name) {
+    return new Promise(resolve => {
+      const localVersion = localStorage.getItem(name)
+      if(localVersion) {
+        resolve(JSON.parse(localVersion));
+      } else {
+        find(name, fileData => {
+          resolve(fileData);
+        });
+      }
+    })
+  }
+
+  function initializeData(name, defaultData) {
+    return new Promise(resolve => {
+      find(name, remoteData => {
+        const cachedData = localStorage.getItem(name) && JSON.parse(localStorage.getItem(name));
+
+        // normal page reload
+        if(cachedData && remoteData) {
+          console.log(remoteData);
+          resolve(cachedData);
+        }
+
+        // file does not yet exist on server, perhaps internet not available during file creation
+        if(cachedData && !remoteData) {
+          create(name, cachedData, response => {
+            console.log(response);
+            cachedData.fileId = response.id;
+            localStorage.setItem(name, JSON.stringify(cachedData));
+            resolve(cachedData);
+          });
+        }
+
+        // new device
+        if(!cachedData && remoteData) {
+          localStorage.setItem(name, JSON.stringify(remoteData))
+          resolve(remoteData);
+        }
+
+        // app being loaded for the first time
+        if(!cachedData && !remoteData) {
+          localStorage.setItem(name, JSON.stringify(defaultData));
+          create(name, defaultData, response => {
+            console.log(response);
+            defaultData.fileId = response.id;
+            localStorage.setItem(name, JSON.stringify(defaultData));
+            resolve(defaultData);
+          });
+        }
+        })
+    })
+  }
+
+  function syncByRevision(name, newData) {
+    newData.revision++;
+    localStorage.setItem(name, JSON.stringify(newData));
+    return new Promise(resolve => {
+      find(name, remoteData => {
+        console.log(remoteData);
+        if(remoteData.revision >= newData.revision) {
+          // if the server version is at a higher revision, use the server version (fast-forward)
+          localStorage.setItem(name, JSON.stringify(remoteData));
+          resolve(remoteData);
+        } else {
+          // otherwise use the new version and update server version
+          localStorage.setItem(name, JSON.stringify(newData));
+          update(newData.fileId, newData);
+          resolve(newData);
+        }
+      })
+    })
+  }
+
+
+  return { create, update, find, findOrFetch, syncByRevision, initializeData }
 }
 
 export default initialize;

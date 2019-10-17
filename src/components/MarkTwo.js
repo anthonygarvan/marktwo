@@ -18,19 +18,8 @@ class MarkTwo extends React.Component {
     this.toggleTrash = this.toggleTrash.bind(this);
     this.sync = this.sync.bind(this);
 
-    let appData;
-    if(localStorage.getItem('appData')) {
-      appData = JSON.parse(localStorage.getItem('appData'));
-    } else {
-      const currentDoc = shortid.generate();
-      appData = { currentDoc, files: [ {id: currentDoc, title: false, lastModified: new Date()} ], revision: 0 };
-    }
-
-    localStorage.setItem('appData', JSON.stringify(appData));
-
     this.state = {
       newTitle: false,
-      ...appData,
       gapi: this.props.gapi,
     };
 
@@ -39,31 +28,19 @@ class MarkTwo extends React.Component {
   componentDidMount() {
     this.syncUtils = syncUtils(this.state.gapi);
 
-    const appData = JSON.parse(localStorage.getItem('appData'));
-    this.syncUtils.find('appData', file => {
-      if(file) {
-        console.log(file);
-      } else {
-        this.syncUtils.create('appData', appData, response => {
-          console.log(response);
-          appData.fileId = response.id;
-          this.sync(appData);
-        });
-      }
-    })
+    const currentDoc = shortid.generate();
+    const defaultAppData = { currentDoc,
+      files: [ {id: currentDoc, title: false, lastModified: new Date()} ],
+      revision: 0 };
+
+    this.syncUtils.initializeData('appData', defaultAppData).then(appData => {
+      this.setState({ ...appData });
+    });
   }
 
   sync(appData) {
-    appData.revision = appData.revision + 1;
     this.setState({ ...appData });
-    localStorage.setItem('appData', JSON.stringify(appData));
-    this.syncUtils.find('appData', remoteAppData => {
-      if(remoteAppData.revision > appData.revision) {
-        localStorage.setItem('appData', JSON.stringify(appData));
-      } else {
-        this.syncUtils.update(appData.fileId, appData, result => console.log(result));
-      }
-    });
+    this.syncUtils.syncByRevision('appData', appData);
   }
 
   openFile(id) {
@@ -119,13 +96,13 @@ class MarkTwo extends React.Component {
 
   render() {
     return <div>
-    <Doc key={this.state.currentDoc}
+    {this.state.currentDoc && <Doc key={this.state.currentDoc}
       currentDoc={this.state.currentDoc}
       gapi={this.props.gapi}
       handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       tryItNow={this.props.tryItNow}
-      initialData={this.state.initialData} />
+      initialData={this.state.initialData} /> }
     <Shelf handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
@@ -155,7 +132,7 @@ class MarkTwo extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {this.state.files.filter(f => (!!f.trashed == this.state.viewTrash)).map(f =>
+            {this.state.files && this.state.files.filter(f => (!!f.trashed == this.state.viewTrash)).map(f =>
               <tr key={f.id}>
                 <td>{this.state.editTitle !== f.id ? <span><a onClick={() => this.openFile(f.id)}>{f.title ? <abbr title={f.title}>{f.title.substring(0,20)}</abbr>: 'Untitled'}</a>
                 <a className="is-pulled-right" onClick={() => this.setState({ editTitle: f.id, newTitle: f.title })}> <FontAwesomeIcon icon={faEdit} /></a></span>
