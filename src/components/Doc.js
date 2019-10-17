@@ -18,6 +18,7 @@ class Doc extends React.Component {
     this.sync = this.sync.bind(this);
     this.debouncedSync = _.debounce(this.sync, 5000);
     this.assembleDocFromMetaData = this.assembleDocFromMetaData.bind(this);
+    this.enterEditMode = this.enterEditMode.bind(this);
     this.initializeEditor = this.initializeEditor.bind(this);
 
     TurndownService.prototype.escape = text => text; // disable escaping characters
@@ -46,7 +47,18 @@ class Doc extends React.Component {
           });
           this.doc = {};
           docList.forEach(entry => this.doc[entry.id] = entry.text);
-          document.getElementById(docMetadata.caretAt) && document.getElementById(docMetadata.caretAt).scrollIntoView();
+          const caretAtEl = document.getElementById(docMetadata.caretAt)
+          if(caretAtEl) {
+            caretAtEl.scrollIntoView();
+            var range = document.createRange();
+            var sel = window.getSelection();
+            range.setStart(caretAtEl, 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            this.enterEditMode(sel, $(caretAtEl));
+            this.oldSelectedBlock = $(caretAtEl);
+          }
           resolve();
         } else {
           document.querySelector('#m2-doc').innerHTML = '<p><br /></p>';
@@ -111,14 +123,46 @@ class Doc extends React.Component {
     });
   }
 
+  enterEditMode(sel, selectedBlock, originalAnchorText) {
+    console.log('markdown:');
+    console.log(selectedBlock[0] && this.turndownService.turndown(selectedBlock[0].outerHTML));
+
+    console.log('selection before toggling to edit');
+    console.log(sel)
+    const anchorOffset = sel.anchorOffset;
+    let renderedMarkdown;
+    if(selectedBlock.attr('id')) {
+      renderedMarkdown = this.doc[selectedBlock.attr('id')] || '<br />';
+    } else {
+      renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
+    }
+    selectedBlock.html(renderedMarkdown);
+    console.log('selection after toggling to edit');
+    console.log(sel)
+    var range = document.createRange();
+    let offset;
+    if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
+      const stringMatch = selectedBlock[0].firstChild.data.match(new RegExp(originalAnchorText));
+      const stringIndex = stringMatch ? stringMatch.index : 0;
+      offset = stringIndex + anchorOffset;
+    } else {
+      offset = 0;
+    }
+    range.setStart(selectedBlock[0].firstChild, Math.min(offset, selectedBlock[0].firstChild.length));
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    selectedBlock.data('editMode', true);
+    selectedBlock.addClass('m2-edit-mode');
+  }
+
   initializeEditor() {
     let selectedBlock;
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
       this.debouncedSync();
 
-      let oldSelectedBlock;
       if(selectedBlock) {
-        oldSelectedBlock = selectedBlock;
+        this.oldSelectedBlock = selectedBlock;
       }
 
       let sel = window.getSelection();
@@ -157,55 +201,27 @@ class Doc extends React.Component {
       // enter edit mode, showing markdown
       console.log(selectedBlock.data('editMode'));
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
-        console.log('markdown:');
-        console.log(selectedBlock[0] && this.turndownService.turndown(selectedBlock[0].outerHTML));
-
-        console.log('selection before toggling to edit');
-        console.log(sel)
-        const anchorOffset = sel.anchorOffset;
-        let renderedMarkdown;
-        if(selectedBlock.attr('id')) {
-          renderedMarkdown = this.doc[selectedBlock.attr('id')] || '<br />';
-        } else {
-          renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
-        }
-        selectedBlock.html(renderedMarkdown);
-        console.log('selection after toggling to edit');
-        console.log(sel)
-        var range = document.createRange();
-        let offset;
-        if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
-          const stringMatch = selectedBlock[0].firstChild.data.match(new RegExp(originalAnchorText));
-          const stringIndex = stringMatch ? stringMatch.index : 0;
-          offset = stringIndex + anchorOffset;
-        } else {
-          offset = 0;
-        }
-        range.setStart(selectedBlock[0].firstChild, Math.min(offset, selectedBlock[0].firstChild.length));
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        selectedBlock.data('editMode', true);
-        selectedBlock.addClass('m2-edit-mode');
+        this.enterEditMode(sel, selectedBlock, originalAnchorText);
       }
 
-      // render the old node upon exit
-      if(oldSelectedBlock && oldSelectedBlock[0] && selectedBlock && selectedBlock[0] && !oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
-        console.log('rendered markdown:')
-        let markdown = oldSelectedBlock[0].innerText.replace(/\u200B/g, '');
-        console.log(markdown);
-        console.log('html:');
-        let html = marked(markdown);
-        console.log(html);
-        const renderedNode = $(html.replace(/\\/g, '') || '<p><br /></p>');
-        let id = oldSelectedBlock.attr('id');
+      // save markdown
+      if(this.oldSelectedBlock && this.oldSelectedBlock[0] && selectedBlock && selectedBlock[0]) {
+        let markdown = this.oldSelectedBlock[0].innerText.replace(/\u200B/g, '');
+        let id = this.oldSelectedBlock.attr('id');
         if(!id) {
           id = shortid.generate();
+          this.oldSelectedBlock.attr('id', id);
         }
-        renderedNode.attr('id', id);
         this.doc[id] = markdown.trim();
         console.log(this.doc);
-        oldSelectedBlock.replaceWith(renderedNode);
+
+        // and render it upon exiting the block
+        if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
+          let html = marked(markdown);
+          const renderedNode = $(html.replace(/\\/g, '') || '<p><br /></p>');
+          renderedNode.attr('id', id);
+          this.oldSelectedBlock.replaceWith(renderedNode);
+        }
       }
 
       // fixes bug with contenteditable where you completely empty the p if the document is empty
