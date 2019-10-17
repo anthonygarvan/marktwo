@@ -38,15 +38,20 @@ class Doc extends React.Component {
     return new Promise(resolve => {
       Promise.all(docMetadata.pageIds.map(pageId => this.syncUtils.findOrFetch(pageId)))
       .then(pages => {
-        const docList = _.flatten(pages)
-        document.querySelector('#m2-doc').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
-        Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
-          el.id = docList[i].id;
-        });
-        this.doc = {};
-        docList.forEach(entry => this.doc[entry.id] = entry.text);
-        document.getElementById(docMetadata.caretAt) && document.getElementById(docMetadata.caretAt).scrollIntoView();
-        resolve();
+        if(pages.length) {
+          const docList = _.flatten(pages)
+          document.querySelector('#m2-doc').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
+          Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
+            el.id = docList[i].id;
+          });
+          this.doc = {};
+          docList.forEach(entry => this.doc[entry.id] = entry.text);
+          document.getElementById(docMetadata.caretAt) && document.getElementById(docMetadata.caretAt).scrollIntoView();
+          resolve();
+        } else {
+          document.querySelector('#m2-doc').innerHTML = '<p><br /></p>';
+          resolve();
+        }
       });
     })
   }
@@ -181,8 +186,7 @@ class Doc extends React.Component {
         sel.removeAllRanges();
         sel.addRange(range);
         selectedBlock.data('editMode', true);
-        selectedBlock.css('white-space', 'pre');
-        //selectedBlock.css('background-color', '#fafafa');
+        selectedBlock.addClass('m2-edit-mode');
       }
 
       // render the old node upon exit
@@ -219,10 +223,11 @@ class Doc extends React.Component {
     let docMetadataDefault = { pageIds: [], revision: 0 };
 
     this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
-      this.assembleDocFromMetaData(docMetadata).then(this.sync);
+      this.assembleDocFromMetaData(docMetadata).then(() => {
+        this.initializeEditor();
+        this.sync();
+      })
     });
-
-    this.initializeEditor();
   }
 
 

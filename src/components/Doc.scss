@@ -8,6 +8,19 @@
     outline: none;
   }
 
+  &>* {
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    margin: 0rem !important;
+    border-left: 3px solid transparent;
+  }
+
+  &>ul {
+    padding-left: 3rem;
+    &.m2-edit-mode {
+      padding-left: 2rem;
+    }
+  }
+
   pre {
     @extend .md-fences;
     code {
@@ -17,5 +30,10 @@
 
   img {
     max-width: 100%;
+  }
+
+  .m2-edit-mode {
+    white-space: pre;
+    border-left: 3px solid lightgrey;
   }
 }
