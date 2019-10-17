@@ -81,7 +81,6 @@ class Doc extends React.Component {
     })
 
     const sel = window.getSelection();
-    let caretAt = $(sel.anchorNode).closest('#m2-doc > *').attr('id');
 
     // creates the authoritative definition of the document, a list of ids with text,
     // and stores as blocks of data keyed by the hash of the data.
@@ -96,7 +95,7 @@ class Doc extends React.Component {
 
 
     const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
-
+    let caretAt = $(sel.anchorNode).closest('#m2-doc > *').attr('id') || docMetadata.caretAt;
     // cache all pageIds
     pageIds.map(pageId => localStorage.setItem(pageId, JSON.stringify(pages[pageId])))
 
@@ -159,7 +158,7 @@ class Doc extends React.Component {
   initializeEditor() {
     let selectedBlock;
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
-      this.debouncedSync();
+      !this.props.tryItNow && this.debouncedSync();
 
       if(selectedBlock) {
         this.oldSelectedBlock = selectedBlock;
@@ -179,8 +178,8 @@ class Doc extends React.Component {
         e.preventDefault();
 
         // if the current line is not empty, prevent default and continue the string in a newline
-        if(selectedBlock && selectedBlock[0] && !(sel.anchorNode.data === '\n\u200B' || (sel.anchorNode.tagName === 'BR'))) {
-        console.log(e);
+        if(selectedBlock && selectedBlock[0]
+          && !((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
 
         let range;
         if(sel.getRangeAt && sel.rangeCount) {
@@ -191,7 +190,11 @@ class Doc extends React.Component {
         }
         } else {
           // if the line is empty, start a new paragraph
-          const newBlock = $(`<p id=${shortid.generate()}><br /></p>`);
+          const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '');
+          const id = shortid.generate();
+          const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
+          this.doc[id] = initialContent || '';
+          this.doc[selectedBlock[0].id] = this.doc[selectedBlock[0].id].replace(initialContent, '');
           newBlock.insertAfter(selectedBlock);
           sel.collapse(newBlock[0], 0);
         }
@@ -229,21 +232,28 @@ class Doc extends React.Component {
           if(!document.querySelector('#m2-doc > *')) {
             document.querySelector('#m2-doc').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
           }
+
+          if(selectedBlock && selectedBlock[0] && sel.anchorNode.parentElement.isSameNode(selectedBlock[0]) && sel.anchorOffset === 0) {
+            this.doc[selectedBlock[0].previousElementSibling.id] = this.doc[selectedBlock[0].previousElementSibling.id] + this.doc[selectedBlock[0].id]
+          }
       }
     });
   }
 
   componentDidMount() {
-    this.syncUtils = syncUtils(this.props.gapi);
+    if(!this.props.tryItNow) {
+      this.syncUtils = syncUtils(this.props.gapi);
+      let docMetadataDefault = { pageIds: [], revision: 0 };
 
-    let docMetadataDefault = { pageIds: [], revision: 0 };
-
-    this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
-      this.assembleDocFromMetaData(docMetadata).then(() => {
-        this.initializeEditor();
-        this.sync();
-      })
-    });
+      this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
+        this.assembleDocFromMetaData(docMetadata).then(() => {
+          this.initializeEditor();
+          this.sync();
+        })
+      });
+    } else {
+      this.initializeEditor();
+    }
   }
 
 

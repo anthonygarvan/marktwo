@@ -33,14 +33,20 @@ class MarkTwo extends React.Component {
       files: [ {id: currentDoc, title: false, lastModified: new Date()} ],
       revision: 0 };
 
-    this.syncUtils.initializeData('appData', defaultAppData).then(appData => {
-      this.setState({ ...appData });
-    });
+    if(!this.props.tryItNow) {
+      this.syncUtils.initializeData('appData', defaultAppData).then(appData => {
+        this.setState({ ...appData });
+      });
+    } else {
+      this.setState({ ...defaultAppData });
+    }
   }
 
   sync(appData) {
     this.setState({ ...appData });
-    this.syncUtils.syncByRevision('appData', appData);
+    if(!this.props.tryItNow) {
+      this.syncUtils.syncByRevision('appData', appData);
+    }
   }
 
   openFile(id) {
