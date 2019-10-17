@@ -1,4 +1,4 @@
-@import './themes/github.scss';
+@import './base.scss';
 
 .m2-doc {
   max-width: 800px;
@@ -22,7 +22,6 @@
   }
 
   pre {
-    @extend .md-fences;
     code {
       border: none;
     }
@@ -34,6 +33,6 @@
 
   .m2-edit-mode {
     white-space: pre;
-    border-left: 3px solid lightgrey;
+    border-left: 3px solid rgba($primary, 0.3);
   }
 }

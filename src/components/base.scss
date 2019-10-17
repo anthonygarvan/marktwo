@@ -1,4 +1,4 @@
-$primary: #A020F0;
+$primary: #3137FD;
 $white: #ffffff;
 $link: $primary;
 $fontFamily: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
@@ -6,4 +6,4 @@ $pretty--color-success: $primary;
 $pretty--color-default: $primary;
 $text: #474C6D;
 
-@import '../../../node_modules/bulma/bulma.sass';
+@import '../../node_modules/bulma/bulma.sass';
