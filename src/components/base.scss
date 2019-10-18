@@ -7,3 +7,10 @@ $pretty--color-default: $primary;
 $text: #474C6D;
 
 @import '../../node_modules/bulma/bulma.sass';
+
+body {
+  font-size: 14px;
+  @include tablet {
+    font-size: 16px;
+  }
+}
