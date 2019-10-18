@@ -16,7 +16,8 @@ class Doc extends React.Component {
     super(props);
 
     this.sync = this.sync.bind(this);
-    this.debouncedSync = _.debounce(this.sync, 5000);
+    this.getLines = this.getLines.bind(this);
+    this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.sync(this.getLines()) : this.getLines(), 3000);
     this.assembleDocFromMetaData = this.assembleDocFromMetaData.bind(this);
     this.enterEditMode = this.enterEditMode.bind(this);
     this.initializeEditor = this.initializeEditor.bind(this);
@@ -68,18 +69,22 @@ class Doc extends React.Component {
     })
   }
 
-  sync() {
-    console.log('syncing');
-
+  getLines() {
     let lines = [];
+    const usedIds = {};
     $('#m2-doc > *').each((i, el) => {
-      if(!el.id) {
+      if(!el.id || el.id in usedIds) {
         el.id = shortid.generate();
         this.doc[el.id] = this.turndownService.turndown(el.outerHTML);
       }
+      usedIds[el.id] = true;
       lines.push(el.id);
     })
+    return lines;
+  }
 
+  sync(lines) {
+    console.log('syncing');
     const sel = window.getSelection();
 
     // creates the authoritative definition of the document, a list of ids with text,
@@ -158,7 +163,7 @@ class Doc extends React.Component {
   initializeEditor() {
     let selectedBlock;
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
-      !this.props.tryItNow && this.debouncedSync();
+      this.debouncedSync();
 
       if(selectedBlock) {
         this.oldSelectedBlock = selectedBlock;
@@ -258,7 +263,7 @@ class Doc extends React.Component {
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
         this.assembleDocFromMetaData(docMetadata).then(() => {
           this.initializeEditor();
-          this.sync();
+          this.sync(this.getLines());
         })
       });
     } else {
