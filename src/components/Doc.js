@@ -194,7 +194,8 @@ class Doc extends React.Component {
           const id = shortid.generate();
           const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
           this.doc[id] = initialContent || '';
-          this.doc[selectedBlock[0].id] = this.doc[selectedBlock[0].id].replace(initialContent, '');
+          const contentWithTextRemoved = this.doc[selectedBlock[0].id].replace(initialContent, '');
+          selectedBlock[0].innerText = contentWithTextRemoved;
           newBlock.insertAfter(selectedBlock);
           sel.collapse(newBlock[0], 0);
         }
@@ -220,10 +221,19 @@ class Doc extends React.Component {
 
         // and render it upon exiting the block
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
-          let html = marked(markdown);
-          const renderedNode = $(html.replace(/\\/g, '') || '<p><br /></p>');
-          renderedNode.attr('id', id);
-          this.oldSelectedBlock.replaceWith(renderedNode);
+          const nodes = markdown.split('\n\n').map((block, i) => {
+            let html = marked(block);
+            const renderedNode = $(html.replace(/\\/g, '') || '<p><br /></p>');
+            if(i > 0) {
+              id = shortid.generate();
+            }
+            renderedNode.attr('id', id);
+            this.doc[id] = block;
+
+            return renderedNode[0].outerHTML;
+          });
+          this.oldSelectedBlock.replaceWith($(nodes.join('\n')));
+
         }
       }
 
