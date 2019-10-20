@@ -297,7 +297,7 @@ class Doc extends React.Component {
       }
 
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
-        setTimeout(this.enterEditMode, 50);
+        setTimeout(this.enterEditMode, 150);
       }
 
       // save markdown
