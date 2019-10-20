@@ -156,7 +156,8 @@ class Doc extends React.Component {
       const stringIndex = stringMatch ? stringMatch.index : 0;
       offset = stringIndex + anchorOffset;
       console.log('-------------------------');
-      console.log(sel);
+      console.log(selectedBlock)
+      console.log(sel.anchorNode);
       console.log(anchorOffset);
       console.log(stringMatch);
       console.log(stringIndex);
