@@ -266,6 +266,9 @@ class Doc extends React.Component {
       }
 
       let sel = window.getSelection();
+      console.log('****************')
+      console.log(e);
+      console.log(sel);
       const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
       selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
 
