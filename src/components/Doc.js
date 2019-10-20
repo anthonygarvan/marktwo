@@ -137,7 +137,10 @@ class Doc extends React.Component {
     });
   }
 
-  enterEditMode(sel, selectedBlock, originalAnchorText) {
+  enterEditMode() {
+    const sel = window.getSelection();
+    const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
+    const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
     const anchorOffset = sel.anchorOffset;
     let renderedMarkdown;
     if(selectedBlock.attr('id')) {
@@ -256,9 +259,7 @@ class Doc extends React.Component {
       }
     });
 
-    $('#m2-doc').on('')
-
-    $('#m2-doc').on('keyup keydown mouseup', (e) => {
+    $('#m2-doc').on('keydown keyup mouseup', (e) => {
       this.debouncedSync();
 
       if(selectedBlock) {
@@ -266,10 +267,6 @@ class Doc extends React.Component {
       }
 
       let sel = window.getSelection();
-      console.log('****************')
-      console.log(e);
-      console.log(sel);
-      const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
       selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
 
       if(e.key === 'Enter' && e.type === 'keydown') {
@@ -299,10 +296,8 @@ class Doc extends React.Component {
         }
       }
 
-
-      // enter edit mode, showing markdown
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
-        this.enterEditMode(sel, selectedBlock, originalAnchorText);
+        setTimeout(this.enterEditMode, 50);
       }
 
       // save markdown
