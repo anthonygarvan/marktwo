@@ -67,7 +67,7 @@ class Doc extends React.Component {
             range.collapse(true);
             sel.removeAllRanges();
             sel.addRange(range);
-            this.enterEditMode(sel, $(caretAtEl));
+            this.enterEditMode();
             this.oldSelectedBlock = $(caretAtEl);
           }
           resolve();
