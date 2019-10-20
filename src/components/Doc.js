@@ -332,8 +332,20 @@ class Doc extends React.Component {
             document.querySelector('#m2-doc').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
           }
 
+          console.log('--------------------------');
+          console.log(sel);
+          console.log(selectedBlock);
+          console.log(sel.anchorNode);
+          console.log(sel.anchorNode.parentElement);
+          console.log(sel.anchorOffset);
+          console.log(doc);
+
           if(selectedBlock && selectedBlock[0] && sel.anchorNode.parentElement.isSameNode(selectedBlock[0]) && sel.anchorOffset === 0) {
+            console.log(selectedBlock[0].previousElementSibling.id);
+            console.log(selectedBlock[0].id);
             doc[selectedBlock[0].previousElementSibling.id] = doc[selectedBlock[0].previousElementSibling.id] + doc[selectedBlock[0].id]
+            console.log('*****');
+            console.log(doc[selectedBlock[0].previousElementSibling.id]);
           }
       }
     });
