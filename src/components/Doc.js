@@ -95,7 +95,6 @@ class Doc extends React.Component {
   }
 
   sync(lines) {
-    console.log('syncing');
     const sel = window.getSelection();
 
     // creates the authoritative definition of the document, a list of ids with text,
@@ -139,11 +138,6 @@ class Doc extends React.Component {
   }
 
   enterEditMode(sel, selectedBlock, originalAnchorText) {
-    console.log('markdown:');
-    console.log(selectedBlock[0] && this.turndownService.turndown(selectedBlock[0].outerHTML));
-
-    console.log('selection before toggling to edit');
-    console.log(sel)
     const anchorOffset = sel.anchorOffset;
     let renderedMarkdown;
     if(selectedBlock.attr('id')) {
@@ -152,8 +146,6 @@ class Doc extends React.Component {
       renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
     }
     selectedBlock.html(renderedMarkdown);
-    console.log('selection after toggling to edit');
-    console.log(sel)
     var range = document.createRange();
     let offset;
     if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
@@ -246,6 +238,19 @@ class Doc extends React.Component {
       this.throttledScroll();
     })
 
+    document.querySelector('#m2-doc').addEventListener('input', e => {
+      if(e.inputType === 'deleteContentBackward') {
+        const sel = window.getSelection();
+        const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
+
+        if(!document.querySelector('#m2-doc > *')) {
+          document.querySelector('#m2-doc').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
+        }
+
+        doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
+      }
+    });
+
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
       this.debouncedSync();
 
@@ -254,14 +259,8 @@ class Doc extends React.Component {
       }
 
       let sel = window.getSelection();
-      console.log('selection:');
-      console.log(sel);
-      console.log('anchorNode:');
-      console.log(sel.anchorNode);
       const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
       selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
-      console.log('selectedBlock:');
-      console.log(selectedBlock);
 
       if(e.key === 'Enter' && e.type === 'keydown') {
         e.preventDefault();
@@ -292,7 +291,6 @@ class Doc extends React.Component {
 
 
       // enter edit mode, showing markdown
-      console.log(selectedBlock.data('editMode'));
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
         this.enterEditMode(sel, selectedBlock, originalAnchorText);
       }
@@ -306,7 +304,6 @@ class Doc extends React.Component {
           this.oldSelectedBlock.attr('id', id);
         }
         doc[id] = markdown.trim();
-        console.log(doc);
 
         // and render it upon exiting the block
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
@@ -324,29 +321,6 @@ class Doc extends React.Component {
           this.oldSelectedBlock.replaceWith($(nodes.join('\n')));
 
         }
-      }
-
-      // fixes bug with contenteditable where you completely empty the p if the document is empty
-      if (e.key === 'Backspace' || e.key === 'Delete') {
-          if(!document.querySelector('#m2-doc > *')) {
-            document.querySelector('#m2-doc').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
-          }
-
-          console.log('--------------------------');
-          console.log(sel);
-          console.log(selectedBlock);
-          console.log(sel.anchorNode);
-          console.log(sel.anchorNode.parentElement);
-          console.log(sel.anchorOffset);
-          console.log(doc);
-
-          if(selectedBlock && selectedBlock[0] && sel.anchorNode.parentElement.isSameNode(selectedBlock[0]) && sel.anchorOffset === 0) {
-            console.log(selectedBlock[0].previousElementSibling.id);
-            console.log(selectedBlock[0].id);
-            doc[selectedBlock[0].previousElementSibling.id] = doc[selectedBlock[0].previousElementSibling.id] + doc[selectedBlock[0].id]
-            console.log('*****');
-            console.log(doc[selectedBlock[0].previousElementSibling.id]);
-          }
       }
     });
   }
