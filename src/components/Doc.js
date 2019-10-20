@@ -152,6 +152,11 @@ class Doc extends React.Component {
       const stringMatch = selectedBlock[0].firstChild.data.match(new RegExp(originalAnchorText));
       const stringIndex = stringMatch ? stringMatch.index : 0;
       offset = stringIndex + anchorOffset;
+      console.log('-------------------------');
+      console.log(sel);
+      console.log(anchorOffset);
+      console.log(stringMatch);
+      console.log(stringIndex);
     } else {
       offset = 0;
     }
@@ -250,6 +255,8 @@ class Doc extends React.Component {
         doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
       }
     });
+
+    $('#m2-doc').on('')
 
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
       this.debouncedSync();
