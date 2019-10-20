@@ -11,13 +11,17 @@ import moment from 'moment';
 import shortid from 'shortid';
 import syncUtils from './syncUtils';
 
+let startIndex, endIndex, doc, allLines;
+
 class Doc extends React.Component {
   constructor(props) {
     super(props);
 
     this.sync = this.sync.bind(this);
-    this.getLines = this.getLines.bind(this);
-    this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.sync(this.getLines()) : this.getLines(), 3000);
+    this.getAllLines = this.getAllLines.bind(this);
+    this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.sync(this.getAllLines()) : this.getAllLines(), 3000);
+    this.handleScroll = this.handleScroll.bind(this);
+    this.throttledScroll = _.throttle(this.handleScroll, 300);
     this.assembleDocFromMetaData = this.assembleDocFromMetaData.bind(this);
     this.enterEditMode = this.enterEditMode.bind(this);
     this.initializeEditor = this.initializeEditor.bind(this);
@@ -30,7 +34,8 @@ class Doc extends React.Component {
       smartLists: true,
     })
 
-    this.doc = {};
+    doc = {};
+    allLines = [];
 
     this.state = { initialHtml: props.initialData ? marked(props.initialData) : '<p><br /></p>' };
   }
@@ -42,12 +47,17 @@ class Doc extends React.Component {
       .then(pages => {
         if(pages.length) {
           const docList = _.flatten(pages)
-          document.querySelector('#m2-doc').innerHTML = docList.map(entry => marked(entry.text || '\u200B')).join('\n')
+          allLines = docList.map(d => d.id);
+          const caretIndex = docMetadata.caretAt ? _.findIndex(docList, {id: docMetadata.caretAt}) : 0;
+          startIndex = Math.max(caretIndex - 100, 0);
+          endIndex = Math.min(caretIndex + 100, docList.length)
+          const visibleDocList = _.slice(docList, startIndex, endIndex);
+          document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => marked(entry.text || '\u200B')).join('\n')
           Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
-            el.id = docList[i].id;
+            el.id = visibleDocList[i].id;
           });
-          this.doc = {};
-          docList.forEach(entry => this.doc[entry.id] = entry.text);
+          doc = {};
+          docList.forEach(entry => doc[entry.id] = entry.text);
           const caretAtEl = document.getElementById(docMetadata.caretAt)
           if(caretAtEl) {
             caretAtEl.scrollIntoView();
@@ -69,18 +79,19 @@ class Doc extends React.Component {
     })
   }
 
-  getLines() {
+  getAllLines() {
     let lines = [];
     const usedIds = {};
     $('#m2-doc > *').each((i, el) => {
       if(!el.id || el.id in usedIds) {
         el.id = shortid.generate();
-        this.doc[el.id] = this.turndownService.turndown(el.outerHTML);
+        doc[el.id] = this.turndownService.turndown(el.outerHTML);
       }
       usedIds[el.id] = true;
       lines.push(el.id);
     })
-    return lines;
+    allLines = _.concat(_.slice(allLines, 0, startIndex), lines, _.slice(allLines, endIndex, allLines.length));
+    return allLines;
   }
 
   sync(lines) {
@@ -91,7 +102,7 @@ class Doc extends React.Component {
     // and stores as blocks of data keyed by the hash of the data.
     const pages = {};
     const pageIds = []
-    _.chunk(lines.map(id => ({ id, text: this.doc[id]})), 100).map(page => {
+    _.chunk(lines.map(id => ({ id, text: doc[id]})), 100).map(page => {
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
       pages[id] = page;
@@ -136,7 +147,7 @@ class Doc extends React.Component {
     const anchorOffset = sel.anchorOffset;
     let renderedMarkdown;
     if(selectedBlock.attr('id')) {
-      renderedMarkdown = this.doc[selectedBlock.attr('id')] || '<br />';
+      renderedMarkdown = doc[selectedBlock.attr('id')] || '<br />';
     } else {
       renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
     }
@@ -160,8 +171,81 @@ class Doc extends React.Component {
     selectedBlock.addClass('m2-edit-mode');
   }
 
+  handleScroll() {
+    const scrollTop = $(window).scrollTop();
+    const docHeight = $(document).height();
+    const winHeight = $(window).height();
+    const scrollPercent = (scrollTop) / (docHeight - winHeight);
+
+    if(scrollPercent > 0.9 && endIndex < allLines.length) {
+      const oldEndIndex = endIndex;
+      endIndex = Math.min(endIndex + 100, allLines.length);
+      const newHtml = _.slice(allLines, oldEndIndex, endIndex).map(id => {
+        const newBlock = $(marked(doc[id]));
+        newBlock.attr('id', id);
+        return newBlock[0].outerHTML
+      }).join('\n');
+      $('#m2-doc > *:last-child').after(newHtml);
+    }
+
+    if(scrollPercent < 0.1 && startIndex > 0) {
+      const oldStartIndex = startIndex;
+      startIndex = Math.max(startIndex - 100, 0);
+      const newHtml = _.slice(allLines, startIndex, oldStartIndex).map(id => {
+        const newBlock = $(marked(doc[id]));
+        newBlock.attr('id', id);
+        return newBlock[0].outerHTML
+      }).join('\n');
+      $('#m2-doc > *:first-child').before(newHtml);
+    }
+
+    if((endIndex - startIndex) > 500) {
+      const scrollTop = $(window).scrollTop();
+      const docHeight = $(document).height();
+      const winHeight = $(window).height();
+      const scrollPercent = (scrollTop) / (docHeight - winHeight);
+
+      if(scrollPercent < 0.2) {
+        document.querySelectorAll(`#m2-doc>*:nth-child(n+250)`).forEach(el => {
+          el.remove();
+        });
+        endIndex = startIndex + 250;
+      }
+
+      if(scrollPercent > 0.8) {
+        document.querySelectorAll(`#m2-doc > *:nth-child(-n+${document.querySelectorAll('#m2-doc > *').length - 250})`).forEach(el => {
+          el.remove();
+        });
+        startIndex = endIndex - 250;
+      }
+    }
+  }
+
   initializeEditor() {
     let selectedBlock;
+
+    if(this.props.initialData) {
+      const container = document.createElement('DIV');
+      container.innerHTML = marked(this.props.initialData);
+      allLines = [];
+      $(container).children().each((i, el) => {
+        el.id = shortid.generate();
+        doc[el.id] = this.turndownService.turndown(el.outerHTML);
+        allLines.push(el.id);
+      })
+
+      startIndex = 0;
+      endIndex = Math.min(250, allLines.length);
+
+      const initialHtml = _.slice(allLines, startIndex, endIndex).map(id => marked(doc[id])).join('\n');
+      this.setState({ initialHtml });
+    } else {
+      this.setState({ initialHtml: '<p><br /></p>' });
+    }
+    $(window).on('scroll', (e) => {
+      this.throttledScroll();
+    })
+
     $('#m2-doc').on('keyup keydown mouseup', (e) => {
       this.debouncedSync();
 
@@ -198,8 +282,8 @@ class Doc extends React.Component {
           const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '');
           const id = shortid.generate();
           const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
-          this.doc[id] = initialContent || '';
-          const contentWithTextRemoved = this.doc[selectedBlock[0].id].replace(initialContent, '');
+          doc[id] = initialContent || '';
+          const contentWithTextRemoved = doc[selectedBlock[0].id].replace(initialContent, '');
           selectedBlock[0].innerText = contentWithTextRemoved;
           newBlock.insertAfter(selectedBlock);
           sel.collapse(newBlock[0], 0);
@@ -221,8 +305,8 @@ class Doc extends React.Component {
           id = shortid.generate();
           this.oldSelectedBlock.attr('id', id);
         }
-        this.doc[id] = markdown.trim();
-        console.log(this.doc);
+        doc[id] = markdown.trim();
+        console.log(doc);
 
         // and render it upon exiting the block
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
@@ -233,7 +317,7 @@ class Doc extends React.Component {
               id = shortid.generate();
             }
             renderedNode.attr('id', id);
-            this.doc[id] = block;
+            doc[id] = block;
 
             return renderedNode[0].outerHTML;
           });
@@ -249,7 +333,7 @@ class Doc extends React.Component {
           }
 
           if(selectedBlock && selectedBlock[0] && sel.anchorNode.parentElement.isSameNode(selectedBlock[0]) && sel.anchorOffset === 0) {
-            this.doc[selectedBlock[0].previousElementSibling.id] = this.doc[selectedBlock[0].previousElementSibling.id] + this.doc[selectedBlock[0].id]
+            doc[selectedBlock[0].previousElementSibling.id] = doc[selectedBlock[0].previousElementSibling.id] + doc[selectedBlock[0].id]
           }
       }
     });
@@ -263,7 +347,7 @@ class Doc extends React.Component {
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
         this.assembleDocFromMetaData(docMetadata).then(() => {
           this.initializeEditor();
-          this.sync(this.getLines());
+          this.sync(this.getAllLines());
         })
       });
     } else {

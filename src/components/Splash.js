@@ -59,7 +59,7 @@ class Splash extends React.Component {
             handleSwitchUser={this.handleSwitchUser}
             tryItNow={false} />
         : <div className="m2-splash"><h1 className="title is-1">MarkTwo</h1>
-        <p>A seamless, secure, syncing markdown editor.</p>
+      <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
           <button className="button is-primary" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
           <button className="button" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>

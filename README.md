@@ -1,3 +1,3 @@
 # MarkTwo
 
-A seamless, secure, syncing markdown editor.
+A seamless, speedy, syncing markdown editor.
