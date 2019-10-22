@@ -309,7 +309,7 @@ class Doc extends React.Component {
       if(this.oldSelectedBlock && this.oldSelectedBlock[0] && selectedBlock && selectedBlock[0]) {
         let markdown = this.oldSelectedBlock[0].innerText.replace(/\u200B/g, '');
         let id = this.oldSelectedBlock.attr('id');
-        if(!id) {
+        if(!id || !this.oldSelectedBlock[0].isSameNode(document.getElementById(id))) {
           id = shortid.generate();
           this.oldSelectedBlock.attr('id', id);
         }
