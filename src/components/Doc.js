@@ -88,7 +88,8 @@ class Doc extends React.Component {
   getAllLines() {
     let lines = [];
     const usedIds = {};
-    $('#m2-doc > *').each((i, el) => {
+    const blocks = $('#m2-doc > *');
+    blocks.each((i, el) => {
       if(!el.id || el.id in usedIds) {
         el.id = shortid.generate();
         doc[el.id] = this.turndownService.turndown(el.outerHTML);
@@ -96,7 +97,8 @@ class Doc extends React.Component {
       usedIds[el.id] = true;
       lines.push(el.id);
     })
-    allLines = _.concat(_.slice(allLines, 0, startIndex), lines, _.slice(allLines, endIndex, allLines.length));
+    allLines = _.concat(_.slice(allLines, 0, startIndex), lines, _.slice(allLines, Math.min(endIndex, allLines.length), allLines.length));
+    endIndex = startIndex + blocks.length;
     this.props.setDocData(allLines, doc);
     return allLines;
   }
@@ -289,7 +291,7 @@ class Doc extends React.Component {
             }
           } else {
             // if the line is empty, start a new paragraph
-            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '');
+            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
             const id = shortid.generate();
             const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
             doc[id] = initialContent || '';
@@ -318,13 +320,13 @@ class Doc extends React.Component {
         // and render it upon exiting the block
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
           const nodes = markdown.split('\n\n').map((block, i) => {
-            let html = marked(block);
-            const renderedNode = $(html.replace(/\\/g, '') || '<p><br /></p>');
+            let html = marked(block).replace(/\\/g, '');
+            const renderedNode = $(html || '<p><br /></p>');
             if(i > 0) {
               id = shortid.generate();
             }
             renderedNode.attr('id', id);
-            doc[id] = block;
+            doc[id] = block.trim();
 
             return renderedNode[0].outerHTML;
           });
