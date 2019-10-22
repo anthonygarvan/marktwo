@@ -149,28 +149,30 @@ class Doc extends React.Component {
     const originalAnchorText = (sel.anchorNode && sel.anchorNode.data) ? sel.anchorNode.data.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') : 0;
     const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
     const anchorOffset = sel.anchorOffset;
-    let renderedMarkdown;
-    if(selectedBlock.attr('id')) {
-      renderedMarkdown = doc[selectedBlock.attr('id')] || '<br />';
-    } else {
-      renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
+    if(sel.anchorNode && selectedBlock && selectedBlock[0]) {
+      let renderedMarkdown;
+      if(selectedBlock.attr('id')) {
+        renderedMarkdown = doc[selectedBlock.attr('id')] || '<br />';
+      } else {
+        renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
+      }
+      selectedBlock.html(renderedMarkdown);
+      var range = document.createRange();
+      let offset;
+      if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
+        const stringMatch = selectedBlock[0].firstChild.data.match(new RegExp(originalAnchorText));
+        const stringIndex = stringMatch ? stringMatch.index : 0;
+        offset = stringIndex + anchorOffset;
+      } else {
+        offset = 0;
+      }
+      range.setStart(selectedBlock[0].firstChild, Math.min(offset, selectedBlock[0].firstChild.length));
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      selectedBlock.data('editMode', true);
+      selectedBlock.addClass('m2-edit-mode');
     }
-    selectedBlock.html(renderedMarkdown);
-    var range = document.createRange();
-    let offset;
-    if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
-      const stringMatch = selectedBlock[0].firstChild.data.match(new RegExp(originalAnchorText));
-      const stringIndex = stringMatch ? stringMatch.index : 0;
-      offset = stringIndex + anchorOffset;
-    } else {
-      offset = 0;
-    }
-    range.setStart(selectedBlock[0].firstChild, Math.min(offset, selectedBlock[0].firstChild.length));
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    selectedBlock.data('editMode', true);
-    selectedBlock.addClass('m2-edit-mode');
   }
 
   handleScroll() {
@@ -274,10 +276,9 @@ class Doc extends React.Component {
       selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
 
       if(e.key === 'Enter' && e.type === 'keydown') {
-        e.preventDefault();
-
         // if the current line is not empty, prevent default and continue the string in a newline
         if(selectedBlock && selectedBlock[0]) {
+          e.preventDefault();
           if(!((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
             let range;
             if(sel.getRangeAt && sel.rangeCount) {

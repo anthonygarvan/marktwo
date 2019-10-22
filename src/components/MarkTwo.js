@@ -44,6 +44,7 @@ class MarkTwo extends React.Component {
 
     if(!this.props.tryItNow) {
       this.syncUtils.initializeData('appData', defaultAppData).then(appData => {
+        this.sync(appData);
         this.setState({ ...appData });
       });
     } else {
@@ -68,6 +69,7 @@ class MarkTwo extends React.Component {
   startNewFile() {
    const appData = JSON.parse(localStorage.getItem('appData'));
    const id = shortid.generate();
+   appData.currentDoc = id;
    appData.files.unshift({ id, title: false, lastModified: new Date() });
    this.setState({ showFiles: false, initialData: false });
    this.sync(appData);
@@ -91,8 +93,9 @@ class MarkTwo extends React.Component {
       console.log(e.target.result);
       const appData = JSON.parse(localStorage.getItem('appData'));
       const id = shortid.generate();
+      appData.currentDoc = id;
       appData.files.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ currentDoc: id, initialData: e.target.result, showFiles: false });
+      this.setState({ initialData: e.target.result, showFiles: false });
       this.sync(appData);
     }
     reader.readAsText(e.target.files[0]);
