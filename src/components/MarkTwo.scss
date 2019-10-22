@@ -1,3 +1,5 @@
+@import './base.scss';
+
 .m2-files {
   section div {
     text-align: right;
@@ -24,6 +26,25 @@
     text-align: right;
     a {
       color: lightgrey;
+    }
+  }
+}
+
+.m2-search {
+  .m2-search-button {
+    width: auto;
+  }
+
+  .m2-search-results {
+    margin-top: 2rem;
+    min-height: 15rem;
+    .m2-search-result {
+      cursor: pointer;
+      padding: 1rem;
+      border-top: 1px solid darken(white, 3%); 
+      &:hover {
+        background-color: darken(white, 2%);
+      }
     }
   }
 }

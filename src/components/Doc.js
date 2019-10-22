@@ -21,10 +21,11 @@ class Doc extends React.Component {
     this.getAllLines = this.getAllLines.bind(this);
     this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.sync(this.getAllLines()) : this.getAllLines(), 3000);
     this.handleScroll = this.handleScroll.bind(this);
-    this.throttledScroll = _.throttle(this.handleScroll, 300);
+    this.throttledScroll = _.throttle(this.handleScroll, 500);
     this.assembleDocFromMetaData = this.assembleDocFromMetaData.bind(this);
     this.enterEditMode = this.enterEditMode.bind(this);
     this.initializeEditor = this.initializeEditor.bind(this);
+    this.initializeFromDocList = this.initializeFromDocList.bind(this);
 
     TurndownService.prototype.escape = text => text; // disable escaping characters
     this.turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
@@ -40,36 +41,41 @@ class Doc extends React.Component {
     this.state = { initialHtml: props.initialData ? marked(props.initialData) : '<p><br /></p>' };
   }
 
+  initializeFromDocList(docList, caretAt) {
+    const caretIndex = caretAt ? _.findIndex(docList, {id: caretAt}) : 0;
+    allLines = docList.map(d => d.id);
+    startIndex = Math.max(caretIndex - 100, 0);
+    endIndex = Math.min(caretIndex + 100, docList.length)
+    const visibleDocList = _.slice(docList, startIndex, endIndex);
+    document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => marked(entry.text || '\u200B')).join('\n')
+    Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
+      el.id = visibleDocList[i].id;
+    });
+    doc = {};
+    docList.forEach(entry => doc[entry.id] = entry.text);
+    this.props.setDocData(allLines, doc);
+    const caretAtEl = document.getElementById(caretAt)
+    if(caretAtEl) {
+      caretAtEl.scrollIntoView();
+      var range = document.createRange();
+      var sel = window.getSelection();
+      range.setStart(caretAtEl, 0);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      this.enterEditMode();
+      this.oldSelectedBlock = $(caretAtEl);
+    }
+  }
+
   assembleDocFromMetaData(docMetadata) {
     // assemble document
     return new Promise(resolve => {
       Promise.all(docMetadata.pageIds.map(pageId => this.syncUtils.findOrFetch(pageId)))
       .then(pages => {
         if(pages.length) {
-          const docList = _.flatten(pages)
-          allLines = docList.map(d => d.id);
-          const caretIndex = docMetadata.caretAt ? _.findIndex(docList, {id: docMetadata.caretAt}) : 0;
-          startIndex = Math.max(caretIndex - 100, 0);
-          endIndex = Math.min(caretIndex + 100, docList.length)
-          const visibleDocList = _.slice(docList, startIndex, endIndex);
-          document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => marked(entry.text || '\u200B')).join('\n')
-          Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
-            el.id = visibleDocList[i].id;
-          });
-          doc = {};
-          docList.forEach(entry => doc[entry.id] = entry.text);
-          const caretAtEl = document.getElementById(docMetadata.caretAt)
-          if(caretAtEl) {
-            caretAtEl.scrollIntoView();
-            var range = document.createRange();
-            var sel = window.getSelection();
-            range.setStart(caretAtEl, 0);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            this.enterEditMode();
-            this.oldSelectedBlock = $(caretAtEl);
-          }
+          const docList = _.flatten(pages);
+          this.initializeFromDocList(docList, docMetadata.caretAt);
           resolve();
         } else {
           document.querySelector('#m2-doc').innerHTML = '<p><br /></p>';
@@ -91,6 +97,7 @@ class Doc extends React.Component {
       lines.push(el.id);
     })
     allLines = _.concat(_.slice(allLines, 0, startIndex), lines, _.slice(allLines, endIndex, allLines.length));
+    this.props.setDocData(allLines, doc);
     return allLines;
   }
 
@@ -101,7 +108,7 @@ class Doc extends React.Component {
     // and stores as blocks of data keyed by the hash of the data.
     const pages = {};
     const pageIds = []
-    _.chunk(lines.map(id => ({ id, text: doc[id]})), 100).map(page => {
+    _.chunk(lines.map(id => ({ id, text: doc[id]})), 300).map(page => {
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
       pages[id] = page;
@@ -117,7 +124,7 @@ class Doc extends React.Component {
     // update page caches
     // if the page isn't cached, cache it
     _.difference(pageIds, docMetadata.pageIds).map(pageId => {
-      this.syncUtils.create(pageId, pages[pageId]);
+      !this.props.tryItNow && this.syncUtils.create(pageId, pages[pageId]);
     });
 
     // if the page has been removed, remove it
@@ -130,7 +137,7 @@ class Doc extends React.Component {
     docMetadata.pageIds = pageIds;
     docMetadata.lastModified = new Date().toISOString();
 
-    this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+    !this.props.tryItNow && this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
       if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
         this.assembleDocFromMetaData(validatedDocMetadata);
       }
@@ -176,7 +183,7 @@ class Doc extends React.Component {
       const oldEndIndex = endIndex;
       endIndex = Math.min(endIndex + 100, allLines.length);
       const newHtml = _.slice(allLines, oldEndIndex, endIndex).map(id => {
-        const newBlock = $(marked(doc[id]));
+        const newBlock = doc[id] ? $(marked(doc[id])) : $('<p><br /></p>');
         newBlock.attr('id', id);
         return newBlock[0].outerHTML
       }).join('\n');
@@ -187,7 +194,7 @@ class Doc extends React.Component {
       const oldStartIndex = startIndex;
       startIndex = Math.max(startIndex - 100, 0);
       const newHtml = _.slice(allLines, startIndex, oldStartIndex).map(id => {
-        const newBlock = $(marked(doc[id]));
+        const newBlock = doc[id] ? $(marked(doc[id])) : $('<p><br /></p>');
         newBlock.attr('id', id);
         return newBlock[0].outerHTML
       }).join('\n');
@@ -233,6 +240,7 @@ class Doc extends React.Component {
       endIndex = Math.min(250, allLines.length);
 
       const initialHtml = _.slice(allLines, startIndex, endIndex).map(id => marked(doc[id])).join('\n');
+      this.props.setDocData(allLines, doc);
       this.setState({ initialHtml });
     } else {
       this.setState({ initialHtml: '<p><br /></p>' });
@@ -243,14 +251,15 @@ class Doc extends React.Component {
 
     document.querySelector('#m2-doc').addEventListener('input', e => {
       if(e.inputType === 'deleteContentBackward') {
-        const sel = window.getSelection();
-        const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
-
         if(!document.querySelector('#m2-doc > *')) {
-          document.querySelector('#m2-doc').innerHTML = `<p id="${shortid.generate()}"><br /></p>`;
+          const id = shortid.generate();
+          document.querySelector('#m2-doc').innerHTML = `<p id="${id}"><br /></p>`;
+          this.initializeFromDocList([{ id, text: '' }], id);
+        } else {
+          const sel = window.getSelection();
+          const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
+          doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
         }
-
-        doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
       }
     });
 
@@ -268,28 +277,28 @@ class Doc extends React.Component {
         e.preventDefault();
 
         // if the current line is not empty, prevent default and continue the string in a newline
-        if(selectedBlock && selectedBlock[0]
-          && !((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
-
-        let range;
-        if(sel.getRangeAt && sel.rangeCount) {
-            range = sel.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(document.createTextNode('\n\u200B'));
-            sel.anchorNode.nextSibling && sel.collapse(sel.anchorNode.nextSibling, sel.anchorNode.nextSibling.length);
-        }
-        } else {
-          // if the line is empty, start a new paragraph
-          const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '');
-          const id = shortid.generate();
-          const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
-          doc[id] = initialContent || '';
-          const contentWithTextRemoved = doc[selectedBlock[0].id].replace(initialContent, '');
-          selectedBlock[0].innerText = contentWithTextRemoved;
-          newBlock.insertAfter(selectedBlock);
-          sel.collapse(newBlock[0], 0);
-        }
+        if(selectedBlock && selectedBlock[0]) {
+          if(!((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
+            let range;
+            if(sel.getRangeAt && sel.rangeCount) {
+                range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode('\n\u200B'));
+                sel.anchorNode.nextSibling && sel.collapse(sel.anchorNode.nextSibling, sel.anchorNode.nextSibling.length);
+            }
+          } else {
+            // if the line is empty, start a new paragraph
+            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '');
+            const id = shortid.generate();
+            const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
+            doc[id] = initialContent || '';
+            const contentWithTextRemoved = doc[selectedBlock[0].id].replace(initialContent, '');
+            selectedBlock[0].innerText = contentWithTextRemoved;
+            newBlock.insertAfter(selectedBlock);
+            sel.collapse(newBlock[0], 0);
+          }
       }
+    }
 
       if(selectedBlock && selectedBlock[0] && !selectedBlock.data('editMode')) {
         this.enterEditMode();
@@ -321,6 +330,8 @@ class Doc extends React.Component {
           this.oldSelectedBlock.replaceWith($(nodes.join('\n')));
 
         }
+
+        this.props.setDocData(allLines, doc);
       }
     });
   }
@@ -338,6 +349,13 @@ class Doc extends React.Component {
       });
     } else {
       this.initializeEditor();
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if(prevProps.goToBlock !== this.props.goToBlock) {
+        const docList = allLines.map(id => ({ id, text: doc[id] }));
+        this.initializeFromDocList(docList, this.props.goToBlock);
     }
   }
 

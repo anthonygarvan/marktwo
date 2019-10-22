@@ -4,6 +4,7 @@ import Shelf from './Shelf';
 import shortid from 'shortid';
 import Doc from './Doc';
 import './MarkTwo.scss';
+import marked from 'marked';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import syncUtils from './syncUtils';
 import { faEdit, faCheck, faTimes, faTrash, faTrashRestore } from '@fortawesome/free-solid-svg-icons';
@@ -16,11 +17,19 @@ class MarkTwo extends React.Component {
     this.startNewFile = this.startNewFile.bind(this);
     this.handleImport = this.handleImport.bind(this);
     this.toggleTrash = this.toggleTrash.bind(this);
+    this.handleSearch = this.handleSearch.bind(this);
     this.sync = this.sync.bind(this);
+
+    marked.setOptions({
+      breaks: true,
+      smartLists: true,
+    });
 
     this.state = {
       newTitle: false,
       gapi: this.props.gapi,
+      searchString: '',
+      searchResults: [],
     };
 
   }
@@ -83,7 +92,7 @@ class MarkTwo extends React.Component {
       const appData = JSON.parse(localStorage.getItem('appData'));
       const id = shortid.generate();
       appData.files.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ initialData: e.target.result, showFiles: false });
+      this.setState({ currentDoc: id, initialData: e.target.result, showFiles: false });
       this.sync(appData);
     }
     reader.readAsText(e.target.files[0]);
@@ -100,6 +109,25 @@ class MarkTwo extends React.Component {
     this.sync(appData);
   }
 
+  handleSearch(e) {
+    e.preventDefault();
+    console.log(this.state.searchString);
+    const exactMatchRegex = /^"(.+)"$/
+    let searchRegex;
+    if(exactMatchRegex.test(this.state.searchString)) {
+      searchRegex = new RegExp(this.state.searchString
+          .match(exactMatchRegex)[1].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'ig');
+    } else {
+      const keywords = this.state.searchString.split(' ')
+              .map(t => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')) // comment out regex expressions
+      searchRegex = new RegExp(keywords.join('|'), 'ig');
+    }
+    const whitespaceRegex = new RegExp('^[\\s\\n]*$')
+    const searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, text: this.state.doc[id] }))
+
+    this.setState({ searchResults });
+  }
+
   render() {
     return <div>
     {this.state.currentDoc && <Doc key={this.state.currentDoc}
@@ -108,12 +136,45 @@ class MarkTwo extends React.Component {
       handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       tryItNow={this.props.tryItNow}
-      initialData={this.state.initialData} /> }
+      initialData={this.state.initialData}
+      goToBlock={this.state.goToBlock}
+      setDocData={(allLines, doc) => this.setState({ allLines, doc })} /> }
     <Shelf handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
       tryItNow={this.props.tryItNow}
-      showFiles={(val) => this.setState({ showFiles: val, viewTrash: false })} />
+      showFiles={(val) => this.setState({ showFiles: val, viewTrash: false })}
+      showSearch={() => this.setState({ showSearch: true })}/>
+
+    {this.state.showSearch && <div className="m2-search modal is-active">
+    <div className="modal-background" onClick={() => this.setState({showSearch: false})}></div>
+      <div className="modal-card">
+      <header className="modal-card-head">
+        <p className="modal-card-title">Search</p>
+        <button className="delete" aria-label="close" onClick={() => this.setState({showSearch: false})}></button>
+      </header>
+      <section className="modal-card-body">
+        <form onSubmit={this.handleSearch}>
+        <div className="field has-addons">
+          <div className="control is-expanded">
+            <input className="input is-fullwidth" type="search" placeholder="Search this doc"
+            value={this.state.searchString} onChange={(e) => this.setState({ searchString: e.target.value })} />
+          </div>
+          <div className="control m2-search-button">
+            <button type="submit" className="button is-primary">
+              Search
+            </button>
+          </div>
+        </div>
+      </form>
+        <div className="m2-search-results">
+        {this.state.searchResults.length ? this.state.searchResults.map(r =>
+          <div key={r.id} className="m2-search-result" onClick={() => this.setState({ goToBlock: r.id, showSearch: false, showShelf: false })}
+            dangerouslySetInnerHTML={ { __html: marked(r.text) } }>
+          </div>) : <p><em>Didn't find anything...</em></p>}</div>
+      </section>
+    </div></div>}
+
 
     <div className={`m2-files modal ${this.state.showFiles && 'is-active'}`}>
     <div className="modal-background" onClick={() => this.setState({showFiles: false})}></div>
