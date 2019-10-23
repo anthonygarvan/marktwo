@@ -7,7 +7,6 @@ class Shelf extends React.Component {
   constructor(props) {
     super(props);
     this.getUserProfile = this.getUserProfile.bind(this);
-    this.state = { showShelf: false }
   }
 
   componentDidMount() {
@@ -24,7 +23,7 @@ class Shelf extends React.Component {
   }
 
   render() {
-    return this.state.showShelf ? <div className="m2-shelf">
+    return this.props.showShelf ? <div className="m2-shelf">
     <div className="m2-profile">
       <div className="m2-profile-photo"><img src={this.state.photoUrl} alt="profile" /></div>
       <div className="m2-username">{this.state.userName}</div>
@@ -39,9 +38,9 @@ class Shelf extends React.Component {
       <div><a onClick={this.props.showSearch}>Search</a></div>
       <div><a onClick={this.props.showSettings}>Settings</a></div>
     </div>
-      <a className="m2-close" onClick={() => this.setState({ showShelf: false })}><FontAwesomeIcon icon={faTimes} /></a>
+      <a className="m2-close" onClick={() => this.props.setShelf(false)}><FontAwesomeIcon icon={faTimes} /></a>
     </div>
-    : <div className="m2-chevron"><a onClick={() => this.setState({ showShelf: true })}><FontAwesomeIcon icon={faChevronRight} /></a></div>
+    : <div className="m2-chevron"><a onClick={() => this.props.setShelf(true)}><FontAwesomeIcon icon={faChevronRight} /></a></div>
   }
 }
 

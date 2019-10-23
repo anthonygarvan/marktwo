@@ -30,6 +30,7 @@ class MarkTwo extends React.Component {
       gapi: this.props.gapi,
       searchString: '',
       searchResults: [],
+      showShelf: false,
     };
 
   }
@@ -62,7 +63,7 @@ class MarkTwo extends React.Component {
   openFile(id) {
     const appData = JSON.parse(localStorage.getItem('appData'));
     appData.currentDoc = id;
-    this.setState({ showFiles: false });
+    this.setState({ showFiles: false, showShelf: false });
     this.sync(appData);
   }
 
@@ -71,7 +72,7 @@ class MarkTwo extends React.Component {
    const id = shortid.generate();
    appData.currentDoc = id;
    appData.files.unshift({ id, title: false, lastModified: new Date() });
-   this.setState({ showFiles: false, initialData: false });
+   this.setState({ showFiles: false, initialData: false, showShelf: false });
    this.sync(appData);
   }
 
@@ -87,15 +88,13 @@ class MarkTwo extends React.Component {
   }
 
   handleImport(e) {
-    console.log(e.target.files);
     const reader = new FileReader();
     reader.onload = (e) => {
-      console.log(e.target.result);
       const appData = JSON.parse(localStorage.getItem('appData'));
       const id = shortid.generate();
       appData.currentDoc = id;
       appData.files.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ initialData: e.target.result, showFiles: false });
+      this.setState({ initialData: e.target.result, showFiles: false, showShelf: false });
       this.sync(appData);
     }
     reader.readAsText(e.target.files[0]);
@@ -146,15 +145,17 @@ class MarkTwo extends React.Component {
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
       tryItNow={this.props.tryItNow}
+      showShelf={this.state.showShelf}
+      setShelf={(val) => this.setState({ showShelf: val })}
       showFiles={(val) => this.setState({ showFiles: val, viewTrash: false })}
       showSearch={() => this.setState({ showSearch: true })}/>
 
     {this.state.showSearch && <div className="m2-search modal is-active">
-    <div className="modal-background" onClick={() => this.setState({showSearch: false})}></div>
+    <div className="modal-background" onClick={() => this.setState({ showSearch: false, searchString: '', searchResults: [] })}></div>
       <div className="modal-card">
       <header className="modal-card-head">
         <p className="modal-card-title">Search</p>
-        <button className="delete" aria-label="close" onClick={() => this.setState({showSearch: false})}></button>
+        <button className="delete" aria-label="close" onClick={() => this.setState({showSearch: false, searchString: '', searchResults: [] })}></button>
       </header>
       <section className="modal-card-body">
         <form onSubmit={this.handleSearch}>
@@ -172,7 +173,7 @@ class MarkTwo extends React.Component {
       </form>
         <div className="m2-search-results">
         {this.state.searchResults.length ? this.state.searchResults.map(r =>
-          <div key={r.id} className="m2-search-result" onClick={() => this.setState({ goToBlock: r.id, showSearch: false, showShelf: false })}
+          <div key={r.id} className="m2-search-result" onClick={() => this.setState({ goToBlock: r.id, showSearch: false, searchString: '', searchResults: [], showShelf: false })}
             dangerouslySetInnerHTML={ { __html: marked(r.text) } }>
           </div>) : <p><em>Didn't find anything...</em></p>}</div>
       </section>
