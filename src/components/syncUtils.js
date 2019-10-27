@@ -118,17 +118,28 @@ function initialize(gapi) {
   function createFiles(files) {
     return async.series(_.chunk(files, 6).map(fileChunk => {
       return function(callback) {
+        let done = false;
         fileChunk.map(file => create(file.name, file.data, () => {
-          setTimeout(callback, 3*1000); // wait 5 seconds to avoid 403s
+          setTimeout(() => {
+            if(!done) {
+              callback()
+              done = true;
+            }}, 3*1000); // wait 5 seconds to avoid 403s
       }))}
     }))
   }
 
   function deleteFiles(names) {
-    return async.series(_.chunk(names, 6).map(nameChunk => {
+    return async.series(_.chunk(names, 3).map(nameChunk => {
       return function(callback) {
-        nameChunk.map(name => deleteFile(name));
-        setTimeout(callback, 3*1000); // wait 3 seconds to avoid API limits
+        let done = false;
+        nameChunk.map(name => deleteFile(name).then(() => {
+          setTimeout(() => {
+            if(!done) {
+              callback()
+              done = true;
+            }}, 3*1000)
+        }));
       }
     }))
   }

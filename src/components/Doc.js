@@ -125,7 +125,7 @@ class Doc extends React.Component {
 
     // update page caches
     // if the page isn't cached, cache it
-    !this.props.tryItNow && this.syncUtils.createFiles(_.difference(pageIds, docMetadata.pageIds))
+    !this.props.tryItNow && this.syncUtils.createFiles(_.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]})))
 
     // if the page has been removed, remove it
     const removeThese = _.difference(docMetadata.pageIds, pageIds)
