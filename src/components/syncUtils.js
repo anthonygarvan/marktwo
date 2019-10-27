@@ -1,3 +1,6 @@
+import async from 'async';
+import _ from 'lodash';
+
 function initialize(gapi) {
   function create(name, data, callback) {
     const boundary = '-------314159265358979323846';
@@ -98,6 +101,38 @@ function initialize(gapi) {
     })
   }
 
+  function deleteFile(name) {
+    localStorage.removeItem(name);
+    return new Promise(resolve => {
+    gapi.client.drive.files.list({q: `name='${name}'`, spaces: 'appDataFolder' })
+      .then(response => {
+          console.log(response);
+          if(response.result.files.length) {
+            gapi.client.drive.files.delete({ fileId: response.result.files[0].id }).then(resolve)
+          } else {
+            resolve(false);
+          }})
+    })
+  }
+
+  function createFiles(files) {
+    return async.series(_.chunk(files, 6).map(fileChunk => {
+      return function(callback) {
+        fileChunk.map(file => create(file.name, file.data, () => {
+          setTimeout(callback, 3*1000); // wait 5 seconds to avoid 403s
+      }))}
+    }))
+  }
+
+  function deleteFiles(names) {
+    return async.series(_.chunk(names, 6).map(nameChunk => {
+      return function(callback) {
+        nameChunk.map(name => deleteFile(name));
+        setTimeout(callback, 3*1000); // wait 3 seconds to avoid API limits
+      }
+    }))
+  }
+
   function initializeData(name, defaultData) {
     return new Promise(resolve => {
       find(name, remoteData => {
@@ -160,7 +195,7 @@ function initialize(gapi) {
   }
 
 
-  return { create, update, find, findOrFetch, syncByRevision, initializeData }
+  return { create, createFiles, update, find, deleteFile, deleteFiles, findOrFetch, syncByRevision, initializeData }
 }
 
 export default initialize;

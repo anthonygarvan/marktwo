@@ -8,6 +8,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.11.2",
     "@fortawesome/free-solid-svg-icons": "^5.11.2",
     "@fortawesome/react-fontawesome": "^0.1.5",
+    "async": "^3.1.0",
     "bulma": "^0.7.5",
     "google-client-api": "^1.0.4",
     "jquery": "^3.4.1",

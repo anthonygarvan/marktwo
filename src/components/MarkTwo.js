@@ -7,7 +7,7 @@ import './MarkTwo.scss';
 import marked from 'marked';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import syncUtils from './syncUtils';
-import { faEdit, faCheck, faTimes, faTrash, faTrashRestore } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
 class MarkTwo extends React.Component {
   constructor(props) {
@@ -16,8 +16,9 @@ class MarkTwo extends React.Component {
     this.openFile = this.openFile.bind(this);
     this.startNewFile = this.startNewFile.bind(this);
     this.handleImport = this.handleImport.bind(this);
-    this.toggleTrash = this.toggleTrash.bind(this);
+    this.toggleArchive = this.toggleArchive.bind(this);
     this.handleSearch = this.handleSearch.bind(this);
+    this.takeFileAction = this.takeFileAction.bind(this);
     this.sync = this.sync.bind(this);
 
     marked.setOptions({
@@ -26,7 +27,6 @@ class MarkTwo extends React.Component {
     });
 
     this.state = {
-      newTitle: false,
       gapi: this.props.gapi,
       searchString: '',
       searchResults: [],
@@ -80,11 +80,30 @@ class MarkTwo extends React.Component {
     const appData = JSON.parse(localStorage.getItem('appData'));
     appData.file = appData.files.map(f => {
       if(f.id === id) {
-        f.title = this.state.newTitle;
+        f.title = title;
       }
     });
-    this.setState({ newTitle: false, editTitle: false });
     this.sync(appData);
+  }
+
+  deleteFile(fileName) {
+    const appData = JSON.parse(localStorage.getItem('appData'));
+    appData.files = appData.files.filter(file => file.id !== fileName);
+    if(this.state.currentDoc === fileName) {
+      if(appData.files.length) {
+        appData.currentDoc = appData.files[0].id;
+      } else {
+        const id = shortid.generate();
+        appData.currentDoc = id;
+        appData.files.unshift({ id, title: false, lastModified: new Date() });
+      }
+    }
+    this.sync(appData);
+    this.syncUtils.find(fileName, docMetadata => {
+      this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
+        this.syncUtils.deleteFile(fileName)
+      })
+    })
   }
 
   handleImport(e) {
@@ -100,11 +119,11 @@ class MarkTwo extends React.Component {
     reader.readAsText(e.target.files[0]);
   }
 
-  toggleTrash(id) {
+  toggleArchive(id) {
     const appData = JSON.parse(localStorage.getItem('appData'));
     appData.file = appData.files.map(f => {
       if(f.id === id) {
-        f.trashed = !f.trashed;
+        f.archived = !f.archived;
       }
     });
     this.setState({ newTitle: false, editTitle: false });
@@ -130,6 +149,26 @@ class MarkTwo extends React.Component {
     this.setState({ searchResults });
   }
 
+  takeFileAction(e, file) {
+    switch(e.target.value) {
+      case 'rename':
+          var newTitle = prompt('Please select a new file name:')
+          if(newTitle) {
+            this.setTitle(file.id, newTitle)
+          }
+          break;
+      case 'toggleArchive':
+        this.toggleArchive(file.id);
+        break;
+      case 'delete':
+        const confirmed = window.confirm(`Permanently delete ${file.title || 'Untitled'}?`)
+        if(confirmed) {
+          this.deleteFile(file.id);
+        }
+        break;
+    }
+  }
+
   render() {
     return <div>
     {this.state.currentDoc && <Doc key={this.state.currentDoc}
@@ -147,7 +186,7 @@ class MarkTwo extends React.Component {
       tryItNow={this.props.tryItNow}
       showShelf={this.state.showShelf}
       setShelf={(val) => this.setState({ showShelf: val })}
-      showFiles={(val) => this.setState({ showFiles: val, viewTrash: false })}
+      showFiles={(val) => this.setState({ showFiles: val, viewArchive: false })}
       showSearch={() => this.setState({ showSearch: true })}/>
 
     {this.state.showSearch && <div className="m2-search modal is-active">
@@ -197,28 +236,31 @@ class MarkTwo extends React.Component {
         <table className="table is-striped is-fullwidth">
           <thead>
             <tr>
-              <th><abbr title="File name">Name</abbr></th>
-              <th><abbr title="Last modified">Last modified</abbr></th>
               <th></th>
+              <th><abbr title="Filename">Filename</abbr></th>
+              <th><abbr title="Last modified">Last modified</abbr></th>
             </tr>
           </thead>
           <tbody>
-            {this.state.files && this.state.files.filter(f => (!!f.trashed == this.state.viewTrash)).map(f =>
+            {this.state.files && this.state.files.filter(f => (!!f.archived == this.state.viewArchive)).map(f =>
               <tr key={f.id}>
-                <td>{this.state.editTitle !== f.id ? <span><a onClick={() => this.openFile(f.id)}>{f.title ? <abbr title={f.title}>{f.title.substring(0,20)}</abbr>: 'Untitled'}</a>
-                <a className="is-pulled-right" onClick={() => this.setState({ editTitle: f.id, newTitle: f.title })}> <FontAwesomeIcon icon={faEdit} /></a></span>
-                : <span><input value={this.state.newTitle || ''} placeholder="Untitled" onChange={(e) => this.setState({ newTitle: e.target.value })}/>
-                <span className="is-pulled-right"><a onClick={() => this.setTitle(f.id)}><FontAwesomeIcon icon={faCheck} /></a> &nbsp;&nbsp;
-                <a onClick={() => this.setState({ editTitle: false, newTitle: false })}><FontAwesomeIcon icon={faTimes} /></a></span></span>}
-                </td>
+                <td><div className="select">
+                      <select value={''} onChange={(e) => this.takeFileAction(e, f)}>
+                        <option value=""></option>
+                        <option value="rename">Rename</option>
+                        <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to files'}</option>
+                        <option value="delete">Delete</option>
+                      </select>
+                    </div></td>
+                <td>
+    <a onClick={() => this.openFile(f.id)}>{f.title ? <abbr title={f.title}>{f.title.substring(0,20)}</abbr>: 'Untitled'}</a></td>
                 <td>{moment(f.lastModified).fromNow()}</td>
-                <td><a onClick={() => this.toggleTrash(f.id)}><FontAwesomeIcon icon={this.state.viewTrash ? faTrashRestore : faTrash} /></a></td>
               </tr>
             )}
           </tbody>
         </table>
         <div className="m2-footer">
-          <a onClick={() => this.setState({ viewTrash: !this.state.viewTrash })}>{this.state.viewTrash ? 'View files' : 'View trash'}</a>
+          <a onClick={() => this.setState({ viewArchive: !this.state.viewArchive })}>{this.state.viewArchive ? 'View files' : 'View archive'}</a>
         </div>
       </section>
     </div>
