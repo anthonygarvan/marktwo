@@ -176,6 +176,7 @@ class Doc extends React.Component {
         el.style = 'border-left: none;';
       })
       selectedBlock.addClass('m2-edit-mode');
+      selectedBlock[0].style = '';
 
     }
   }
