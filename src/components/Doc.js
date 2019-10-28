@@ -71,7 +71,7 @@ class Doc extends React.Component {
   assembleDocFromMetaData(docMetadata) {
     // assemble document
     return new Promise(resolve => {
-      Promise.all(docMetadata.pageIds.map(pageId => this.syncUtils.findOrFetch(pageId)))
+      this.syncUtils.findOrFetchFiles(docMetadata.pageIds)
       .then(pages => {
         if(pages.length) {
           const docList = _.flatten(pages);

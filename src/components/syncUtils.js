@@ -101,6 +101,16 @@ function initialize(gapi) {
     })
   }
 
+  function findOrFetchFiles(names) {
+    return new Promise(resolve => {
+      async.series(_.chunk(names, 6).map(nameChunk => {
+      return function(callback) {
+        Promise.all(nameChunk.map(name => findOrFetch(name))).then(results => callback(null, results))
+      }})).then(chunkedResults => {
+        resolve(_.flatten(chunkedResults))})
+    })
+  }
+
   function deleteFile(name) {
     localStorage.removeItem(name);
     return new Promise(resolve => {
@@ -113,20 +123,6 @@ function initialize(gapi) {
             resolve(false);
           }})
     })
-  }
-
-  function createFiles(files) {
-    return async.series(_.chunk(files, 6).map(fileChunk => {
-      return function(callback) {
-        let done = false;
-        fileChunk.map(file => create(file.name, file.data, () => {
-          setTimeout(() => {
-            if(!done) {
-              callback()
-              done = true;
-            }}, 3*1000); // wait 5 seconds to avoid 403s
-      }))}
-    }))
   }
 
   function deleteFiles(names) {
@@ -143,6 +139,22 @@ function initialize(gapi) {
       }
     }))
   }
+
+
+  function createFiles(files) {
+    return async.series(_.chunk(files, 6).map(fileChunk => {
+      return function(callback) {
+        let done = false;
+        fileChunk.map(file => create(file.name, file.data, () => {
+          setTimeout(() => {
+            if(!done) {
+              callback()
+              done = true;
+            }}, 3*1000); // wait 5 seconds to avoid 403s
+      }))}
+    }))
+  }
+
 
   function initializeData(name, defaultData) {
     return new Promise(resolve => {
@@ -206,7 +218,16 @@ function initialize(gapi) {
   }
 
 
-  return { create, createFiles, update, find, deleteFile, deleteFiles, findOrFetch, syncByRevision, initializeData }
+  return { create,
+    createFiles,
+    update,
+    find,
+    deleteFile,
+    deleteFiles,
+    findOrFetch,
+    findOrFetchFiles,
+    syncByRevision,
+    initializeData }
 }
 
 export default initialize;
