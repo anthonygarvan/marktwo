@@ -172,7 +172,11 @@ class Doc extends React.Component {
       sel.removeAllRanges();
       sel.addRange(range);
       selectedBlock.data('editMode', true);
+      document.querySelectorAll('.m2-edit-mode').forEach(el => {
+        $(el).removeClass('m2-edit-mode');
+      })
       selectedBlock.addClass('m2-edit-mode');
+
     }
   }
 
