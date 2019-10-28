@@ -8,6 +8,7 @@ import marked from 'marked';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import syncUtils from './syncUtils';
 import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import download from 'in-browser-download';
 
 class MarkTwo extends React.Component {
   constructor(props) {
@@ -157,6 +158,11 @@ class MarkTwo extends React.Component {
             this.setTitle(file.id, newTitle)
           }
           break;
+      case 'export':
+        const text = this.state.allLines.map(id => this.state.doc[id]).join('\n\n');
+        const title = this.state.files.filter(f => f.id === this.state.currentDoc).title || 'Untitled';
+        download(text, `${title}.txt`);
+        break;
       case 'toggleArchive':
         this.toggleArchive(file.id);
         break;
@@ -248,11 +254,12 @@ class MarkTwo extends React.Component {
                       <select value={''} onChange={(e) => this.takeFileAction(e, f)}>
                         <option value=""></option>
                         <option value="rename">Rename</option>
+                        {f.id === this.state.currentDoc && <option value="export">Export</option>}
                         <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to files'}</option>
                         <option value="delete">Delete</option>
                       </select>
                     </div></td>
-                <td>
+                  <td className={f.id === this.state.currentDoc && 'm2-is-current-doc'}>
     <a onClick={() => this.openFile(f.id)}>{f.title ? <abbr title={f.title}>{f.title.substring(0,20)}</abbr>: 'Untitled'}</a></td>
                 <td>{moment(f.lastModified).fromNow()}</td>
               </tr>
