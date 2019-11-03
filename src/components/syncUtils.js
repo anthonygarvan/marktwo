@@ -126,7 +126,7 @@ function initialize(gapi) {
   }
 
   function deleteFiles(names) {
-    return async.series(_.chunk(names, 3).map(nameChunk => {
+    return async.series(_.chunk(names, 2).map(nameChunk => {
       return function(callback) {
         let done = false;
         nameChunk.map(name => deleteFile(name).then(() => {

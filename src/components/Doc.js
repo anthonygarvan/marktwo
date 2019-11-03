@@ -109,16 +109,52 @@ class Doc extends React.Component {
     // creates the authoritative definition of the document, a list of ids with text,
     // and stores as blocks of data keyed by the hash of the data.
     const pages = {};
-    const pageIds = []
-    _.chunk(lines.map(id => ({ id, text: doc[id]})), 300).map(page => {
+    let pageIds = [];
+
+    const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
+
+    let startIndex = 0;
+    let i = 0;
+    for(i = 0; i < docMetadata.pageIds.length; i++) {
+      const page = _.slice(lines, startIndex, startIndex + docMetadata.pageLengths[i]).map(id => ({id, text: doc[id]}));
+      const hash = md5(stringify(page));
+      const id = `${this.props.currentDoc}.${hash}`;
+      if(id === docMetadata.pageIds[i]) {
+        startIndex += docMetadata.pageLengths[i];
+        pages[id] = page;
+        pageIds.push(id);
+      } else {
+        break;
+      }
+    }
+
+    let endIndex = lines.length;
+    const endPageIds = [];
+    for(let j = docMetadata.pageIds.length - 1; j > i; j--) {
+      const page = _.slice(lines, endIndex - docMetadata.pageLengths[j], endIndex).map(id => ({id, text: doc[id]}));
+      const hash = md5(stringify(page));
+      const id = `${this.props.currentDoc}.${hash}`;
+      if(id === docMetadata.pageIds[j]) {
+        endIndex -= docMetadata.pageLengths[j];
+        pages[id] = page;
+        endPageIds.push(id);
+      } else {
+        break;
+      }
+    }
+
+    let newLines = _.slice(lines, startIndex, endIndex).map(id => ({ id, text: doc[id]}));
+    let chunkSize = newLines.length / Math.ceil(newLines.length / 300);
+
+    _.chunk(newLines, chunkSize).map(page => {
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
       pages[id] = page;
       pageIds.push(id);
     })
 
+    pageIds = _.concat(pageIds, endPageIds);
 
-    const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
     let caretAt = $(sel.anchorNode).closest('#m2-doc > *').attr('id') || docMetadata.caretAt;
     // cache all pageIds
     pageIds.map(pageId => localStorage.setItem(pageId, JSON.stringify(pages[pageId])))
@@ -136,6 +172,7 @@ class Doc extends React.Component {
 
     docMetadata.caretAt = caretAt;
     docMetadata.pageIds = pageIds;
+    docMetadata.pageLengths = pageIds.map(pageId => pages[pageId].length);
     docMetadata.lastModified = new Date().toISOString();
 
     !this.props.tryItNow && this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
