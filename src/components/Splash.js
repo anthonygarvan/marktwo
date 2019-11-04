@@ -64,7 +64,40 @@ class Splash extends React.Component {
         <div className="m2-cta">
           <button className="button is-primary is-outlined" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
           <button className="button is-primary is-outlined" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
-        </div></div>
+        </div>
+
+        <div className="m2-tiles">
+        <div className="columns">
+            <div className="column">
+                <h4 className="title is-4">Seamless</h4>
+                <p>Read and edit markdown from a single view.</p>
+            </div>
+            <div className="column">
+              <h4 className="title is-4">Speedy</h4>
+              <p>Big doc? No problem.</p>
+            </div>
+            <div className="column">
+              <h4 className="title is-4">Syncing</h4>
+              <p>Works across devices, always synced.</p>
+            </div>
+        </div>
+
+        <div className="columns">
+            <div className="column">
+                <h4 className="title is-4">Private</h4>
+                <p>Even we can't see your documents.</p>
+            </div>
+            <div className="column">
+              <h4 className="title is-4">Searchable</h4>
+              <p>Fast, clear search results.</p>
+            </div>
+            <div className="column">
+              <h4 className="title is-4">Free</h4>
+              <p>Free and open source.</p>
+            </div>
+        </div>
+      </div>
+      </div>
   }
 }
 

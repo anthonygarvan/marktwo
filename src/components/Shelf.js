@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import './Shelf.scss';
 
 class Shelf extends React.Component {
@@ -40,7 +40,7 @@ class Shelf extends React.Component {
     </div>
       <a className="m2-close" onClick={() => this.props.setShelf(false)}><FontAwesomeIcon icon={faTimes} /></a>
     </div>
-    : <div className="m2-chevron"><a onClick={() => this.props.setShelf(true)}><FontAwesomeIcon icon={faChevronRight} /></a></div>
+    : <div className="m2-menu"><a onClick={() => this.props.setShelf(true)}><FontAwesomeIcon icon={faEllipsisV} /></a></div>
   }
 }
 
