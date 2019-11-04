@@ -58,11 +58,12 @@ class Splash extends React.Component {
             handleLogout={this.handleLogout}
             handleSwitchUser={this.handleSwitchUser}
             tryItNow={false} />
-        : <div className="m2-splash"><h1 className="title is-1">MarkTwo</h1>
+        : <div className="m2-splash">
+      <h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
-          <button className="button is-primary" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
-          <button className="button" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
+          <button className="button is-primary is-outlined" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
+          <button className="button is-primary is-outlined" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
         </div></div>
   }
 }

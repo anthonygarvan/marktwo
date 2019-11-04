@@ -4,6 +4,12 @@
   max-width: 800px;
   margin: 20vh auto;
   padding: 1.5rem;
+  text-align: center;
+
+  .title img {
+    width: 4rem;
+    padding: 0 1rem 0 1rem;
+  }
 
   .m2-cta {
     margin-top: 2rem;
@@ -12,7 +18,8 @@
       margin-top: 1rem;
       @include tablet {
         width: 15rem;
-        margin-right: 2rem;
+        margin-right: 1rem;
+        margin-left: 1rem;
     }}
   }
 }
