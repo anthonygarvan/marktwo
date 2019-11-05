@@ -119,13 +119,19 @@ class Doc extends React.Component {
       const page = _.slice(lines, startIndex, startIndex + docMetadata.pageLengths[i]).map(id => ({id, text: doc[id]}));
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
-      if(id === docMetadata.pageIds[i] && page.length > 150) {
+      if(id === docMetadata.pageIds[i]) {
         startIndex += docMetadata.pageLengths[i];
         pages[id] = page;
         pageIds.push(id);
       } else {
         break;
       }
+    }
+
+    if(docMetadata.pageLengths[i] < 250) {
+      startIndex -= docMetadata.pageLengths[i];
+      const id = pageIds.pop();
+      delete pages[id];
     }
 
     let endIndex = lines.length;
