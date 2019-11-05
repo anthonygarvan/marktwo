@@ -129,7 +129,7 @@ class Doc extends React.Component {
     }
 
     if(docMetadata.pageLengths[i] < 250) {
-      startIndex -= docMetadata.pageLengths[i];
+      startIndex -= (docMetadata.pageLengths[i] - 1);
       const id = pageIds.pop();
       delete pages[id];
     }
@@ -389,7 +389,7 @@ class Doc extends React.Component {
   componentDidMount() {
     if(!this.props.tryItNow) {
       this.syncUtils = syncUtils(this.props.gapi);
-      let docMetadataDefault = { pageIds: [], revision: 0 };
+      let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
         this.assembleDocFromMetaData(docMetadata).then(() => {
