@@ -90,7 +90,7 @@ class Doc extends React.Component {
     const usedIds = {};
     const blocks = $('#m2-doc > *');
     blocks.each((i, el) => {
-      if(!el.id || el.id in usedIds) {
+      if(!el.id || el.id in usedIds || !(el.id in doc)) {
         el.id = shortid.generate();
         doc[el.id] = this.turndownService.turndown(el.outerHTML);
       }
@@ -119,19 +119,13 @@ class Doc extends React.Component {
       const page = _.slice(lines, startIndex, startIndex + docMetadata.pageLengths[i]).map(id => ({id, text: doc[id]}));
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
-      if(id === docMetadata.pageIds[i]) {
+      if(id === docMetadata.pageIds[i] && docMetadata.pageLengths[i] < 250) {
         startIndex += docMetadata.pageLengths[i];
         pages[id] = page;
         pageIds.push(id);
       } else {
         break;
       }
-    }
-
-    if(docMetadata.pageLengths[i] < 250) {
-      startIndex -= (docMetadata.pageLengths[i] - 1);
-      const id = pageIds.pop();
-      delete pages[id];
     }
 
     let endIndex = lines.length;
@@ -299,6 +293,8 @@ class Doc extends React.Component {
     $(window).on('scroll', (e) => {
       this.throttledScroll();
     })
+
+    document.querySelector('#m2-doc').addEventListener('paste', () => setTimeout(this.getAllLines, 50))
 
     document.querySelector('#m2-doc').addEventListener('input', e => {
       if(e.inputType === 'deleteContentBackward') {
