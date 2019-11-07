@@ -9,6 +9,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import syncUtils from './syncUtils';
 import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import download from 'in-browser-download';
+import raw from 'raw.macro';
+const tryItNowText  = raw('./tryItNow.md');
 
 class MarkTwo extends React.Component {
   constructor(props) {
@@ -183,7 +185,7 @@ class MarkTwo extends React.Component {
       handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       tryItNow={this.props.tryItNow}
-      initialData={this.state.initialData}
+      initialData={!this.props.tryItNow ? this.state.initialData : tryItNowText}
       goToBlock={this.state.goToBlock}
       setDocData={(allLines, doc) => this.setState({ allLines, doc })} /> }
     <Shelf handleLogout={this.props.handleLogout}

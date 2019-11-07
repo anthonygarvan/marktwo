@@ -22,7 +22,7 @@ class Doc extends React.Component {
     this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.sync(this.getAllLines()) : this.getAllLines(), 3000);
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
-    this.assembleDocFromMetaData = this.assembleDocFromMetaData.bind(this);
+    this.getDocList = this.getDocList.bind(this);
     this.enterEditMode = this.enterEditMode.bind(this);
     this.initializeEditor = this.initializeEditor.bind(this);
     this.initializeFromDocList = this.initializeFromDocList.bind(this);
@@ -31,6 +31,7 @@ class Doc extends React.Component {
     this.turndownService = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
     this.turndownService.use(gfm);
     marked.setOptions({
+      gfm: true,
       breaks: true,
       smartLists: true,
     })
@@ -38,7 +39,7 @@ class Doc extends React.Component {
     doc = {};
     allLines = [];
 
-    this.state = { initialHtml: props.initialData ? marked(props.initialData) : '<p><br /></p>' };
+    this.state = {};
   }
 
   initializeFromDocList(docList, caretAt) {
@@ -54,7 +55,7 @@ class Doc extends React.Component {
     doc = {};
     docList.forEach(entry => doc[entry.id] = entry.text);
     this.props.setDocData(allLines, doc);
-    const caretAtEl = document.getElementById(caretAt)
+    const caretAtEl = document.getElementById(caretAt);
     if(caretAtEl) {
       caretAtEl.scrollIntoView();
       var range = document.createRange();
@@ -68,21 +69,35 @@ class Doc extends React.Component {
     }
   }
 
-  assembleDocFromMetaData(docMetadata) {
-    // assemble document
-    return new Promise(resolve => {
-      this.syncUtils.findOrFetchFiles(docMetadata.pageIds)
-      .then(pages => {
-        if(pages.length) {
-          const docList = _.flatten(pages);
-          this.initializeFromDocList(docList, docMetadata.caretAt);
-          resolve();
-        } else {
-          document.querySelector('#m2-doc').innerHTML = '<p><br /></p>';
-          resolve();
+  getDocList(docMetadata) {
+    if(this.props.initialData) {
+      // importing data, in tryit now mode or regular import
+      let text = ''
+      const docList = [];
+      this.props.initialData.split('\n').forEach(nextLine => {
+        nextLine = nextLine || '\n\u200B';
+        if($(marked(`${text}\n${nextLine}`)).length > 1) {
+          docList.push({ id: shortid.generate(), text: text.replace(/\u200B/g, '').trim() });
+          text = '';
         }
-      });
-    })
+        text += `\n${nextLine}`;
+      })
+      // add last element
+      docList.push({ id: shortid.generate(), text });
+      return new Promise(resolve => resolve(docList));
+    } else {
+      return new Promise(resolve => {
+        this.syncUtils.findOrFetchFiles(docMetadata.pageIds)
+        .then(pages => {
+          if(pages.length) {
+            const docList = _.flatten(pages);
+            resolve(docList);
+          } else {
+            resolve([{ id: shortid.generate(), text: '' }]);
+          }
+        });
+      })
+    }
   }
 
   getAllLines() {
@@ -177,7 +192,7 @@ class Doc extends React.Component {
 
     !this.props.tryItNow && this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
       if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-        this.assembleDocFromMetaData(validatedDocMetadata);
+        this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
       }
     });
   }
@@ -271,25 +286,6 @@ class Doc extends React.Component {
   initializeEditor() {
     let selectedBlock;
 
-    if(this.props.initialData) {
-      const container = document.createElement('DIV');
-      container.innerHTML = marked(this.props.initialData);
-      allLines = [];
-      $(container).children().each((i, el) => {
-        el.id = shortid.generate();
-        doc[el.id] = this.turndownService.turndown(el.outerHTML);
-        allLines.push(el.id);
-      })
-
-      startIndex = 0;
-      endIndex = Math.min(250, allLines.length);
-
-      const initialHtml = _.slice(allLines, startIndex, endIndex).map(id => marked(doc[id])).join('\n');
-      this.props.setDocData(allLines, doc);
-      this.setState({ initialHtml });
-    } else {
-      this.setState({ initialHtml: '<p><br /></p>' });
-    }
     $(window).on('scroll', (e) => {
       this.throttledScroll();
     })
@@ -388,13 +384,16 @@ class Doc extends React.Component {
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
-        this.assembleDocFromMetaData(docMetadata).then(() => {
+        this.getDocList(docMetadata).then((docList) => {
           this.initializeEditor();
-          this.sync(this.getAllLines());
+          this.initializeFromDocList(docList, docMetadata.caretAt);
         })
       });
     } else {
-      this.initializeEditor();
+      this.getDocList().then((docList) => {
+        this.initializeEditor();
+        this.initializeFromDocList(docList, docList[0].id);
+      })
     }
   }
 
@@ -407,7 +406,7 @@ class Doc extends React.Component {
 
 
   render() {
-    return <div><div id="m2-doc" className="m2-doc content" contentEditable="true" dangerouslySetInnerHTML={ {__html: this.state.initialHtml} }></div></div>
+    return <div><div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }
 
