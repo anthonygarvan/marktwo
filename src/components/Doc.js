@@ -205,11 +205,11 @@ class Doc extends React.Component {
     if(sel.anchorNode && selectedBlock && selectedBlock[0]) {
       let renderedMarkdown;
       if(selectedBlock.attr('id')) {
-        renderedMarkdown = doc[selectedBlock.attr('id')] || '<br />';
+        renderedMarkdown = doc[selectedBlock.attr('id')] || '\u200B';
       } else {
-        renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '<br />'
+        renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '\u200B'
       }
-      selectedBlock.html(renderedMarkdown);
+      selectedBlock.text(renderedMarkdown);
       var range = document.createRange();
       let offset;
       if(selectedBlock[0].firstChild && selectedBlock[0].firstChild.data) {
@@ -243,7 +243,7 @@ class Doc extends React.Component {
       const oldEndIndex = endIndex;
       endIndex = Math.min(endIndex + 100, allLines.length);
       const newHtml = _.slice(allLines, oldEndIndex, endIndex).map(id => {
-        const newBlock = doc[id] ? $(marked(doc[id])) : $('<p><br /></p>');
+        const newBlock = doc[id] ? $(marked(doc[id])) : $('<p>\u200B</p>');
         newBlock.attr('id', id);
         return newBlock[0].outerHTML
       }).join('\n');
@@ -254,7 +254,7 @@ class Doc extends React.Component {
       const oldStartIndex = startIndex;
       startIndex = Math.max(startIndex - 100, 0);
       const newHtml = _.slice(allLines, startIndex, oldStartIndex).map(id => {
-        const newBlock = doc[id] ? $(marked(doc[id])) : $('<p><br /></p>');
+        const newBlock = doc[id] ? $(marked(doc[id])) : $('<p>\u200B</p>');
         newBlock.attr('id', id);
         return newBlock[0].outerHTML
       }).join('\n');
@@ -296,7 +296,7 @@ class Doc extends React.Component {
       if(e.inputType === 'deleteContentBackward') {
         if(!document.querySelector('#m2-doc > *')) {
           const id = shortid.generate();
-          document.querySelector('#m2-doc').innerHTML = `<p id="${id}"><br /></p>`;
+          document.querySelector('#m2-doc').innerHTML = `<p id="${id}">\u200B</p>`;
           this.initializeFromDocList([{ id, text: '' }], id);
         } else {
           const sel = window.getSelection();
@@ -332,7 +332,7 @@ class Doc extends React.Component {
             // if the line is empty, start a new paragraph
             const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
             const id = shortid.generate();
-            const newBlock = $(`<p id=${id}>${initialContent || '<br />'}</p>`);
+            const newBlock = $(`<p id=${id}>${initialContent || '\u200B'}</p>`);
             doc[id] = initialContent || '';
             const contentWithTextRemoved = doc[selectedBlock[0].id].replace(initialContent, '');
             selectedBlock[0].innerText = contentWithTextRemoved;
@@ -360,7 +360,11 @@ class Doc extends React.Component {
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
           const nodes = markdown.split('\n\n').map((block, i) => {
             let html = marked(block).replace(/\\/g, '');
-            const renderedNode = $(html || '<p><br /></p>');
+            let renderedNode = $(html || '<p>\u200B</p>');
+            const isVoidNode = new RegExp(/^(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|KEYGEN|LINK|META|PARAM|SOURCE|TRACK|WBR)$/);
+            if(isVoidNode.test(renderedNode[0].nodeName)) {
+              renderedNode = $(`<div>${html}</div>`)
+            }
             if(i > 0) {
               id = shortid.generate();
             }
