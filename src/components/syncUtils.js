@@ -164,7 +164,11 @@ function initialize(gapi) {
         // normal page reload
         if(cachedData && remoteData) {
           console.log(remoteData);
-          resolve(cachedData);
+          if(remoteData.revision >= cachedData.revision) {
+            resolve(remoteData);
+          } else {
+            resolve(cachedData)
+          }
         }
 
         // file does not yet exist on server, perhaps internet not available during file creation
