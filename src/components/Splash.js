@@ -36,11 +36,17 @@ class Splash extends React.Component {
 
   handleLogin() {
     this.state.gapi.auth2.getAuthInstance().signIn()
-      .then(() => this.setState({ isAuthenticated: this.state.gapi.auth2.getAuthInstance().isSignedIn.get()}));
+      .then(() => {
+        const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+        this.setState({ isAuthenticated: this.state.gapi.auth2.getAuthInstance().isSignedIn.get(), userEmail });
+      });
   }
 
   handleSwitchUser(callback) {
-    this.state.gapi.auth2.getAuthInstance().signIn({ prompt: 'select_account' }).then(callback);
+    this.state.gapi.auth2.getAuthInstance().signIn({ prompt: 'select_account' }).then(() => {
+      const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+      this.setState({ userEmail });
+      callback()});
   }
 
   handleLogout() {
@@ -49,12 +55,16 @@ class Splash extends React.Component {
   }
 
   render() {
-    return this.state.tryItNow ? <MarkTwo gapi={this.state.gapi}
+    return this.state.tryItNow ? <MarkTwo key={this.state.userEmail}
+        userEmail={this.state.userEmail}
+        gapi={this.state.gapi}
         handleLogout={() => this.setState({ tryItNow: false })}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
         tryItNow={true} />
       : this.state.isAuthenticated ?
-          <MarkTwo gapi={this.state.gapi}
+          <MarkTwo key={this.state.userEmail}
+            userEmail={this.state.userEmail}
+            gapi={this.state.gapi}
             handleLogout={this.handleLogout}
             handleSwitchUser={this.handleSwitchUser}
             tryItNow={false} />

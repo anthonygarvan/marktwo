@@ -40,14 +40,14 @@ class MarkTwo extends React.Component {
 
   componentDidMount() {
     this.syncUtils = syncUtils(this.state.gapi);
-
+    this.appDataKey = `appData_${this.props.userEmail}`;
     const currentDoc = shortid.generate();
     const defaultAppData = { currentDoc,
       files: [ {id: currentDoc, title: false, lastModified: new Date()} ],
       revision: 0 };
 
     if(!this.props.tryItNow) {
-      this.syncUtils.initializeData('appData', defaultAppData).then(appData => {
+      this.syncUtils.initializeData(this.appDataKey, defaultAppData).then(appData => {
         this.sync(appData);
         this.setState({ ...appData });
       });
@@ -59,19 +59,19 @@ class MarkTwo extends React.Component {
   sync(appData) {
     this.setState({ ...appData });
     if(!this.props.tryItNow) {
-      this.syncUtils.syncByRevision('appData', appData);
+      this.syncUtils.syncByRevision(this.appDataKey, appData);
     }
   }
 
   openFile(id) {
-    const appData = JSON.parse(localStorage.getItem('appData'));
+    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
     appData.currentDoc = id;
     this.setState({ showFiles: false, showShelf: false });
     this.sync(appData);
   }
 
   startNewFile() {
-   const appData = JSON.parse(localStorage.getItem('appData'));
+   const appData = JSON.parse(localStorage.getItem(this.appDataKey));
    const id = shortid.generate();
    appData.currentDoc = id;
    appData.files.unshift({ id, title: false, lastModified: new Date() });
@@ -80,7 +80,7 @@ class MarkTwo extends React.Component {
   }
 
   setTitle(id, title) {
-    const appData = JSON.parse(localStorage.getItem('appData'));
+    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
     appData.file = appData.files.map(f => {
       if(f.id === id) {
         f.title = title;
@@ -90,7 +90,7 @@ class MarkTwo extends React.Component {
   }
 
   deleteFile(fileName) {
-    const appData = JSON.parse(localStorage.getItem('appData'));
+    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
     appData.files = appData.files.filter(file => file.id !== fileName);
     if(this.state.currentDoc === fileName) {
       if(appData.files.length) {
@@ -112,7 +112,7 @@ class MarkTwo extends React.Component {
   handleImport(e) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const appData = JSON.parse(localStorage.getItem('appData'));
+      const appData = JSON.parse(localStorage.getItem(this.appDataKey));
       const id = shortid.generate();
       appData.currentDoc = id;
       appData.files.unshift({ id, title: false, lastModified: new Date() });
@@ -123,7 +123,7 @@ class MarkTwo extends React.Component {
   }
 
   toggleArchive(id) {
-    const appData = JSON.parse(localStorage.getItem('appData'));
+    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
     appData.file = appData.files.map(f => {
       if(f.id === id) {
         f.archived = !f.archived;
