@@ -358,7 +358,8 @@ class Doc extends React.Component {
 
         // and render it upon exiting the block
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
-          const nodes = markdown.split('\n\n').map((block, i) => {
+          const blocks = this.oldSelectedBlock[0].nodeName === 'PRE' ? [markdown] : markdown.split('\n\n');
+          const nodes = blocks.map((block, i) => {
             let html = marked(block).replace(/\\/g, '');
             let renderedNode = $(html || '<p>\u200B</p>');
             const isVoidNode = new RegExp(/^(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|KEYGEN|LINK|META|PARAM|SOURCE|TRACK|WBR)$/);
