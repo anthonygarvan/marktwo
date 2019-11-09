@@ -28,7 +28,8 @@ class Splash extends React.Component {
 
               gapi.client.init(initSettings).then(() => {
                   let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
-                  this.setState({ isAuthenticated, gapi });
+                  const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+                  this.setState({ isAuthenticated, gapi, userEmail });
             });
             });
       });
@@ -55,8 +56,7 @@ class Splash extends React.Component {
   }
 
   render() {
-    return this.state.tryItNow ? <MarkTwo key={this.state.userEmail}
-        userEmail={this.state.userEmail}
+    return this.state.tryItNow ? <MarkTwo
         gapi={this.state.gapi}
         handleLogout={() => this.setState({ tryItNow: false })}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
