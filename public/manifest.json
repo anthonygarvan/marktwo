@@ -8,7 +8,7 @@
       "type": "image/x-icon"
     },
     {
-      "src": "/img/logo512.png",
+      "src": "/img/manifest_logo.png",
       "type": "image/png",
       "sizes": "512x512"
     }
