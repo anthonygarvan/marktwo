@@ -43,30 +43,34 @@ class Doc extends React.Component {
   }
 
   initializeFromDocList(docList, caretAt) {
-    const caretIndex = caretAt ? _.findIndex(docList, {id: caretAt}) : 0;
-    allLines = docList.map(d => d.id);
-    startIndex = Math.max(caretIndex - 100, 0);
-    endIndex = Math.min(caretIndex + 100, docList.length)
-    const visibleDocList = _.slice(docList, startIndex, endIndex);
+    if(docList.filter(d => !d).length === 0) {
+      const caretIndex = caretAt ? _.findIndex(docList, {id: caretAt}) : 0;
+      allLines = docList.map(d => d.id);
+      startIndex = Math.max(caretIndex - 100, 0);
+      endIndex = Math.min(caretIndex + 100, docList.length)
+      const visibleDocList = _.slice(docList, startIndex, endIndex);
 
-    document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => this.getNodeForBlock(entry.text)[0].outerHTML).join('\n')
-    Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
-      el.id = visibleDocList[i].id;
-    });
-    doc = {};
-    docList.forEach(entry => doc[entry.id] = entry.text);
-    this.props.setDocData(allLines, doc);
-    const caretAtEl = document.getElementById(caretAt);
-    if(caretAtEl) {
-      caretAtEl.scrollIntoView();
-      var range = document.createRange();
-      var sel = window.getSelection();
-      range.setStart(caretAtEl, 0);
-      range.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      this.enterEditMode();
-      this.oldSelectedBlock = $(caretAtEl);
+      document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => this.getNodeForBlock(entry.text)[0].outerHTML).join('\n')
+      Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
+        el.id = visibleDocList[i].id;
+      });
+      doc = {};
+      docList.forEach(entry => doc[entry.id] = entry.text);
+      this.props.setDocData(allLines, doc);
+      const caretAtEl = document.getElementById(caretAt);
+      if(caretAtEl) {
+        caretAtEl.scrollIntoView();
+        var range = document.createRange();
+        var sel = window.getSelection();
+        range.setStart(caretAtEl, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        this.enterEditMode();
+        this.oldSelectedBlock = $(caretAtEl);
+      }
+    } else {
+      alert('Encountered an error, please reload');
     }
   }
 
