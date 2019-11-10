@@ -68,3 +68,28 @@
     }
   }
 }
+
+
+.m2-about {
+  footer  {
+    text-align: right;
+    a {
+      margin-right: 2rem;
+    }
+  }
+
+  section p {
+    margin-bottom: 1.5rem;
+  }
+
+  .m2-me {
+    margin-top: 3rem;
+    text-align: center;
+    img {
+      margin: 0 auto;
+      width: 6rem;
+      border-radius: 6rem;
+      border: 2px solid $primary;
+    }
+  }
+}

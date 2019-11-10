@@ -32,6 +32,14 @@ body {
       height: inherit;
     }
   }
+
+  .modal-card-foot {
+    display: block;
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+  }
+
   @include tablet {
     display: flex;
     height: auto;
@@ -43,6 +51,13 @@ body {
         border-top-left-radius: 6px;
         border-top-right-radius: 6px;
       }
+    }
+
+    .modal-card-foot {
+      display: flex;
+      position: unset;
+      bottom: unset;
+      width: unset;
     }
   }
 }
