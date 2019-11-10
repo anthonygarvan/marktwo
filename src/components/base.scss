@@ -14,3 +14,35 @@ body {
     font-size: 16px;
   }
 }
+
+
+.modal.is-active {
+  display: block;
+  height: 100vh;
+  .modal-card {
+    display: block;
+    height: inherit;
+    margin-left: 0px;
+    overflow: visible;
+    .modal-card-head {
+      border-top-left-radius: 0px;
+      border-top-right-radius: 0px;
+    }
+    .modal-card-body {
+      height: inherit;
+    }
+  }
+  @include tablet {
+    display: flex;
+    height: auto;
+    .modal-card {
+      display: flex;
+      margin-left: auto;
+      overflow: hidden;
+      .modal-card-head {
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+      }
+    }
+  }
+}
