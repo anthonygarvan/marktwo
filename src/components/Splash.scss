@@ -1,5 +1,23 @@
 @import './base.scss';
 
+.m2-load-screen {
+  text-align: center;
+  margin-top: 35vh;
+  .title.is-1 {
+    font-size: 2.2rem;
+    @include tablet {
+      font-size: 3rem;
+    }
+    img {
+      width: 3.5rem;
+      padding: 0 1rem 0 1rem;
+      @include tablet {
+        width: 4rem;
+      }
+    }
+  }
+}
+
 .m2-splash {
   max-width: 800px;
   margin: 20vh auto;

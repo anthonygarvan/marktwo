@@ -12,7 +12,7 @@ class Splash extends React.Component {
     this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
     this.handleSwitchUser = this.handleSwitchUser.bind(this);
-    this.state = { tryItNow: false };
+    this.state = { tryItNow: false, isAuthenticated: null };
   }
 
   componentWillMount() {
@@ -28,8 +28,12 @@ class Splash extends React.Component {
 
               gapi.client.init(initSettings).then(() => {
                   let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
-                  const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
-                  this.setState({ isAuthenticated, gapi, userEmail });
+                  if(isAuthenticated) {
+                    const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+                    this.setState({ isAuthenticated, gapi, userEmail });
+                } else {
+                  this.setState({ isAuthenticated, gapi });
+                }
             });
             });
       });
@@ -56,19 +60,22 @@ class Splash extends React.Component {
   }
 
   render() {
-    return this.state.tryItNow ? <MarkTwo
+    return <div>{this.state.tryItNow && <MarkTwo
         gapi={this.state.gapi}
         handleLogout={() => this.setState({ tryItNow: false })}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
-        tryItNow={true} />
-      : this.state.isAuthenticated ?
+        tryItNow={true} />}
+      {!this.state.tryItNow && this.state.isAuthenticated &&
           <MarkTwo key={this.state.userEmail}
             userEmail={this.state.userEmail}
             gapi={this.state.gapi}
             handleLogout={this.handleLogout}
             handleSwitchUser={this.handleSwitchUser}
-            tryItNow={false} />
-        : <div className="m2-splash">
+            tryItNow={false} />}
+      {!this.state.tryItNow && this.state.isAuthenticated === null && <div className="m2-load-screen">
+            <h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
+        </div>}
+      {!this.state.tryItNow && this.state.isAuthenticated === false && <div className="m2-splash">
       <h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
@@ -107,7 +114,7 @@ class Splash extends React.Component {
             </div>
         </div>
       </div>
-      </div>
+    </div>}</div>
   }
 }
 
