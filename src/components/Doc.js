@@ -1,5 +1,6 @@
 import React from 'react';
 import './Doc.scss'
+import './loading.scss';
 import $ from 'jquery';
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
@@ -39,7 +40,7 @@ class Doc extends React.Component {
     doc = {};
     allLines = [];
 
-    this.state = {};
+    this.state = { isLoading: true };
   }
 
   initializeFromDocList(docList, caretAt) {
@@ -404,12 +405,14 @@ class Doc extends React.Component {
         this.getDocList(docMetadata).then((docList) => {
           this.initializeEditor();
           this.initializeFromDocList(docList, docMetadata.caretAt);
+          this.setState({ isLoading: false });
         })
       });
     } else {
       this.getDocList().then((docList) => {
         this.initializeEditor();
         this.initializeFromDocList(docList, docList[0].id);
+        this.setState({ isLoading: false });
       })
     }
   }
@@ -423,7 +426,13 @@ class Doc extends React.Component {
 
 
   render() {
-    return <div><div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
+    return <div>
+      {this.state.isLoading && <div className="sp-loading">
+        <div className="bar"></div>
+        <div className="bar"></div>
+        <div className="bar"></div>
+      </div>}
+      <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }
 

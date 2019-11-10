@@ -34,7 +34,7 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 | Burrito           |          no        |      yes         |
 
 ## And more!
-- Import and export markdown via the `files` menu.
+- Import and export markdown via the `Files` menu.
 - Optimized for very large documents, perfect for keeping a running list of notes or journal
 - Easily search your doc to match keywords and use quotes for "exact strings"
 - MarkTwo is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times
