@@ -163,7 +163,6 @@ function initialize(gapi) {
 
         // normal page reload
         if(cachedData && remoteData) {
-          console.log(remoteData);
           if(remoteData.revision >= cachedData.revision) {
             resolve(remoteData);
           } else {

@@ -48,7 +48,7 @@ class Doc extends React.Component {
     startIndex = Math.max(caretIndex - 100, 0);
     endIndex = Math.min(caretIndex + 100, docList.length)
     const visibleDocList = _.slice(docList, startIndex, endIndex);
-    console.log(visibleDocList);
+
     document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => this.getNodeForBlock(entry.text)[0].outerHTML).join('\n')
     Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
       el.id = visibleDocList[i].id;
@@ -332,7 +332,8 @@ class Doc extends React.Component {
         // if the current line is not empty, prevent default and continue the string in a newline
         if(selectedBlock && selectedBlock[0]) {
           e.preventDefault();
-          if(!((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
+          if(selectedBlock[0].nodeName === 'PRE' || !((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
+            // do not start a new block
             let range;
             if(sel.getRangeAt && sel.rangeCount) {
                 range = sel.getRangeAt(0);
@@ -341,7 +342,7 @@ class Doc extends React.Component {
                 sel.anchorNode.nextSibling && sel.collapse(sel.anchorNode.nextSibling, sel.anchorNode.nextSibling.length);
             }
           } else {
-            // if the line is empty, start a new paragraph
+            // if the line is empty, start a new block
             const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
             const id = shortid.generate();
             const newBlock = $(`<p id=${id}>${initialContent || '\u200B'}</p>`);
