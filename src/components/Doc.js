@@ -48,6 +48,7 @@ class Doc extends React.Component {
     startIndex = Math.max(caretIndex - 100, 0);
     endIndex = Math.min(caretIndex + 100, docList.length)
     const visibleDocList = _.slice(docList, startIndex, endIndex);
+    console.log(visibleDocList);
     document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => this.getNodeForBlock(entry.text)[0].outerHTML).join('\n')
     Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
       el.id = visibleDocList[i].id;
@@ -284,7 +285,7 @@ class Doc extends React.Component {
   }
 
   getNodeForBlock(block) {
-    let html = marked(block).replace(/\\/g, '');
+    let html = marked(block || '').replace(/\\/g, '');
     let renderedNode = $(html || '<p>\u200B</p>');
     const isVoidNode = new RegExp(/^(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|KEYGEN|LINK|META|PARAM|SOURCE|TRACK|WBR)$/);
     if(isVoidNode.test(renderedNode[0].nodeName)) {

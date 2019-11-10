@@ -29,6 +29,9 @@ class Splash extends React.Component {
               gapi.client.init(initSettings).then(() => {
                   let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
                   if(isAuthenticated) {
+                    try {
+                      window.gtag('event', 'login', {'method': 'Google'});
+                    } catch {}
                     const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
                     this.setState({ isAuthenticated, gapi, userEmail });
                 } else {
@@ -40,6 +43,10 @@ class Splash extends React.Component {
   }
 
   handleLogin() {
+    try {
+      window.gtag('event', 'sign_up', {'method': 'Google'});
+    } catch {}
+
     this.state.gapi.auth2.getAuthInstance().signIn()
       .then(() => {
         const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
