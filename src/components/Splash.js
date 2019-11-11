@@ -83,41 +83,41 @@ class Splash extends React.Component {
             <h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
         </div>}
       {!this.state.tryItNow && this.state.isAuthenticated === false && <div className="m2-splash">
-      <h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
+      <div className="m2-hero"><h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
           <button className="button is-primary is-outlined" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
           <button className="button is-primary is-outlined" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
-        </div>
+        </div></div>
 
         <div className="m2-tiles">
         <div className="columns">
             <div className="column">
                 <h4 className="title is-4">Seamless</h4>
-                <p>Read and edit markdown from a single view.</p>
+                <p>Read and edit markdown from a single view. No need to toggle back and forth!</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Speedy</h4>
-              <p>Big doc? No problem.</p>
+              <p>Big doc? No problem. MarkTwo is optimized for very large documents.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Syncing</h4>
-              <p>Works across devices, always synced.</p>
+              <p>Mark Two is web-native, so it works across devices, and your docs are always synced.</p>
             </div>
         </div>
 
         <div className="columns">
             <div className="column">
                 <h4 className="title is-4">Private</h4>
-                <p>Even we can't see your documents.</p>
+                <p>We take privacy seriously&mdash;we built MarkTwo so that even we can't see your documents.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Searchable</h4>
-              <p>Fast, clear search results.</p>
+              <p>Using MarkTwo for notes? Easily find what you're looking for with fast, clear search results.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Free</h4>
-              <p>Free and open source.</p>
+              <p>No lock-in: MarkTwo is free and open source, and you can export your docs at any time.</p>
             </div>
         </div>
       </div>

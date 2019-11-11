@@ -20,22 +20,26 @@
 
 .m2-splash {
   max-width: 800px;
-  margin: 20vh auto;
+  margin: 0 auto;
   padding: 1.5rem;
   text-align: center;
 
-  .title.is-1 {
-    font-size: 2.2rem;
-    @include tablet {
-      font-size: 3rem;
-    }
-    img {
-      width: 3.5rem;
-      padding: 0 1rem 0 1rem;
+  .m2-hero {
+    margin-top: 20vh;
+    margin-bottom: 10vh;
+    .title.is-1 {
+      font-size: 2.2rem;
       @include tablet {
-        width: 4rem;
+        font-size: 3rem;
       }
-    }
+      img {
+        width: 3.5rem;
+        padding: 0 1rem 0 1rem;
+        @include tablet {
+          width: 4rem;
+        }
+      }
+  }
   }
 
   .m2-cta {
@@ -58,6 +62,9 @@
 
   .m2-tiles {
     margin-top: 3rem;
+    p {
+      text-align: justify;
+    }
     .columns {
       margin-top: 2rem;
     }
