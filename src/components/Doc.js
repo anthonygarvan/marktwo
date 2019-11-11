@@ -70,6 +70,9 @@ class Doc extends React.Component {
         this.enterEditMode();
         this.oldSelectedBlock = $(caretAtEl);
       }
+      if(!this.props.tryItNow && this.props.initialData) {
+        this.sync(this.getAllLines());
+      }
     } else {
       alert('Encountered an error, please reload');
     }
@@ -165,7 +168,7 @@ class Doc extends React.Component {
     }
 
     let newLines = _.slice(lines, startIndex, endIndex).map(id => ({ id, text: doc[id]}));
-    let chunkSize = newLines.length / Math.ceil(newLines.length / 300);
+    let chunkSize = newLines.length / Math.ceil(newLines.length / 500);
 
     _.chunk(newLines, chunkSize).map(page => {
       const hash = md5(stringify(page));
