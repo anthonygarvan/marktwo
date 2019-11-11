@@ -43,7 +43,7 @@ class MarkTwo extends React.Component {
     this.appDataKey = `appData_${this.props.userEmail}`;
     const currentDoc = shortid.generate();
     const defaultAppData = { currentDoc,
-      files: [ {id: currentDoc, title: false, lastModified: new Date()} ],
+      docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
       revision: 0 };
 
     if(!this.props.tryItNow) {
@@ -66,7 +66,7 @@ class MarkTwo extends React.Component {
   openFile(id) {
     const appData = JSON.parse(localStorage.getItem(this.appDataKey));
     appData.currentDoc = id;
-    this.setState({ showFiles: false, showShelf: false });
+    this.setState({ showDocs: false, showShelf: false });
     this.sync(appData);
   }
 
@@ -74,14 +74,14 @@ class MarkTwo extends React.Component {
    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
    const id = shortid.generate();
    appData.currentDoc = id;
-   appData.files.unshift({ id, title: false, lastModified: new Date() });
-   this.setState({ showFiles: false, initialData: false, showShelf: false });
+   appData.docs.unshift({ id, title: false, lastModified: new Date() });
+   this.setState({ showDocs: false, initialData: false, showShelf: false });
    this.sync(appData);
   }
 
   setTitle(id, title) {
     const appData = JSON.parse(localStorage.getItem(this.appDataKey));
-    appData.file = appData.files.map(f => {
+    appData.file = appData.docs.map(f => {
       if(f.id === id) {
         f.title = title;
       }
@@ -91,19 +91,19 @@ class MarkTwo extends React.Component {
 
   deleteFile(fileName) {
     const appData = JSON.parse(localStorage.getItem(this.appDataKey));
-    appData.files = appData.files.filter(file => file.id !== fileName);
+    appData.docs = appData.docs.filter(file => file.id !== fileName);
     if(this.state.currentDoc === fileName) {
-      if(appData.files.length) {
-        appData.currentDoc = appData.files[0].id;
+      if(appData.docs.length) {
+        appData.currentDoc = appData.docs[0].id;
       } else {
         const id = shortid.generate();
         appData.currentDoc = id;
-        appData.files.unshift({ id, title: false, lastModified: new Date() });
+        appData.docs.unshift({ id, title: false, lastModified: new Date() });
       }
     }
     this.sync(appData);
     this.syncUtils.find(fileName, docMetadata => {
-      this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
+      this.syncUtils.deleteDocs(docMetadata.pageIds).then(results => {
         this.syncUtils.deleteFile(fileName)
       })
     })
@@ -115,8 +115,8 @@ class MarkTwo extends React.Component {
       const appData = JSON.parse(localStorage.getItem(this.appDataKey));
       const id = shortid.generate();
       appData.currentDoc = id;
-      appData.files.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ initialData: e.target.result, showFiles: false, showShelf: false });
+      appData.docs.unshift({ id, title: false, lastModified: new Date() });
+      this.setState({ initialData: e.target.result, showDocs: false, showShelf: false });
       this.sync(appData);
     }
     reader.readAsText(e.target.files[0]);
@@ -124,7 +124,7 @@ class MarkTwo extends React.Component {
 
   toggleArchive(id) {
     const appData = JSON.parse(localStorage.getItem(this.appDataKey));
-    appData.file = appData.files.map(f => {
+    appData.file = appData.docs.map(f => {
       if(f.id === id) {
         f.archived = !f.archived;
       }
@@ -162,7 +162,7 @@ class MarkTwo extends React.Component {
           break;
       case 'export':
         const text = this.state.allLines.map(id => this.state.doc[id]).join('\n\n');
-        const title = this.state.files.filter(f => f.id === this.state.currentDoc).title || 'Untitled';
+        const title = this.state.docs.filter(f => f.id === this.state.currentDoc).title || 'Untitled';
         download(text, `${title}.txt`);
         break;
       case 'toggleArchive':
@@ -194,7 +194,7 @@ class MarkTwo extends React.Component {
       tryItNow={this.props.tryItNow}
       showShelf={this.state.showShelf}
       setShelf={(val) => this.setState({ showShelf: val })}
-      showFiles={(val) => this.setState({ showFiles: val, viewArchive: false })}
+      showDocs={(val) => this.setState({ showDocs: val, viewArchive: false })}
       showSearch={() => this.setState({ showSearch: true })}
       showAbout={() => this.setState({ showAbout: true })}/>
 
@@ -228,12 +228,12 @@ class MarkTwo extends React.Component {
     </div></div>}
 
 
-    <div className={`m2-files modal ${this.state.showFiles && 'is-active'}`}>
-    <div className="modal-background" onClick={() => this.setState({showFiles: false})}></div>
+    <div className={`m2-docs modal ${this.state.showDocs && 'is-active'}`}>
+    <div className="modal-background" onClick={() => this.setState({showDocs: false})}></div>
       <div className="modal-card">
       <header className="modal-card-head">
-        <p className="modal-card-title">Files</p>
-        <button className="delete" aria-label="close" onClick={() => this.setState({showFiles: false})}></button>
+        <p className="modal-card-title">Docs</p>
+        <button className="delete" aria-label="close" onClick={() => this.setState({showDocs: false})}></button>
       </header>
       <section className="modal-card-body">
         <div>
@@ -251,14 +251,14 @@ class MarkTwo extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {this.state.files && this.state.files.filter(f => (!!f.archived == this.state.viewArchive)).map(f =>
+            {this.state.docs && this.state.docs.filter(f => (!!f.archived == this.state.viewArchive)).map(f =>
               <tr key={f.id}>
                 <td><div className="select">
                       <select value={''} onChange={(e) => this.takeFileAction(e, f)}>
                         <option value=""></option>
                         <option value="rename">Rename</option>
                         {f.id === this.state.currentDoc && <option value="export">Export</option>}
-                        <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to files'}</option>
+                        <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to docs'}</option>
                         <option value="delete">Delete</option>
                       </select>
                     </div></td>
@@ -270,7 +270,7 @@ class MarkTwo extends React.Component {
           </tbody>
         </table>
         <div className="m2-footer">
-          <a onClick={() => this.setState({ viewArchive: !this.state.viewArchive })}>{this.state.viewArchive ? 'View files' : 'View archive'}</a>
+          <a onClick={() => this.setState({ viewArchive: !this.state.viewArchive })}>{this.state.viewArchive ? 'View docs' : 'View archive'}</a>
         </div>
       </section>
     </div>
