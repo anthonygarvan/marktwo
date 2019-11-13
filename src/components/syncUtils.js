@@ -102,12 +102,17 @@ function initialize(gapi) {
   }
 
   function findOrFetchFiles(names) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       async.series(_.chunk(names, 2).map(nameChunk => {
       return function(callback) {
         Promise.all(nameChunk.map(name => findOrFetch(name))).then(results => callback(null, results))
       }})).then(chunkedResults => {
-        resolve(_.flatten(chunkedResults))})
+        const results = _.flatten(chunkedResults);
+        if(results.filter(r => !r).length >= 1) {
+          reject();
+        } else {
+          resolve(_.flatten(chunkedResults));
+        }})
     })
   }
 

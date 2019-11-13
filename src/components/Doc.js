@@ -135,7 +135,7 @@ class Doc extends React.Component {
     const pages = {};
     let pageIds = [];
 
-    const docMetadata = JSON.parse(localStorage.getItem(this.props.currentDoc));
+    const docMetadata = this.state.docMetadata;
 
     let startIndex = 0;
     let i = 0;
@@ -200,6 +200,7 @@ class Doc extends React.Component {
     docMetadata.lastModified = new Date().toISOString();
 
     !this.props.tryItNow && this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+      this.setState({ docMetadata: validatedDocMetadata });
       if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
         this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
       }
@@ -405,6 +406,7 @@ class Doc extends React.Component {
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
+        this.setState({ docMetadata });
         this.getDocList(docMetadata).then((docList) => {
           this.initializeEditor();
           this.initializeFromDocList(docList, docMetadata.caretAt);

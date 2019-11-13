@@ -103,7 +103,7 @@ class MarkTwo extends React.Component {
     }
     this.sync(appData);
     this.syncUtils.find(fileName, docMetadata => {
-      this.syncUtils.deleteDocs(docMetadata.pageIds).then(results => {
+      this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
         this.syncUtils.deleteFile(fileName)
       })
     })
