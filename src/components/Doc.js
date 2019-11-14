@@ -135,7 +135,7 @@ class Doc extends React.Component {
     const pages = {};
     let pageIds = [];
 
-    const docMetadata = this.state.docMetadata;
+    const docMetadata = _.clone(this.state.docMetadata);
 
     let startIndex = 0;
     let i = 0;
@@ -185,7 +185,7 @@ class Doc extends React.Component {
 
     // update page caches
     // if the page isn't cached, cache it
-    !this.props.tryItNow && this.syncUtils.createFiles(_.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]})))
+    this.syncUtils.createFiles(_.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]})))
 
     // if the page has been removed, remove it
     const removeThese = _.difference(docMetadata.pageIds, pageIds)
@@ -199,7 +199,7 @@ class Doc extends React.Component {
     docMetadata.pageLengths = pageIds.map(pageId => pages[pageId].length);
     docMetadata.lastModified = new Date().toISOString();
 
-    !this.props.tryItNow && this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+    this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
       this.setState({ docMetadata: validatedDocMetadata });
       if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
         this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
