@@ -29,7 +29,7 @@ class Shelf extends React.Component {
       <div className="m2-username">{this.state.userName}</div>
       <div className="m2-email">{this.state.userEmail}</div>
       <div className="m2-switch-user">
-        <button className="button is-clear" onClick={() => this.props.handleSwitchUser(this.getUserProfile)}>Switch user</button>
+        <button className="button is-clear" onClick={() => this.props.handleSwitchUser}>Switch user</button>
         <button className="button is-clear" onClick={this.props.handleLogout}>Sign out</button>
       </div>
     </div>
