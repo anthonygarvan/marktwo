@@ -42,3 +42,11 @@
     border-left: 3px solid rgba($primary, 0.3);
   }
 }
+
+.m2-sync-failed {
+  position: fixed;
+  bottom: 1rem;
+  right: 0.5rem;
+  color: lightgrey;
+  font-size:2.5rem;
+}

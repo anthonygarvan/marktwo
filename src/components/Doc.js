@@ -11,6 +11,8 @@ import md5 from 'md5';
 import moment from 'moment';
 import shortid from 'shortid';
 import syncUtils from './syncUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBolt } from '@fortawesome/free-solid-svg-icons';
 
 let startIndex, endIndex, doc, allLines;
 
@@ -185,26 +187,35 @@ class Doc extends React.Component {
 
     // update page caches
     // if the page isn't cached, cache it
-    this.syncUtils.createFiles(_.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]})))
+    const pagesToAdd = _.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]}));
 
-    // if the page has been removed, remove it
-    const removeThese = _.difference(docMetadata.pageIds, pageIds)
-    this.syncUtils.deleteFiles(removeThese);
-    removeThese.map(pageId => {
-       localStorage.removeItem(pageId);
-    });
+    if(pagesToAdd.length) {
+      // first add the new pages
+      this.syncUtils.createFiles(pagesToAdd)
+      .then(results => {
+        // then update the metadata and docList.
+        docMetadata.caretAt = caretAt;
+        docMetadata.pageIds = pageIds;
+        docMetadata.pageLengths = pageIds.map(pageId => pages[pageId].length);
+        docMetadata.lastModified = new Date().toISOString();
 
-    docMetadata.caretAt = caretAt;
-    docMetadata.pageIds = pageIds;
-    docMetadata.pageLengths = pageIds.map(pageId => pages[pageId].length);
-    docMetadata.lastModified = new Date().toISOString();
-
-    this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
-      this.setState({ docMetadata: validatedDocMetadata });
-      if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-        this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
-      }
-    });
+        this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+          this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
+          if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+            this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+          }
+        });
+      })
+      .then(results => {
+        // then remove the unused pages
+        const removeThese = _.difference(docMetadata.pageIds, pageIds)
+        removeThese.map(pageId => {
+           localStorage.removeItem(pageId);
+        });
+        return this.syncUtils.deleteFiles(removeThese);
+      })
+      .catch(err => this.setState({ syncFailed: true }));
+    }
   }
 
   enterEditMode() {
@@ -309,6 +320,10 @@ class Doc extends React.Component {
 
     $(window).on('scroll', (e) => {
       this.throttledScroll();
+    })
+
+    $(window).on('focus', (e) => {
+      this.debouncedSync();
     })
 
     document.querySelector('#m2-doc').addEventListener('paste', () => setTimeout(this.getAllLines, 50))
@@ -437,6 +452,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
         <div className="bar"></div>
       </div>}
+      {this.state.syncFailed && <div className="m2-sync-failed"><FontAwesomeIcon icon={faBolt} /></div>}
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }

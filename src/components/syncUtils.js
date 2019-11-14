@@ -102,18 +102,16 @@ function initialize(gapi) {
   }
 
   function findOrFetchFiles(names) {
-    return new Promise((resolve, reject) => {
-      async.series(_.chunk(names, 2).map(nameChunk => {
+    return async.series(names.map(name => {
       return function(callback) {
-        Promise.all(nameChunk.map(name => findOrFetch(name))).then(results => callback(null, results))
-      }})).then(chunkedResults => {
-        const results = _.flatten(chunkedResults);
-        if(results.filter(r => !r).length >= 1) {
-          reject();
-        } else {
-          resolve(_.flatten(chunkedResults));
-        }})
-    })
+        findOrFetch(name).then(result => {
+          if(result) {
+            callback(null, result)
+          } else {
+            callback('Could not find file', null)
+          }
+        })
+      }}))
   }
 
   function deleteFile(name) {
@@ -131,33 +129,35 @@ function initialize(gapi) {
   }
 
   function deleteFiles(names) {
-    return async.series(_.chunk(names, 2).map(nameChunk => {
+    return async.series(names.map(name => {
       return function(callback) {
-        let done = false;
-        nameChunk.map(name => deleteFile(name).then(() => {
+        deleteFile(name).then(result => {
           setTimeout(() => {
-            if(!done) {
-              callback()
-              done = true;
-            }}, 3*1000)
-        }));
+            if(!(result.status === 204)) {
+              callback('Delete request failed');
+            } else {
+              callback();
+            }
+          }, 1500)
+        }).catch(err => callback('Delete request failed'));
       }
     }))
   }
 
 
   function createFiles(files) {
-    return async.series(_.chunk(files, 6).map(fileChunk => {
+    return async.series(files.map(file => {
       return function(callback) {
-        let done = false;
-        fileChunk.map(file => create(file.name, file.data, () => {
+        create(file.name, file.data, (result) => {
           setTimeout(() => {
-            if(!done) {
-              callback()
-              done = true;
-            }}, 3*1000); // wait 5 seconds to avoid 403s
-      }))}
-    }))
+            if(!result.name) {
+              callback('Create request failed');
+            } else {
+              callback();
+            }
+          })}, 500); // wait 500ms seconds to avoid 403s
+      }}
+    ))
   }
 
 
