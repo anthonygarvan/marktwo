@@ -10,7 +10,9 @@ import syncUtils from './syncUtils';
 import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import download from 'in-browser-download';
 import raw from 'raw.macro';
+import _ from 'lodash';
 const tryItNowText  = raw('./tryItNow.md');
+
 
 class MarkTwo extends React.Component {
   constructor(props) {
@@ -49,29 +51,30 @@ class MarkTwo extends React.Component {
     if(!this.props.tryItNow) {
       this.syncUtils.initializeData(this.appDataKey, defaultAppData).then(appData => {
         this.sync(appData);
-        this.setState({ ...appData });
       });
     } else {
-      this.setState({ ...defaultAppData });
+      this.setState({ ...defaultAppData, appData: defaultAppData });
     }
   }
 
   sync(appData) {
-    this.setState({ ...appData });
+    this.setState({ ...appData, appData });
     if(!this.props.tryItNow) {
-      this.syncUtils.syncByRevision(this.appDataKey, appData);
+      this.syncUtils.syncByRevision(this.appDataKey, appData).then(appData => {
+        this.setState({ ...appData, appData })
+      });
     }
   }
 
   openFile(id) {
-    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
+    const appData = _.clone(this.state.appData);
     appData.currentDoc = id;
     this.setState({ showDocs: false, showShelf: false });
     this.sync(appData);
   }
 
   startNewFile() {
-   const appData = JSON.parse(localStorage.getItem(this.appDataKey));
+   const appData = _.clone(this.state.appData);
    const id = shortid.generate();
    appData.currentDoc = id;
    appData.docs.unshift({ id, title: false, lastModified: new Date() });
@@ -80,7 +83,7 @@ class MarkTwo extends React.Component {
   }
 
   setTitle(id, title) {
-    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
+    const appData = _.clone(this.state.appData);
     appData.file = appData.docs.map(f => {
       if(f.id === id) {
         f.title = title;
@@ -90,7 +93,7 @@ class MarkTwo extends React.Component {
   }
 
   deleteFile(fileName) {
-    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
+    const appData = _.clone(this.state.appData);
     appData.docs = appData.docs.filter(file => file.id !== fileName);
     if(this.state.currentDoc === fileName) {
       if(appData.docs.length) {
@@ -112,7 +115,7 @@ class MarkTwo extends React.Component {
   handleImport(e) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const appData = JSON.parse(localStorage.getItem(this.appDataKey));
+      const appData = _.clone(this.state.appData);
       const id = shortid.generate();
       appData.currentDoc = id;
       appData.docs.unshift({ id, title: false, lastModified: new Date() });
@@ -123,7 +126,7 @@ class MarkTwo extends React.Component {
   }
 
   toggleArchive(id) {
-    const appData = JSON.parse(localStorage.getItem(this.appDataKey));
+    const appData = _.clone(this.state.appData);
     appData.file = appData.docs.map(f => {
       if(f.id === id) {
         f.archived = !f.archived;
@@ -228,7 +231,7 @@ class MarkTwo extends React.Component {
     </div></div>}
 
 
-    <div className={`m2-docs modal ${this.state.showDocs && 'is-active'}`}>
+    {this.state.showDocs && <div className="m2-docs modal is-active">
     <div className="modal-background" onClick={() => this.setState({showDocs: false})}></div>
       <div className="modal-card">
       <header className="modal-card-head">
@@ -255,14 +258,13 @@ class MarkTwo extends React.Component {
               <tr key={f.id}>
                 <td><div className="select">
                       <select value={''} onChange={(e) => this.takeFileAction(e, f)}>
-                        <option value=""></option>
                         <option value="rename">Rename</option>
                         {f.id === this.state.currentDoc && <option value="export">Export</option>}
                         <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to docs'}</option>
                         <option value="delete">Delete</option>
                       </select>
                     </div></td>
-                  <td className={f.id === this.state.currentDoc && 'm2-is-current-doc'}>
+                  <td className={f.id === this.state.currentDoc ? 'm2-is-current-doc' : undefined}>
     <a onClick={() => this.openFile(f.id)}>{f.title ? <abbr title={f.title}>{f.title.substring(0,20)}</abbr>: 'Untitled'}</a></td>
                 <td>{moment(f.lastModified).fromNow()}</td>
               </tr>
@@ -274,7 +276,7 @@ class MarkTwo extends React.Component {
         </div>
       </section>
     </div>
-    </div>
+  </div>}
 
     {this.state.showAbout && <div className="m2-about modal is-active">
     <div className="modal-background" onClick={() => this.setState({ showAbout: false })}></div>

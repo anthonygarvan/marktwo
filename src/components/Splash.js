@@ -56,8 +56,7 @@ class Splash extends React.Component {
 
   handleSwitchUser() {
     this.state.gapi.auth2.getAuthInstance().signIn({ prompt: 'select_account' }).then(() => {
-      const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
-      this.setState({ userEmail });
+      window.location.reload();
     });
   }
 

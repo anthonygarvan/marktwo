@@ -11,6 +11,7 @@
     "async": "^3.1.0",
     "bulma": "^0.7.5",
     "google-client-api": "^1.0.4",
+    "idb-keyval": "^3.2.0",
     "in-browser-download": "^2.0.0",
     "jquery": "^3.4.1",
     "json-stringify-deterministic": "^1.0.1",

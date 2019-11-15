@@ -13,7 +13,7 @@ import shortid from 'shortid';
 import syncUtils from './syncUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
-
+import { del, set } from 'idb-keyval';
 let startIndex, endIndex, doc, allLines;
 
 class Doc extends React.Component {
@@ -106,7 +106,7 @@ class Doc extends React.Component {
           } else {
             resolve([{ id: shortid.generate(), text: '' }]);
           }
-        });
+        }).catch(e => console.log('could not find file'));
       })
     }
   }
@@ -137,7 +137,7 @@ class Doc extends React.Component {
     const pages = {};
     let pageIds = [];
 
-    const docMetadata = _.clone(this.state.docMetadata);
+    const docMetadata = _.cloneDeep(this.state.docMetadata);
 
     let startIndex = 0;
     let i = 0;
@@ -170,7 +170,7 @@ class Doc extends React.Component {
     }
 
     let newLines = _.slice(lines, startIndex, endIndex).map(id => ({ id, text: doc[id]}));
-    let chunkSize = newLines.length / Math.ceil(newLines.length / 500);
+    let chunkSize = Math.ceil(newLines.length / Math.ceil(newLines.length / 1500));
 
     _.chunk(newLines, chunkSize).map(page => {
       const hash = md5(stringify(page));
@@ -183,7 +183,9 @@ class Doc extends React.Component {
 
     let caretAt = $(sel.anchorNode).closest('#m2-doc > *').attr('id') || docMetadata.caretAt;
     // cache all pageIds
-    pageIds.map(pageId => localStorage.setItem(pageId, JSON.stringify(pages[pageId])))
+    pageIds.map(pageId => {
+      set(pageId, JSON.stringify(pages[pageId])).catch(() => console.log('storage full'))
+    });
 
     // update page caches
     // if the page isn't cached, cache it
@@ -196,8 +198,8 @@ class Doc extends React.Component {
         // then update the metadata and docList.
         docMetadata.caretAt = caretAt;
         docMetadata.pageIds = pageIds;
-        docMetadata.pageLengths = pageIds.map(pageId => pages[pageId].length);
         docMetadata.lastModified = new Date().toISOString();
+        docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
 
         this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
           this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
@@ -210,7 +212,7 @@ class Doc extends React.Component {
         // then remove the unused pages
         const removeThese = _.difference(docMetadata.pageIds, pageIds)
         removeThese.map(pageId => {
-           localStorage.removeItem(pageId);
+           del(pageId).catch(() => console.log('page not cached, did not remove.'));
         });
         return this.syncUtils.deleteFiles(removeThese);
       })

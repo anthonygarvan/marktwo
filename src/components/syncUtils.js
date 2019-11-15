@@ -1,5 +1,6 @@
 import async from 'async';
 import _ from 'lodash';
+import { get, set, del } from 'idb-keyval';
 
 function initialize(gapi) {
   function create(name, data, callback) {
@@ -90,14 +91,15 @@ function initialize(gapi) {
 
   function findOrFetch(name) {
     return new Promise(resolve => {
-      const localVersion = localStorage.getItem(name)
-      if(localVersion) {
-        resolve(JSON.parse(localVersion));
-      } else {
-        find(name, fileData => {
-          resolve(fileData);
-        });
-      }
+      get(name).then(localVersion => {
+        if(localVersion) {
+          resolve(JSON.parse(localVersion));
+        } else {
+          find(name, fileData => {
+            resolve(fileData);
+          });
+        }
+      })
     })
   }
 
@@ -115,7 +117,7 @@ function initialize(gapi) {
   }
 
   function deleteFile(name) {
-    localStorage.removeItem(name);
+    del(name);
     return new Promise(resolve => {
     gapi.client.drive.files.list({q: `name='${name}'`, spaces: 'appDataFolder' })
       .then(response => {
@@ -149,75 +151,75 @@ function initialize(gapi) {
     return async.series(files.map(file => {
       return function(callback) {
         create(file.name, file.data, (result) => {
-          setTimeout(() => {
-            if(!result.name) {
+          if(!result.name) {
               callback('Create request failed');
             } else {
               callback();
             }
-          })}, 500); // wait 500ms seconds to avoid 403s
-      }}
-    ))
+          })}
+      }))
   }
 
 
   function initializeData(name, defaultData) {
     return new Promise(resolve => {
       find(name, remoteData => {
-        const cachedData = localStorage.getItem(name) && JSON.parse(localStorage.getItem(name));
+        get(name).then(cachedData => {
+          cachedData =  cachedData && JSON.parse(cachedData);
 
-        // normal page reload
-        if(cachedData && remoteData) {
-          if(remoteData.revision >= cachedData.revision) {
-            resolve(remoteData);
-          } else {
-            resolve(cachedData)
+          // normal page reload
+          if(cachedData && remoteData) {
+            if(remoteData.revision >= cachedData.revision) {
+              resolve(remoteData);
+            } else {
+              resolve(cachedData)
+            }
           }
-        }
 
-        // file does not yet exist on server, perhaps internet not available during file creation
-        if(cachedData && !remoteData) {
-          create(name, cachedData, response => {
-            console.log(response);
-            cachedData.fileId = response.id;
-            localStorage.setItem(name, JSON.stringify(cachedData));
-            resolve(cachedData);
-          });
-        }
+          // file does not yet exist on server, perhaps internet not available during file creation
+          if(cachedData && !remoteData) {
+            create(name, cachedData, response => {
+              console.log(response);
+              cachedData.fileId = response.id;
+              set(name, JSON.stringify(cachedData));
+              resolve(cachedData);
+            });
+          }
 
-        // new device
-        if(!cachedData && remoteData) {
-          localStorage.setItem(name, JSON.stringify(remoteData))
-          resolve(remoteData);
-        }
+          // new device
+          if(!cachedData && remoteData) {
+            set(name, JSON.stringify(remoteData))
+            resolve(remoteData);
+          }
 
-        // app being loaded for the first time
-        if(!cachedData && !remoteData) {
-          localStorage.setItem(name, JSON.stringify(defaultData));
-          create(name, defaultData, response => {
-            console.log(response);
-            defaultData.fileId = response.id;
-            localStorage.setItem(name, JSON.stringify(defaultData));
-            resolve(defaultData);
-          });
-        }
+          // app being loaded for the first time
+          if(!cachedData && !remoteData) {
+            set(name, JSON.stringify(defaultData));
+            create(name, defaultData, response => {
+              console.log(response);
+              defaultData.fileId = response.id;
+              set(name, JSON.stringify(defaultData));
+              resolve(defaultData);
+            });
+          }
+        })
         })
     })
   }
 
   function syncByRevision(name, newData) {
     newData.revision++;
-    localStorage.setItem(name, JSON.stringify(newData));
+    set(name, JSON.stringify(newData));
     return new Promise(resolve => {
       find(name, remoteData => {
         console.log(remoteData);
         if(remoteData.revision >= newData.revision) {
           // if the server version is at a higher revision, use the server version (fast-forward)
-          localStorage.setItem(name, JSON.stringify(remoteData));
+          set(name, JSON.stringify(remoteData));
           resolve(remoteData);
         } else {
           // otherwise use the new version and update server version
-          localStorage.setItem(name, JSON.stringify(newData));
+          set(name, JSON.stringify(newData));
           update(newData.fileId, newData);
           resolve(newData);
         }
