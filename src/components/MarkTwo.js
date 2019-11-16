@@ -57,8 +57,8 @@ class MarkTwo extends React.Component {
     }
   }
 
-  sync(appData) {
-    this.setState({ ...appData, appData });
+  sync(appData, additionalState) {
+    this.setState({ ...appData, ...additionalState, appData });
     if(!this.props.tryItNow) {
       this.syncUtils.syncByRevision(this.appDataKey, appData).then(appData => {
         this.setState({ ...appData, appData })
@@ -67,33 +67,35 @@ class MarkTwo extends React.Component {
   }
 
   openFile(id) {
-    const appData = _.clone(this.state.appData);
-    appData.currentDoc = id;
-    this.setState({ showDocs: false, showShelf: false });
-    this.sync(appData);
+    this.setState({ currentDoc: false }, () => {
+      const appData = _.cloneDeep(this.state.appData);
+      appData.currentDoc = id;
+      this.sync(appData, { showDocs: false, showShelf: false, initialData: false });
+    })
   }
 
   startNewFile() {
-   const appData = _.clone(this.state.appData);
-   const id = shortid.generate();
-   appData.currentDoc = id;
-   appData.docs.unshift({ id, title: false, lastModified: new Date() });
-   this.setState({ showDocs: false, initialData: false, showShelf: false });
-   this.sync(appData);
+    this.setState({ currentDoc: false }, () => {
+      const appData = _.cloneDeep(this.state.appData);
+      const id = shortid.generate();
+      appData.currentDoc = id;
+      appData.docs.unshift({ id, title: false, lastModified: new Date() });
+      this.sync(appData, { showDocs: false, initialData: false, showShelf: false });
+    })
   }
 
   setTitle(id, title) {
-    const appData = _.clone(this.state.appData);
+    const appData = _.cloneDeep(this.state.appData);
     appData.file = appData.docs.map(f => {
       if(f.id === id) {
         f.title = title;
       }
     });
-    this.sync(appData);
+    this.sync(appData, {});
   }
 
   deleteFile(fileName) {
-    const appData = _.clone(this.state.appData);
+    const appData = _.cloneDeep(this.state.appData);
     appData.docs = appData.docs.filter(file => file.id !== fileName);
     if(this.state.currentDoc === fileName) {
       if(appData.docs.length) {
@@ -104,7 +106,7 @@ class MarkTwo extends React.Component {
         appData.docs.unshift({ id, title: false, lastModified: new Date() });
       }
     }
-    this.sync(appData);
+    this.sync(appData, {});
     this.syncUtils.find(fileName, docMetadata => {
       this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
         this.syncUtils.deleteFile(fileName)
@@ -114,26 +116,26 @@ class MarkTwo extends React.Component {
 
   handleImport(e) {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      const appData = _.clone(this.state.appData);
-      const id = shortid.generate();
-      appData.currentDoc = id;
-      appData.docs.unshift({ id, title: false, lastModified: new Date() });
-      this.setState({ initialData: e.target.result, showDocs: false, showShelf: false });
-      this.sync(appData);
-    }
-    reader.readAsText(e.target.files[0]);
+        reader.onload = (e) => {
+          const appData = _.cloneDeep(this.state.appData);
+          const id = shortid.generate();
+          appData.currentDoc = id;
+          appData.docs.unshift({ id, title: false, lastModified: new Date() });
+          this.setState({ currentDoc: false }, () => {
+            this.sync(appData, { initialData: e.target.result, showDocs: false, showShelf: false });
+          })
+        }
+        reader.readAsText(e.target.files[0]);
   }
 
   toggleArchive(id) {
-    const appData = _.clone(this.state.appData);
+    const appData = _.cloneDeep(this.state.appData);
     appData.file = appData.docs.map(f => {
       if(f.id === id) {
         f.archived = !f.archived;
       }
     });
-    this.setState({ newTitle: false, editTitle: false });
-    this.sync(appData);
+    this.sync(appData, { newTitle: false, editTitle: false });
   }
 
   handleSearch(e) {

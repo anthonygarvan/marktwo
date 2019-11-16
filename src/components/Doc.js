@@ -202,9 +202,11 @@ class Doc extends React.Component {
         docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
 
         this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
-          this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
-          if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-            this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+          if(this._isMounted) {
+            this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
+            if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+              this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+            }
           }
         });
       })
@@ -218,6 +220,10 @@ class Doc extends React.Component {
       })
       .catch(err => this.setState({ syncFailed: true }));
     }
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   enterEditMode() {
@@ -418,6 +424,7 @@ class Doc extends React.Component {
   }
 
   componentDidMount() {
+    this._isMounted = true;
     if(!this.props.tryItNow) {
       this.syncUtils = syncUtils(this.props.gapi);
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
