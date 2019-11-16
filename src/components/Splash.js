@@ -4,6 +4,7 @@ import MarkTwo from './MarkTwo';
 import './Splash.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
+import $ from 'jquery';
 
 
 class Splash extends React.Component {
@@ -62,7 +63,7 @@ class Splash extends React.Component {
 
   handleLogout() {
     this.state.gapi.auth2.getAuthInstance().signOut()
-      .then(() => this.setState( { isAuthenticated: false }));
+      .then(() => this.setState( { isAuthenticated: false }, () => $('body').scrollTop(0)));
   }
 
   render() {
