@@ -117,7 +117,7 @@ class Splash extends React.Component {
             </div>
             <div className="column">
               <h4 className="title is-4">Free</h4>
-              <p>No lock-in: MarkTwo is free and open source, and you can export your docs at any time.</p>
+              <p>No lock-in&mdash;MarkTwo is free and open source, and you can export your docs at any time.</p>
             </div>
         </div>
       </div>
