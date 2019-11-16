@@ -260,6 +260,7 @@ class MarkTwo extends React.Component {
               <tr key={f.id}>
                 <td><div className="select">
                       <select value={''} onChange={(e) => this.takeFileAction(e, f)}>
+                        <option hidden selected value></option>
                         <option value="rename">Rename</option>
                         {f.id === this.state.currentDoc && <option value="export">Export</option>}
                         <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to docs'}</option>
