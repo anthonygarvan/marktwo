@@ -63,7 +63,7 @@ class Splash extends React.Component {
 
   handleLogout() {
     this.state.gapi.auth2.getAuthInstance().signOut()
-      .then(() => this.setState( { isAuthenticated: false }, () => $('body').scrollTop(0)));
+      .then(() => this.setState( { isAuthenticated: false }, () => $(window).scrollTop(0)));
   }
 
   render() {
@@ -94,7 +94,7 @@ class Splash extends React.Component {
         <div className="columns">
             <div className="column">
                 <h4 className="title is-4">Seamless</h4>
-                <p>Read and edit markdown from a single view. No need to toggle back and forth!</p>
+                <p>Read and edit markdown from a single view. No need to toggle back and forth.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Speedy</h4>

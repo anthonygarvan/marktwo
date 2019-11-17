@@ -12,6 +12,7 @@ import download from 'in-browser-download';
 import raw from 'raw.macro';
 import _ from 'lodash';
 import $ from 'jquery';
+import { get } from 'idb-keyval';
 const tryItNowText  = raw('./tryItNow.md');
 
 
@@ -26,6 +27,7 @@ class MarkTwo extends React.Component {
     this.handleSearch = this.handleSearch.bind(this);
     this.takeFileAction = this.takeFileAction.bind(this);
     this.sync = this.sync.bind(this);
+    this.refreshDocs = this.refreshDocs.bind(this);
 
     marked.setOptions({
       breaks: true,
@@ -50,21 +52,39 @@ class MarkTwo extends React.Component {
       revision: 0 };
 
     if(!this.props.tryItNow) {
-      this.syncUtils.initializeData(this.appDataKey, defaultAppData).then(appData => {
-        this.sync(appData);
-      });
+      this.refreshDocs(defaultAppData);
     } else {
       this.setState({ ...defaultAppData, appData: defaultAppData });
     }
   }
 
+  refreshDocs(defaultAppData) {
+    return new Promise(resolve => {
+      this.syncUtils.initializeData(this.appDataKey, defaultAppData).then(appData => {
+        Promise.all(appData.docs.map(d => {
+          return get(d.id)
+        })).then(docMetaDataFiles => {
+          appData.docs = appData.docs.map((d, i) => {
+            d.lastModified = docMetaDataFiles[i] ? docMetaDataFiles[i].lastModified : d.lastModified;
+            return d;
+          })
+          this.sync(appData, {}).then(resolve);
+        });
+        });
+      });
+  }
+
   sync(appData, additionalState) {
     this.setState({ ...appData, ...additionalState, appData });
-    if(!this.props.tryItNow) {
-      this.syncUtils.syncByRevision(this.appDataKey, appData).then(appData => {
-        this.setState({ ...appData, appData })
-      });
-    }
+    return new Promise(resolve => {
+      if(!this.props.tryItNow) {
+        this.syncUtils.syncByRevision(this.appDataKey, appData).then(appData => {
+          this.setState({ ...appData, appData }, resolve)
+        });
+      } else {
+        resolve();
+      }
+    })
   }
 
   openFile(id) {
@@ -203,7 +223,7 @@ class MarkTwo extends React.Component {
       tryItNow={this.props.tryItNow}
       showShelf={this.state.showShelf}
       setShelf={(val) => this.setState({ showShelf: val })}
-      showDocs={(val) => this.setState({ showDocs: val, viewArchive: false })}
+      showDocs={(val) => this.setState({ showDocs: val, viewArchive: false }, this.refreshDocs)}
       showSearch={() => this.setState({ showSearch: true })}
       showAbout={() => this.setState({ showAbout: true })}/>
 

@@ -110,7 +110,7 @@ function initialize(gapi) {
           if(result) {
             callback(null, result)
           } else {
-            callback('Could not find file', null)
+            callback(`Could not find file ${name}`, null)
           }
         })
       }}))
@@ -136,7 +136,7 @@ function initialize(gapi) {
         deleteFile(name).then(result => {
           setTimeout(() => {
             if(!(result.status === 204)) {
-              callback('Delete request failed');
+              callback(`Delete request failed for ${name}`);
             } else {
               callback();
             }
@@ -152,7 +152,7 @@ function initialize(gapi) {
       return function(callback) {
         create(file.name, file.data, (result) => {
           if(!result.name) {
-              callback('Create request failed');
+              callback(`Create request failed for ${file.name}`);
             } else {
               callback();
             }
@@ -220,6 +220,7 @@ function initialize(gapi) {
         } else {
           // otherwise use the new version and update server version
           set(name, JSON.stringify(newData));
+          console.log(`Updating ${name}, fileId ${newData.fileId}`);
           update(newData.fileId, newData);
           resolve(newData);
         }

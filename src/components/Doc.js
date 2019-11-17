@@ -201,6 +201,9 @@ class Doc extends React.Component {
     const pagesToAdd = _.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]}));
 
     if(pagesToAdd.length) {
+      if(pagesToAdd.length > 1) {
+        this.setState({ isLoading: true });
+      }
       // first add the new pages
       this.syncUtils.createFiles(pagesToAdd)
       .then(results => {
@@ -227,7 +230,7 @@ class Doc extends React.Component {
         });
         return this.syncUtils.deleteFiles(removeThese).then(() => this.setState({ isLoading: false }));
       })
-      .catch(err => this.setState({ syncFailed: true }));
+      .catch(err => this.setState({ syncFailed: true, isLoading: false }));
     }
   }
 
