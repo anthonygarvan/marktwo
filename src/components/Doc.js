@@ -14,7 +14,6 @@ import syncUtils from './syncUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
 import { del, set } from 'idb-keyval';
-let startIndex, endIndex, doc, allLines;
 
 class Doc extends React.Component {
   constructor(props) {
@@ -22,7 +21,7 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
-    this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.sync(this.getAllLines()) : this.getAllLines(), 3000);
+    this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.getAllLines().then(lines => this.sync(lines)) : this.getAllLines(), 3000);
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
     this.getDocList = this.getDocList.bind(this);
@@ -39,42 +38,46 @@ class Doc extends React.Component {
       smartLists: true,
     })
 
-    doc = {};
-    allLines = [];
-
-    this.state = { isLoading: true };
+    this.state = { isLoading: true, doc: {}, allLines: [] };
   }
 
   initializeFromDocList(docList, caretAt) {
     if(docList.filter(d => !d).length === 0) {
       const caretIndex = caretAt ? _.findIndex(docList, {id: caretAt}) : 0;
-      allLines = docList.map(d => d.id);
-      startIndex = Math.max(caretIndex - 100, 0);
-      endIndex = Math.min(caretIndex + 100, docList.length)
+      const allLines = docList.map(d => d.id);
+      const startIndex = Math.max(caretIndex - 100, 0);
+      const endIndex = Math.min(caretIndex + 100, docList.length)
       const visibleDocList = _.slice(docList, startIndex, endIndex);
 
       document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => this.getNodeForBlock(entry.text)[0].outerHTML).join('\n')
       Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
         el.id = visibleDocList[i].id;
       });
-      doc = {};
+      const doc = {};
       docList.forEach(entry => doc[entry.id] = entry.text);
       this.props.setDocData(allLines, doc);
       const caretAtEl = document.getElementById(caretAt);
-      if(caretAtEl) {
-        caretAtEl.scrollIntoView();
-        var range = document.createRange();
-        var sel = window.getSelection();
-        range.setStart(caretAtEl, 0);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        this.enterEditMode();
-        this.oldSelectedBlock = $(caretAtEl);
-      }
-      if(!this.props.tryItNow && this.props.initialData) {
-        this.sync(this.getAllLines());
-      }
+
+      this.setState({ startIndex, endIndex, doc, allLines }, () => {
+        this.getAllLines().then(lines => {
+          if(caretAtEl) {
+            caretAtEl.scrollIntoView();
+            $(window).scrollTop($(window).scrollTop() - 100);
+            var range = document.createRange();
+            var sel = window.getSelection();
+            range.setStart(caretAtEl, 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            this.enterEditMode();
+            this.oldSelectedBlock = $(caretAtEl);
+          }
+          if(!this.props.tryItNow && this.props.initialData) {
+            this.sync(lines);
+          } else {
+            this.setState({ isLoading: false });
+          }
+      })});
     } else {
       alert('Encountered an error, please reload');
     }
@@ -115,6 +118,7 @@ class Doc extends React.Component {
     let lines = [];
     const usedIds = {};
     const blocks = $('#m2-doc > *');
+    const doc = _.clone(this.state.doc);
     blocks.each((i, el) => {
       if(!el.id || el.id in usedIds || !(el.id in doc)) {
         el.id = shortid.generate();
@@ -123,10 +127,15 @@ class Doc extends React.Component {
       usedIds[el.id] = true;
       lines.push(el.id);
     })
-    allLines = _.concat(_.slice(allLines, 0, startIndex), lines, _.slice(allLines, Math.min(endIndex, allLines.length), allLines.length));
-    endIndex = startIndex + blocks.length;
-    this.props.setDocData(allLines, doc);
-    return allLines;
+    const allLines = _.concat(_.slice(this.state.allLines, 0, this.state.startIndex), lines, _.slice(this.state.allLines, Math.min(this.state.endIndex, this.state.allLines.length), this.state.allLines.length));
+    const endIndex = this.state.startIndex + blocks.length;
+    return new Promise(resolve => {
+        this.setState({ allLines, doc, endIndex }, () => {
+        this.props.setDocData(this.state.allLines, this.state.doc);
+        $('#m2-doc').show(); // this is part of a bug fix, when importing data lines disappear before doc is initialized
+        resolve(allLines);
+      })
+    })
   }
 
   sync(lines) {
@@ -142,7 +151,7 @@ class Doc extends React.Component {
     let startIndex = 0;
     let i = 0;
     for(i = 0; i < docMetadata.pageIds.length; i++) {
-      const page = _.slice(lines, startIndex, startIndex + docMetadata.pageLengths[i]).map(id => ({id, text: doc[id]}));
+      const page = _.slice(lines, startIndex, startIndex + docMetadata.pageLengths[i]).map(id => ({id, text: this.state.doc[id]}));
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
       if(id === docMetadata.pageIds[i] && docMetadata.pageLengths[i] < 250) {
@@ -157,7 +166,7 @@ class Doc extends React.Component {
     let endIndex = lines.length;
     const endPageIds = [];
     for(let j = docMetadata.pageIds.length - 1; j > i; j--) {
-      const page = _.slice(lines, endIndex - docMetadata.pageLengths[j], endIndex).map(id => ({id, text: doc[id]}));
+      const page = _.slice(lines, endIndex - docMetadata.pageLengths[j], endIndex).map(id => ({id, text: this.state.doc[id]}));
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
       if(id === docMetadata.pageIds[j]) {
@@ -169,7 +178,7 @@ class Doc extends React.Component {
       }
     }
 
-    let newLines = _.slice(lines, startIndex, endIndex).map(id => ({ id, text: doc[id]}));
+    let newLines = _.slice(lines, startIndex, endIndex).map(id => ({ id, text: this.state.doc[id]}));
     let chunkSize = Math.ceil(newLines.length / Math.ceil(newLines.length / 1500));
 
     _.chunk(newLines, chunkSize).map(page => {
@@ -216,7 +225,7 @@ class Doc extends React.Component {
         removeThese.map(pageId => {
            del(pageId).catch(() => console.log('page not cached, did not remove.'));
         });
-        return this.syncUtils.deleteFiles(removeThese);
+        return this.syncUtils.deleteFiles(removeThese).then(() => this.setState({ isLoading: false }));
       })
       .catch(err => this.setState({ syncFailed: true }));
     }
@@ -224,6 +233,8 @@ class Doc extends React.Component {
 
   componentWillUnmount() {
     this._isMounted = false;
+    $('#m2-doc').off('input keydown paste keydown keyup mouseup');
+    $(window).off('scroll focus');
   }
 
   enterEditMode() {
@@ -234,7 +245,7 @@ class Doc extends React.Component {
     if(sel.anchorNode && selectedBlock && selectedBlock[0]) {
       let renderedMarkdown;
       if(selectedBlock.attr('id')) {
-        renderedMarkdown = doc[selectedBlock.attr('id')] || '\u200B';
+        renderedMarkdown = this.state.doc[selectedBlock.attr('id')] || '\u200B';
       } else {
         renderedMarkdown = this.turndownService.turndown(selectedBlock[0].outerHTML) || '\u200B'
       }
@@ -267,12 +278,13 @@ class Doc extends React.Component {
     const docHeight = $(document).height();
     const winHeight = $(window).height();
     const scrollPercent = (scrollTop) / (docHeight - winHeight);
-
-    if(scrollPercent > 0.9 && endIndex < allLines.length) {
+    let startIndex = this.state.startIndex;
+    let endIndex = this.state.endIndex;
+    if(scrollPercent > 0.9 && endIndex < this.state.allLines.length) {
       const oldEndIndex = endIndex;
-      endIndex = Math.min(endIndex + 100, allLines.length);
-      const newHtml = _.slice(allLines, oldEndIndex, endIndex).map(id => {
-        const newBlock = this.getNodeForBlock(doc[id]);
+      endIndex = Math.min(endIndex + 100, this.state.allLines.length);
+      const newHtml = _.slice(this.state.allLines, oldEndIndex, endIndex).map(id => {
+        const newBlock = this.getNodeForBlock(this.state.doc[id]);
         newBlock.attr('id', id);
         return newBlock[0].outerHTML
       }).join('\n');
@@ -282,8 +294,8 @@ class Doc extends React.Component {
     if(scrollPercent < 0.1 && startIndex > 0) {
       const oldStartIndex = startIndex;
       startIndex = Math.max(startIndex - 100, 0);
-      const newHtml = _.slice(allLines, startIndex, oldStartIndex).map(id => {
-        const newBlock = this.getNodeForBlock(doc[id]);
+      const newHtml = _.slice(this.state.allLines, startIndex, oldStartIndex).map(id => {
+        const newBlock = this.getNodeForBlock(this.state.doc[id]);
         newBlock.attr('id', id);
         return newBlock[0].outerHTML
       }).join('\n');
@@ -300,7 +312,7 @@ class Doc extends React.Component {
         document.querySelectorAll(`#m2-doc>*:nth-child(n+250)`).forEach(el => {
           el.remove();
         });
-        endIndex = startIndex + 250;
+        endIndex = this.state.startIndex + 250;
       }
 
       if(scrollPercent > 0.8) {
@@ -310,6 +322,8 @@ class Doc extends React.Component {
         startIndex = endIndex - 250;
       }
     }
+
+    this.setState({ startIndex, endIndex });
   }
 
   getNodeForBlock(block) {
@@ -345,12 +359,15 @@ class Doc extends React.Component {
         } else {
           const sel = window.getSelection();
           const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
+          const doc = _.clone(this.state.doc);
           doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
+          this.setState({ doc });
         }
       }
     });
 
     $('#m2-doc').on('keydown keyup mouseup', (e) => {
+      const doc = _.clone(this.state.doc);
       this.debouncedSync();
 
       if(selectedBlock) {
@@ -417,25 +434,30 @@ class Doc extends React.Component {
           this.oldSelectedBlock.replaceWith($(nodes.join('\n')));
 
         }
-
-        this.props.setDocData(allLines, doc);
+        this.setState({ doc }, () => {
+          this.props.setDocData(this.state.allLines, this.state.doc);
+        });
       }
     });
   }
 
   componentDidMount() {
     this._isMounted = true;
+    $('#m2-doc').hide();
     if(!this.props.tryItNow) {
       this.syncUtils = syncUtils(this.props.gapi);
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
-        this.setState({ docMetadata });
-        this.getDocList(docMetadata).then((docList) => {
-          this.initializeEditor();
-          this.initializeFromDocList(docList, docMetadata.caretAt);
-          this.setState({ isLoading: false });
-        })
+        if(this._isMounted) {
+          this.setState({ docMetadata });
+          this.getDocList(docMetadata).then((docList) => {
+            if(this._isMounted) {
+              this.initializeEditor();
+              this.initializeFromDocList(docList, docMetadata.caretAt);
+            }
+          })
+        }
       });
     } else {
       this.getDocList().then((docList) => {
@@ -448,7 +470,7 @@ class Doc extends React.Component {
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if(prevProps.goToBlock !== this.props.goToBlock) {
-        const docList = allLines.map(id => ({ id, text: doc[id] }));
+        const docList = this.state.allLines.map(id => ({ id, text: this.state.doc[id] }));
         this.initializeFromDocList(docList, this.props.goToBlock);
     }
   }

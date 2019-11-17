@@ -11,6 +11,7 @@ import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import download from 'in-browser-download';
 import raw from 'raw.macro';
 import _ from 'lodash';
+import $ from 'jquery';
 const tryItNowText  = raw('./tryItNow.md');
 
 
@@ -68,6 +69,7 @@ class MarkTwo extends React.Component {
 
   openFile(id) {
     this.setState({ currentDoc: false }, () => {
+      $(window).scrollTop(0);
       const appData = _.cloneDeep(this.state.appData);
       appData.currentDoc = id;
       this.sync(appData, { showDocs: false, showShelf: false, initialData: false });
@@ -76,6 +78,7 @@ class MarkTwo extends React.Component {
 
   startNewFile() {
     this.setState({ currentDoc: false }, () => {
+      $(window).scrollTop(0);
       const appData = _.cloneDeep(this.state.appData);
       const id = shortid.generate();
       appData.currentDoc = id;
@@ -122,6 +125,7 @@ class MarkTwo extends React.Component {
           appData.currentDoc = id;
           appData.docs.unshift({ id, title: false, lastModified: new Date() });
           this.setState({ currentDoc: false }, () => {
+            $(window).scrollTop(0);
             this.sync(appData, { initialData: e.target.result, showDocs: false, showShelf: false });
           })
         }
