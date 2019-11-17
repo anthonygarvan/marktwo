@@ -65,7 +65,7 @@ class MarkTwo extends React.Component {
           return get(d.id)
         })).then(docMetaDataFiles => {
           appData.docs = appData.docs.map((d, i) => {
-            d.lastModified = docMetaDataFiles[i] ? docMetaDataFiles[i].lastModified : d.lastModified;
+            d.lastModified = docMetaDataFiles[i] ? JSON.parse(docMetaDataFiles[i]).lastModified : d.lastModified;
             return d;
           })
           this.sync(appData, {}).then(resolve);
@@ -283,8 +283,8 @@ class MarkTwo extends React.Component {
             {this.state.docs && this.state.docs.filter(f => (!!f.archived == this.state.viewArchive)).map(f =>
               <tr key={f.id}>
                 <td><div className="select">
-                      <select value={''} onChange={(e) => this.takeFileAction(e, f)}>
-                        <option hidden selected value></option>
+                      <select value={'default'} onChange={(e) => this.takeFileAction(e, f)}>
+                        <option hidden value="default"></option>
                         <option value="rename">Rename</option>
                         {f.id === this.state.currentDoc && <option value="export">Export</option>}
                         <option value="toggleArchive">{!f.archived ? 'Archive' : 'Move to docs'}</option>
