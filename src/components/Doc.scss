@@ -42,6 +42,12 @@
     white-space: pre-wrap;
     border-left: 3px solid rgba($primary, 0.3);
   }
+
+  &.m2-syncing .m2-edit-mode {
+    border-left: 3px solid rgba($primary, 0.15);
+  }
+
+
 }
 
 .m2-sync-failed {

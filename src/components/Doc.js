@@ -21,7 +21,9 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
-    this.debouncedSync = _.debounce(() => !this.props.tryItNow ? this.getAllLines().then(lines => this.sync(lines)) : this.getAllLines(), 3000);
+    const debounced = _.debounce(() => !this.props.tryItNow ? this.getAllLines().then(lines => this.sync(lines).then(() => this.setState({ syncing: false })))
+      : this.getAllLines().then(() => this.setState({ syncing: false })), 3000);
+    this.debouncedSync = () => { this.setState({ syncing: true }, debounced); }
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
     this.getDocList = this.getDocList.bind(this);
@@ -200,38 +202,43 @@ class Doc extends React.Component {
     // if the page isn't cached, cache it
     const pagesToAdd = _.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]}));
 
-    if(pagesToAdd.length) {
-      if(pagesToAdd.length > 1) {
-        this.setState({ isLoading: true });
-      }
-      // first add the new pages
-      this.syncUtils.createFiles(pagesToAdd)
-      .then(results => {
-        // then update the metadata and docList.
-        docMetadata.caretAt = caretAt;
-        docMetadata.pageIds = pageIds;
-        docMetadata.lastModified = new Date().toISOString();
-        docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
+    return new Promise(resolve => {
+      if(pagesToAdd.length) {
+        if(pagesToAdd.length > 1) {
+          this.setState({ isLoading: true });
+        }
+        // first add the new pages
+        this.syncUtils.createFiles(pagesToAdd)
+        .then(results => {
+          // then update the metadata and docList.
+          docMetadata.caretAt = caretAt;
+          docMetadata.pageIds = pageIds;
+          docMetadata.lastModified = new Date().toISOString();
+          docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
 
-        this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
-          if(this._isMounted) {
-            this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
-            if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-              this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+          this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+            if(this._isMounted) {
+              this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
+              if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+                this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+              }
             }
-          }
-        });
-      })
-      .then(results => {
-        // then remove the unused pages
-        const removeThese = _.difference(docMetadata.pageIds, pageIds)
-        removeThese.map(pageId => {
-           del(pageId).catch(() => console.log('page not cached, did not remove.'));
-        });
-        return this.syncUtils.deleteFiles(removeThese).then(() => this.setState({ isLoading: false }));
-      })
-      .catch(err => this.setState({ syncFailed: true, isLoading: false }));
-    }
+          });
+        })
+        .then(results => {
+          // then remove the unused pages
+          const removeThese = _.difference(docMetadata.pageIds, pageIds)
+          removeThese.map(pageId => {
+             del(pageId).catch(() => console.log('page not cached, did not remove.'));
+          });
+          return this.syncUtils.deleteFiles(removeThese).then(() => this.setState({ isLoading: false }, resolve));
+        })
+        .catch(err => this.setState({ syncFailed: true, isLoading: false }));
+      } else {
+        resolve();
+      }
+    })
+
   }
 
   componentWillUnmount() {
@@ -487,7 +494,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
       </div>}
       {this.state.syncFailed && <div className="m2-sync-failed"><FontAwesomeIcon icon={faBolt} /></div>}
-      <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
+      <div id="m2-doc" className={`m2-doc content ${this.state.syncing && 'm2-syncing'}`} contentEditable="true"></div></div>
   }
 }
 
