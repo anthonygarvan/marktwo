@@ -21,9 +21,9 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
-    const debounced = _.debounce(() => !this.props.tryItNow ? this.getAllLines().then(lines => this.sync(lines).then(() => this.setState({ syncing: false })))
-      : this.getAllLines().then(() => this.setState({ syncing: false })), 3000);
-    this.debouncedSync = () => { this.setState({ syncing: true }, debounced); }
+    const debounced = _.debounce(() => !this.props.tryItNow ? this.getAllLines().then(lines => this.sync(lines).then(() => $('#m2-doc').removeClass('m2-syncing')))
+      : this.getAllLines().then(() => $('#m2-doc').removeClass('m2-syncing')), 3000);
+    this.debouncedSync = () => { $('#m2-doc').addClass('m2-syncing'); debounced(); }
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
     this.getDocList = this.getDocList.bind(this);
@@ -60,7 +60,8 @@ class Doc extends React.Component {
       this.props.setDocData(allLines, doc);
       const caretAtEl = document.getElementById(caretAt);
 
-      this.setState({ startIndex, endIndex, doc, allLines }, () => {
+      this.setState({ startIndex, endIndex, doc, allLines })
+      setTimeout(() => {
         this.getAllLines().then(lines => {
           if(caretAtEl) {
             caretAtEl.scrollIntoView();
@@ -79,7 +80,7 @@ class Doc extends React.Component {
           } else {
             this.setState({ isLoading: false });
           }
-      })});
+      })}, 25);
     } else {
       alert('Encountered an error, please reload');
     }
@@ -132,11 +133,12 @@ class Doc extends React.Component {
     const allLines = _.concat(_.slice(this.state.allLines, 0, this.state.startIndex), lines, _.slice(this.state.allLines, Math.min(this.state.endIndex, this.state.allLines.length), this.state.allLines.length));
     const endIndex = this.state.startIndex + blocks.length;
     return new Promise(resolve => {
-        this.setState({ allLines, doc, endIndex }, () => {
+        this.setState({ allLines, doc, endIndex });
+        setTimeout(() => {
         this.props.setDocData(this.state.allLines, this.state.doc);
         $('#m2-doc').show(); // this is part of a bug fix, when importing data lines disappear before doc is initialized
         resolve(allLines);
-      })
+      }, 50)
     })
   }
 
@@ -377,7 +379,7 @@ class Doc extends React.Component {
     });
 
     $('#m2-doc').on('keydown keyup mouseup', (e) => {
-      const doc = _.clone(this.state.doc);
+      const doc = this.state.doc;
       this.debouncedSync();
 
       if(selectedBlock) {
@@ -451,6 +453,15 @@ class Doc extends React.Component {
     });
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    // I have to hang some variables off of state to tie them into the lifecycle
+    // of the Docs commponent, but they should not trigger a render
+    return this.state.allLines !== nextState.allLines
+    || this.state.doc !== nextState.doc
+    || this.state.startIndex !== nextState.startIndex
+    || this.state.endIndex !== nextState.endIndex;
+  }
+
   componentDidMount() {
     this._isMounted = true;
     $('#m2-doc').hide();
@@ -494,7 +505,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
       </div>}
       {this.state.syncFailed && <div className="m2-sync-failed"><FontAwesomeIcon icon={faBolt} /></div>}
-      <div id="m2-doc" className={`m2-doc content ${this.state.syncing && 'm2-syncing'}`} contentEditable="true"></div></div>
+      <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }
 
