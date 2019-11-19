@@ -21,7 +21,11 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
-    const debounced = _.debounce(() => !this.props.tryItNow ? this.getAllLines().then(lines => this.sync(lines).then(() => $('#m2-doc').removeClass('m2-syncing')))
+    const debounced = _.debounce(() => !this.props.tryItNow ? this.getAllLines()
+    .then(lines => this.sync(lines).then(() => {
+      $('#m2-doc').removeClass('m2-syncing');
+      $('#m2-loading').hide();
+    }))
       : this.getAllLines().then(() => $('#m2-doc').removeClass('m2-syncing')), 3000);
     this.debouncedSync = () => { $('#m2-doc').addClass('m2-syncing'); debounced(); }
     this.handleScroll = this.handleScroll.bind(this);
@@ -40,7 +44,7 @@ class Doc extends React.Component {
       smartLists: true,
     })
 
-    this.state = { isLoading: true, doc: {}, allLines: [] };
+    this.state = { doc: {}, allLines: [] };
   }
 
   initializeFromDocList(docList, caretAt) {
@@ -76,9 +80,9 @@ class Doc extends React.Component {
             this.oldSelectedBlock = $(caretAtEl);
           }
           if(!this.props.tryItNow && this.props.initialData) {
-            this.sync(lines);
+            this.sync(lines).then(() => $('#m2-loading').hide());
           } else {
-            this.setState({ isLoading: false });
+            $('#m2-loading').hide();
           }
       })}, 25);
     } else {
@@ -207,7 +211,7 @@ class Doc extends React.Component {
     return new Promise(resolve => {
       if(pagesToAdd.length) {
         if(pagesToAdd.length > 1) {
-          this.setState({ isLoading: true });
+          $('#m2-loading').show();
         }
         // first add the new pages
         this.syncUtils.createFiles(pagesToAdd)
@@ -233,14 +237,13 @@ class Doc extends React.Component {
           removeThese.map(pageId => {
              del(pageId).catch(() => console.log('page not cached, did not remove.'));
           });
-          return this.syncUtils.deleteFiles(removeThese).then(() => this.setState({ isLoading: false }, resolve));
+          return this.syncUtils.deleteFiles(removeThese).then(resolve);
         })
-        .catch(err => this.setState({ syncFailed: true, isLoading: false }));
+        .catch(err => this.setState({ syncFailed: true }, resolve));
       } else {
         resolve();
       }
     })
-
   }
 
   componentWillUnmount() {
@@ -454,12 +457,12 @@ class Doc extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    // I have to hang some variables off of state to tie them into the lifecycle
-    // of the Docs commponent, but they should not trigger a render
-    return this.state.allLines !== nextState.allLines
-    || this.state.doc !== nextState.doc
-    || this.state.startIndex !== nextState.startIndex
-    || this.state.endIndex !== nextState.endIndex;
+    // Due to the complexities of cross-platform editing of html in react, this component is not
+    // a "real" react component - it's stitched together with jquery and raw html.
+    // However, key variables are still scoped to hang off of state, in order to take advantage of
+    // the component lifecycle logic built into react.
+    // I fully disable rendering for performance reasons.
+    return false;
   }
 
   componentDidMount() {
@@ -484,7 +487,7 @@ class Doc extends React.Component {
       this.getDocList().then((docList) => {
         this.initializeEditor();
         this.initializeFromDocList(docList, docList[0].id);
-        this.setState({ isLoading: false });
+        $('#m2-loading').hide()
       })
     }
   }
@@ -499,11 +502,11 @@ class Doc extends React.Component {
 
   render() {
     return <div>
-      {this.state.isLoading && <div className="sp-loading">
+      <div id="m2-loading" className="m2-loading">
         <div className="bar"></div>
         <div className="bar"></div>
         <div className="bar"></div>
-      </div>}
+      </div>
       {this.state.syncFailed && <div className="m2-sync-failed"><FontAwesomeIcon icon={faBolt} /></div>}
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }

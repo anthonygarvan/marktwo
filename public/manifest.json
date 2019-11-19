@@ -3,9 +3,9 @@
   "name": "MarkTwo",
   "icons": [
     {
-      "src": "/img/favicon.ico",
+      "src": "/img/manifest_logo_small.png",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "type": "image/png"
     },
     {
       "src": "/img/manifest_logo.png",
