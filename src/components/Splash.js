@@ -50,8 +50,12 @@ class Splash extends React.Component {
 
     this.state.gapi.auth2.getAuthInstance().signIn()
       .then(() => {
-        const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
-        this.setState({ isAuthenticated: this.state.gapi.auth2.getAuthInstance().isSignedIn.get(), userEmail });
+        const isAuthenticated = this.state.gapi.auth2.getAuthInstance().isSignedIn.get();
+        if(isAuthenticated) {
+          const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+          this.setState({ isAuthenticated, userEmail });
+          $('.m2-is-signed-out').hide();
+        }
       });
   }
 
@@ -70,6 +74,7 @@ class Splash extends React.Component {
     return <div>{this.state.tryItNow && <MarkTwo
         gapi={this.state.gapi}
         handleLogout={() => this.setState({ tryItNow: false })}
+        handleLogin={() => alert("You're in anonymous mode! To log in please sign in under your google account")}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
         tryItNow={true} />}
       {!this.state.tryItNow && this.state.isAuthenticated &&
@@ -77,6 +82,7 @@ class Splash extends React.Component {
             userEmail={this.state.userEmail}
             gapi={this.state.gapi}
             handleLogout={this.handleLogout}
+            handleLogin={this.handleLogin}
             handleSwitchUser={this.handleSwitchUser}
             tryItNow={false} />}
       {!this.state.tryItNow && this.state.isAuthenticated === null && <div className="m2-load-screen">

@@ -213,6 +213,7 @@ class MarkTwo extends React.Component {
       gapi={this.props.gapi}
       handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
+      handleLogin={this.props.handleLogin}
       tryItNow={this.props.tryItNow}
       initialData={!this.props.tryItNow ? this.state.initialData : tryItNowText}
       goToBlock={this.state.goToBlock}

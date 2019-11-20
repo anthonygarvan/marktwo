@@ -57,3 +57,13 @@
   color: lightgrey;
   font-size: 2rem;
 }
+
+.m2-is-signed-out {
+  position: fixed;
+  top: 0px;
+  width: 100%;
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+  background-color: lighten($primary, 35%);
+}

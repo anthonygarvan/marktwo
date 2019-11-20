@@ -27,7 +27,15 @@ class Doc extends React.Component {
       $('#m2-loading').hide();
     }).catch(err => $('.m2-sync-failed').show()))
       : this.getAllLines().then(() => $('#m2-doc').removeClass('m2-syncing')), 3000);
-    this.debouncedSync = () => { $('#m2-doc').addClass('m2-syncing'); debounced(); }
+
+    this.debouncedSync = () => {
+    if(props.gapi.auth2.getAuthInstance().isSignedIn.get()) {
+        $('#m2-doc').addClass('m2-syncing');
+        $('.m2-is-signed-out').hide();
+        debounced();
+    } else {
+        $('.m2-is-signed-out').show();
+    }}
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
     this.getDocList = this.getDocList.bind(this);
@@ -509,6 +517,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
       </div>
       <div className="m2-sync-failed" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
+      <div className="m2-is-signed-out" style={ {display: 'none' } }>You've been signed out. <a onClick={this.props.handleLogin}>Sign back in</a></div>
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }
