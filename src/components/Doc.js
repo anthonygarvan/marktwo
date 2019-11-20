@@ -25,7 +25,7 @@ class Doc extends React.Component {
     .then(lines => this.sync(lines).then(() => {
       $('#m2-doc').removeClass('m2-syncing');
       $('#m2-loading').hide();
-    }))
+    }).catch(err => $('.m2-sync-failed').show()))
       : this.getAllLines().then(() => $('#m2-doc').removeClass('m2-syncing')), 3000);
     this.debouncedSync = () => { $('#m2-doc').addClass('m2-syncing'); debounced(); }
     this.handleScroll = this.handleScroll.bind(this);
@@ -208,7 +208,7 @@ class Doc extends React.Component {
     // if the page isn't cached, cache it
     const pagesToAdd = _.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]}));
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       if(pagesToAdd.length) {
         if(pagesToAdd.length > 1) {
           $('#m2-loading').show();
@@ -224,7 +224,8 @@ class Doc extends React.Component {
 
           this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
             if(this._isMounted) {
-              this.setState({ docMetadata: validatedDocMetadata, syncFailed: false });
+              this.setState({ docMetadata: validatedDocMetadata });
+              $('.m2-sync-failed').hide();
               if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
                 this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
               }
@@ -239,7 +240,7 @@ class Doc extends React.Component {
           });
           return this.syncUtils.deleteFiles(removeThese).then(resolve);
         })
-        .catch(err => this.setState({ syncFailed: true }, resolve));
+        .catch(err => reject());
       } else {
         resolve();
       }
@@ -507,7 +508,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
         <div className="bar"></div>
       </div>
-      {this.state.syncFailed && <div className="m2-sync-failed"><FontAwesomeIcon icon={faBolt} /></div>}
+      <div className="m2-sync-failed" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }
