@@ -34,7 +34,9 @@ class Doc extends React.Component {
         $('.m2-is-signed-out').hide();
         debounced();
     } else {
-        $('.m2-is-signed-out').show();
+      if(!this.props.tryItNow) {
+        $('.m2-is-signed-out').show();  
+      }
     }}
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
