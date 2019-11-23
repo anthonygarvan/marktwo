@@ -14,6 +14,7 @@ import syncUtils from './syncUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
 import { del, set } from 'idb-keyval';
+import async from 'async';
 
 class Doc extends React.Component {
   constructor(props) {
@@ -21,17 +22,31 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
-    const debounced = _.debounce(() => !this.props.tryItNow ? this.getAllLines()
-    .then(lines => this.sync(lines).then(() => {
-      $('#m2-doc').removeClass('m2-syncing');
-      $('#m2-loading').hide();
-    }).catch(err => $('.m2-sync-failed').show()))
-      : this.getAllLines().then(() => $('#m2-doc').removeClass('m2-syncing')), 3000);
+    const syncQueue = async.queue((task, callback) => {
+      if (!this.props.tryItNow) {
+        this.getAllLines()
+        .then(lines => this.sync(lines).then(() => {
+          $('#m2-doc').removeClass('m2-syncing');
+          $('#m2-loading').hide();
+          callback();
+        }).catch(err => {
+            $('.m2-sync-failed').show();
+            callback();
+        }));
+      } else {
+        this.getAllLines().then(() => {
+          $('#m2-doc').removeClass('m2-syncing');
+          callback();
+        });
+      }
+    }, 1)
+
+    const debounced = _.debounce(() => syncQueue.push(), 3000)
 
     this.debouncedSync = () => {
     if(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get()) {
-        $('#m2-doc').addClass('m2-syncing');
         $('.m2-is-signed-out').hide();
+        $('#m2-doc').addClass('m2-syncing');
         debounced();
     } else {
       if(!this.props.tryItNow) {

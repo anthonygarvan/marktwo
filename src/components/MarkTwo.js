@@ -374,7 +374,7 @@ Links: [Text in brackets](https://link-in-parentheses.com)`}</pre>
 <pre>
 {`1. Any number followed by a period and space
 1. The numbers themselves don't matter
-    1. Again, four spaces starts a sublist`}
+    1. Again, four spaces starts a sub-list`}
 </pre>
 
 <h5>Tables</h5>
