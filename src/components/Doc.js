@@ -187,7 +187,7 @@ class Doc extends React.Component {
       const page = _.slice(lines, startIndex, startIndex + docMetadata.pageLengths[i]).map(id => ({id, text: this.state.doc[id]}));
       const hash = md5(stringify(page));
       const id = `${this.props.currentDoc}.${hash}`;
-      if(id === docMetadata.pageIds[i] && docMetadata.pageLengths[i] < 250) {
+      if(id === docMetadata.pageIds[i] && docMetadata.pageLengths[i] > 1000) {
         startIndex += docMetadata.pageLengths[i];
         pages[id] = page;
         pageIds.push(id);
@@ -465,7 +465,7 @@ class Doc extends React.Component {
           const nodes = blocks.map((block, i) => {
             block = block.replace(/\/now/gi, moment().format('LLL'));
             block = block.replace(/\/today/gi, moment().format('LL'));
-            
+
             const renderedNode = this.getNodeForBlock(block);
             if(i > 0) {
               id = shortid.generate();
