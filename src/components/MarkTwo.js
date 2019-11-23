@@ -226,7 +226,8 @@ class MarkTwo extends React.Component {
       setShelf={(val) => this.setState({ showShelf: val })}
       showDocs={(val) => this.setState({ showDocs: val, viewArchive: false }, this.refreshDocs)}
       showSearch={() => this.setState({ showSearch: true })}
-      showAbout={() => this.setState({ showAbout: true })}/>
+      showAbout={() => this.setState({ showAbout: true })}
+      showHelp={() => this.setState({ showHelp: true })}/>
 
     {this.state.showSearch && <div className="m2-search modal is-active">
     <div className="modal-background" onClick={() => this.setState({ showSearch: false, searchString: '', searchResults: [] })}></div>
@@ -326,6 +327,83 @@ class MarkTwo extends React.Component {
         <a href="/terms.txt" target="_blank">Terms</a>
         <a href="https://github.com/anthonygarvan/marktwo" target="_blank">Source</a>
     </footer>
+    </div></div>}
+
+    {this.state.showHelp && <div className="m2-help modal is-active">
+    <div className="modal-background" onClick={() => this.setState({ showHelp: false })}></div>
+      <div className="modal-card">
+      <header className="modal-card-head">
+        <p className="modal-card-title">Help</p>
+        <button className="delete" aria-label="close" onClick={() => this.setState({ showHelp: false })}></button>
+      </header>
+      <section className="modal-card-body content">
+        <h2>General notes</h2>
+        <p>Thanks for using MarkTwo!</p>
+          <ul>
+          <li>When you select a block (paragraph), it automatically transforms that HTML into markdown,
+        and when you exit the block, it renders to HTML.</li>
+      <li>MarkTwo continuously and efficiently syncs the document you're working via Google Drive. When the edit indicator bar turns light blue, it means changes are being made.
+      Once it turns dark blue, the changes are synced (a few seconds after you're done editing).</li>
+          <li>We do not have access to your documents, they are as secure as your Google account (we recommend enabling two factor authentication).</li>
+        </ul>
+        <h2>Writing with MarkTwo</h2>
+        <p>MarkTwo supports most features of github flavored markdown.</p>
+        <h5>Inline Formatting</h5>
+        <pre>
+{`Italics: *single asterisks* or _single underscores_
+Bold: **double asterisks** or __double underscores__
+Strikethrough: ~tildas~
+Code: \`backticks\`
+Links: [Text in brackets](https://link-in-parentheses.com)`}</pre>
+
+<h5>Headers</h5>
+<pre>
+{`# One hash and a space for title header
+## Two hashes makes a subheader
+
+(3-6 hashes renders progressively smaller headers)`}
+</pre>
+<h5>Unorderd list</h5>
+<pre>
+{`- Dash or asterisk (*) followed by a space
+- like this
+    * Four spaces and a dash or asterisk starts a sub-list`}
+</pre>
+
+<h5>Ordered lists</h5>
+<pre>
+{`1. Any number followed by a period and space
+1. The numbers themselves don't matter
+    1. Again, four spaces starts a sublist`}
+</pre>
+
+<h5>Tables</h5>
+<pre>
+{`| Header1  | Header2 |
+| -------  | ------- |
+| entry 1  | entry2  |`}
+</pre>
+
+<h5>Block quotes</h5>
+<pre>
+{`> An angle bracket and a space will render a block quote.`}
+</pre>
+
+<h5>Code blocks</h5>
+<pre>
+{`\`\`\`
+var success = "Text sandwiched by three backticks renders a code block";
+\`\`\``}
+</pre>
+
+<h5>Horizontal Rule</h5>
+<p>A line consisting solely of three or more dashes renders a horizontal rule.</p>
+<pre>
+{`---`}
+</pre>
+<p><b>That's it, enjoy!</b></p>
+<p><br /></p>
+      </section>
     </div></div>}
 
 

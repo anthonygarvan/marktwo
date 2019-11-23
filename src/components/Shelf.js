@@ -38,6 +38,7 @@ class Shelf extends React.Component {
       <div><a onClick={() => this.props.showDocs(true)}>Docs</a></div>
     </div>
     <div className="m2-menu-footer">
+      <a onClick={this.props.showHelp}>Help</a>
       <a onClick={this.props.showAbout}>About</a>
     </div>
       <a className="m2-close" onClick={() => this.props.setShelf(false)}><FontAwesomeIcon icon={faTimes} /></a>

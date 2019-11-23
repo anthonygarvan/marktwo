@@ -29,7 +29,7 @@ class Doc extends React.Component {
       : this.getAllLines().then(() => $('#m2-doc').removeClass('m2-syncing')), 3000);
 
     this.debouncedSync = () => {
-    if(props.gapi.auth2.getAuthInstance().isSignedIn.get()) {
+    if(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get()) {
         $('#m2-doc').addClass('m2-syncing');
         $('.m2-is-signed-out').hide();
         debounced();

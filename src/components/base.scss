@@ -19,6 +19,10 @@ a:hover {
   color: darken($primary, 20%);
 }
 
+.content pre {
+  white-space: pre-wrap;
+}
+
 
 .modal.is-active {
   display: block;

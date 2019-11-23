@@ -13,7 +13,7 @@ class Splash extends React.Component {
     this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
     this.handleSwitchUser = this.handleSwitchUser.bind(this);
-    this.state = { tryItNow: false, isAuthenticated: null };
+    this.state = { tryItNow: document.location.pathname.startsWith('/try-it-now'), isAuthenticated: null };
   }
 
   componentWillMount() {
@@ -73,7 +73,7 @@ class Splash extends React.Component {
   render() {
     return <div>{this.state.tryItNow && <MarkTwo
         gapi={this.state.gapi}
-        handleLogout={() => this.setState({ tryItNow: false })}
+        handleLogout={() => window.location = "/"}
         handleLogin={() => alert("You're in anonymous mode! To log in please sign in under your google account")}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
         tryItNow={true} />}
@@ -92,7 +92,7 @@ class Splash extends React.Component {
       <div className="m2-hero"><h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
-          <button className="button is-primary is-outlined" onClick={() => this.setState({ tryItNow: true })}>Try it now</button>
+          <a className="button is-primary is-outlined" href="/try-it-now">Try it now</a>
           <button className="button is-primary is-outlined" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
         </div></div>
 
