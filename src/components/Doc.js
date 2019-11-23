@@ -35,7 +35,7 @@ class Doc extends React.Component {
         debounced();
     } else {
       if(!this.props.tryItNow) {
-        $('.m2-is-signed-out').show();  
+        $('.m2-is-signed-out').show();
       }
     }}
     this.handleScroll = this.handleScroll.bind(this);
@@ -468,6 +468,10 @@ class Doc extends React.Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
+    if(this.props.goToBlock !== nextProps.goToBlock) {
+        const docList = this.state.allLines.map(id => ({ id, text: this.state.doc[id] }));
+        this.initializeFromDocList(docList, nextProps.goToBlock);
+    }
     // Due to the complexities of cross-platform editing of html in react, this component is not
     // a "real" react component - it's stitched together with jquery and raw html.
     // However, key variables are still scoped to hang off of state, in order to take advantage of
@@ -500,13 +504,6 @@ class Doc extends React.Component {
         this.initializeFromDocList(docList, docList[0].id);
         $('#m2-loading').hide()
       })
-    }
-  }
-
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if(prevProps.goToBlock !== this.props.goToBlock) {
-        const docList = this.state.allLines.map(id => ({ id, text: this.state.doc[id] }));
-        this.initializeFromDocList(docList, this.props.goToBlock);
     }
   }
 
