@@ -463,6 +463,9 @@ class Doc extends React.Component {
         if(!this.oldSelectedBlock[0].isSameNode(selectedBlock[0])) {
           const blocks = this.oldSelectedBlock[0].nodeName === 'PRE' ? [markdown] : markdown.split('\n\n');
           const nodes = blocks.map((block, i) => {
+            block = block.replace(/\/now/gi, moment().format('LLL'));
+            block = block.replace(/\/today/gi, moment().format('LL'));
+            
             const renderedNode = this.getNodeForBlock(block);
             if(i > 0) {
               id = shortid.generate();

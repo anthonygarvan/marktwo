@@ -401,6 +401,11 @@ var success = "Text sandwiched by three backticks renders a code block";
 <pre>
 {`---`}
 </pre>
+
+<h5>Text Expansion</h5>
+<p>MarkTwo expands the strings <code>/today</code> and <code>/now</code> into the current date or date and time for your locale.
+</p>
+<pre>{`# Star date: /today`}</pre>
 <p><b>That's it, enjoy!</b></p>
 <p><br /></p>
       </section>
