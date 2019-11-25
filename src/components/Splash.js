@@ -108,7 +108,7 @@ class Splash extends React.Component {
             </div>
             <div className="column">
               <h4 className="title is-4">Syncing</h4>
-              <p>Mark Two is web-native, so it works across devices, and your docs are always synced.</p>
+              <p>MarkTwo is web-native, so it works across devices, and your docs are always synced.</p>
             </div>
         </div>
 

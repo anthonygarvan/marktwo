@@ -31,6 +31,7 @@ class Doc extends React.Component {
           callback();
         }).catch(err => {
             $('.m2-sync-failed').show();
+            $('.m2-is-signed-out').show();
             callback();
         }));
       } else {
