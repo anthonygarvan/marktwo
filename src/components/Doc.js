@@ -234,6 +234,8 @@ class Doc extends React.Component {
     // if the page isn't cached, cache it
     const pagesToAdd = _.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]}));
 
+    console.log('initial doc metadata');
+    console.log(docMetadata);
     return new Promise((resolve, reject) => {
       if(pagesToAdd.length) {
         if(pagesToAdd.length > 1) {
@@ -253,6 +255,10 @@ class Doc extends React.Component {
               this.setState({ docMetadata: validatedDocMetadata });
               $('.m2-sync-failed').hide();
               if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+                console.log('doc metadata:');
+                console.log(docMetadata);
+                console.log('validated:');
+                console.log(validatedDocMetadata);
                 this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
               }
             }
