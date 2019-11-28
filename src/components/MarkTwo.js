@@ -60,17 +60,18 @@ class MarkTwo extends React.Component {
 
   refreshDocs(defaultAppData) {
     return new Promise(resolve => {
-      this.syncUtils.initializeData(this.appDataKey, defaultAppData).then(appData => {
-        Promise.all(appData.docs.map(d => {
-          return get(d.id)
-        })).then(docMetaDataFiles => {
-          appData.docs = appData.docs.map((d, i) => {
-            d.lastModified = docMetaDataFiles[i] ? JSON.parse(docMetaDataFiles[i]).lastModified : d.lastModified;
-            return d;
-          })
-          this.sync(appData, {}).then(resolve);
-        });
-        });
+        (this.props.tryItNow ? new Promise(resolve => resolve(_.clone(this.state.appData)))
+        : this.syncUtils.initializeData(this.appDataKey, defaultAppData)).then(appData => {
+          Promise.all(appData.docs.map(d => {
+            return get(d.id)
+          })).then(docMetaDataFiles => {
+            appData.docs = appData.docs.map((d, i) => {
+              d.lastModified = docMetaDataFiles[i] ? JSON.parse(docMetaDataFiles[i]).lastModified : d.lastModified;
+              return d;
+            })
+            this.sync(appData, {}).then(resolve);
+          });
+          });
       });
   }
 
@@ -130,7 +131,7 @@ class MarkTwo extends React.Component {
       }
     }
     this.sync(appData, {});
-    this.syncUtils.find(fileName, docMetadata => {
+    !this.props.tryItNow && this.syncUtils.find(fileName, docMetadata => {
       this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
         this.syncUtils.deleteFile(fileName)
       })
@@ -215,7 +216,7 @@ class MarkTwo extends React.Component {
       handleSwitchUser={this.props.handleSwitchUser}
       handleLogin={this.props.handleLogin}
       tryItNow={this.props.tryItNow}
-      initialData={!this.props.tryItNow ? this.state.initialData : tryItNowText}
+      initialData={this.state.initialData || (this.props.tryItNow && tryItNowText)}
       goToBlock={this.state.goToBlock}
       setDocData={(allLines, doc) => this.setState({ allLines, doc })} /> }
     <Shelf handleLogout={this.props.handleLogout}

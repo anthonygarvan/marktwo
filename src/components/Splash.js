@@ -115,7 +115,7 @@ class Splash extends React.Component {
         <div className="columns">
             <div className="column">
                 <h4 className="title is-4">Private</h4>
-                <p>We take privacy seriously&mdash;we built MarkTwo so that even we can't see your documents.</p>
+                <p>MarkTwo is a static app backed by your own Google Drive&mdash;we don't store any of your data.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Searchable</h4>
