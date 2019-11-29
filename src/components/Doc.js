@@ -22,10 +22,10 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
-    const syncQueue = async.queue((task, callback) => {
+    this.syncQueue = async.queue((forceSync, callback) => {
       if (!this.props.tryItNow) {
         this.getAllLines()
-        .then(lines => this.sync(lines).then(() => {
+        .then(lines => this.sync(lines, forceSync).then(() => {
           $('#m2-doc').removeClass('m2-syncing');
           $('#m2-loading').hide();
           callback();
@@ -42,13 +42,17 @@ class Doc extends React.Component {
       }
     }, 1)
 
-    const debounced = _.debounce(() => syncQueue.push(), 3000)
+    const debounced = _.debounce(() => this.syncQueue.push(), 3000)
 
-    this.debouncedSync = () => {
+    this.initiateSync = (forceSync) => {
     if(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get()) {
         $('.m2-is-signed-out').hide();
         $('#m2-doc').addClass('m2-syncing');
-        debounced();
+        if(forceSync) {
+          this.syncQueue.push(true);
+        } else {
+          debounced();
+        }
     } else {
       if(!this.props.tryItNow) {
         $('.m2-is-signed-out').show();
@@ -172,7 +176,7 @@ class Doc extends React.Component {
     })
   }
 
-  sync(lines) {
+  sync(lines, forceSync) {
     const sel = window.getSelection();
 
     // creates the authoritative definition of the document, a list of ids with text,
@@ -237,7 +241,7 @@ class Doc extends React.Component {
     console.log('initial doc metadata');
     console.log(docMetadata);
     return new Promise((resolve, reject) => {
-      if(pagesToAdd.length) {
+      if(pagesToAdd.length || forceSync) {
         if(pagesToAdd.length > 1) {
           $('#m2-loading').show();
         }
@@ -393,7 +397,7 @@ class Doc extends React.Component {
     })
 
     $(window).on('focus', (e) => {
-      this.debouncedSync();
+      this.initiateSync(true);
     })
 
     document.querySelector('#m2-doc').addEventListener('paste', () => setTimeout(this.getAllLines, 50))
@@ -416,7 +420,7 @@ class Doc extends React.Component {
 
     $('#m2-doc').on('keydown keyup mouseup', (e) => {
       const doc = this.state.doc;
-      this.debouncedSync();
+      this.initiateSync();
 
       if(selectedBlock) {
         this.oldSelectedBlock = selectedBlock;
