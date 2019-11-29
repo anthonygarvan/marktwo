@@ -108,34 +108,27 @@ class MarkTwo extends React.Component {
     })
   }
 
-  setTitle(id, title) {
-    const appData = _.cloneDeep(this.state.appData);
-    appData.file = appData.docs.map(f => {
-      if(f.id === id) {
-        f.title = title;
-      }
-    });
-    this.sync(appData, {});
-  }
-
   deleteFile(fileName) {
-    const appData = _.cloneDeep(this.state.appData);
-    appData.docs = appData.docs.filter(file => file.id !== fileName);
-    if(this.state.currentDoc === fileName) {
-      if(appData.docs.length) {
-        appData.currentDoc = appData.docs[0].id;
-      } else {
-        const id = shortid.generate();
-        appData.currentDoc = id;
-        appData.docs.unshift({ id, title: false, lastModified: new Date() });
+    const currentDoc = this.state.currentDoc;
+    this.setState({ currentDoc: false }, () => {
+      const appData = _.cloneDeep(this.state.appData);
+      appData.docs = appData.docs.filter(file => file.id !== fileName);
+      if(currentDoc === fileName) {
+        if(appData.docs.length) {
+          appData.currentDoc = appData.docs[0].id;
+        } else {
+          const id = shortid.generate();
+          appData.currentDoc = id;
+          appData.docs.unshift({ id, title: false, lastModified: new Date() });
+        }
       }
-    }
-    this.sync(appData, {});
-    !this.props.tryItNow && this.syncUtils.find(fileName, docMetadata => {
-      this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
-        this.syncUtils.deleteFile(fileName)
+      this.sync(appData, { initialData: false });
+      !this.props.tryItNow && this.syncUtils.find(fileName, docMetadata => {
+        this.syncUtils.deleteFiles(docMetadata.pageIds).then(results => {
+          this.syncUtils.deleteFile(fileName)
+        })
       })
-    })
+  })
   }
 
   handleImport(e) {
@@ -151,6 +144,16 @@ class MarkTwo extends React.Component {
           })
         }
         reader.readAsText(e.target.files[0]);
+  }
+
+  setTitle(id, title) {
+    const appData = _.cloneDeep(this.state.appData);
+    appData.file = appData.docs.map(f => {
+      if(f.id === id) {
+        f.title = title;
+      }
+    });
+    this.sync(appData, {});
   }
 
   toggleArchive(id) {
