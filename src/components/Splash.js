@@ -104,7 +104,7 @@ class Splash extends React.Component {
             </div>
             <div className="column">
               <h4 className="title is-4">Speedy</h4>
-              <p>Big doc? No problem. MarkTwo is optimized for very large documents.</p>
+              <p>Writing the next War & Peace? No problem, MarkTwo can handle large documents.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Syncing</h4>

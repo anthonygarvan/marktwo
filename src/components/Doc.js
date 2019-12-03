@@ -240,47 +240,53 @@ class Doc extends React.Component {
 
     console.log('initial doc metadata');
     console.log(docMetadata);
-    return new Promise((resolve, reject) => {
-      if(pagesToAdd.length || forceSync) {
-        if(pagesToAdd.length > 1) {
-          $('#m2-loading').show();
-        }
-        // first add the new pages
-        this.syncUtils.createFiles(pagesToAdd)
-        .then(results => {
-          // then update the metadata and docList.
-          docMetadata.caretAt = caretAt;
-          docMetadata.pageIds = pageIds;
-          docMetadata.lastModified = new Date().toISOString();
-          docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
 
-          this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
-            if(this._isMounted) {
-              this.setState({ docMetadata: validatedDocMetadata });
-              $('.m2-sync-failed').hide();
-              if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-                console.log('doc metadata:');
-                console.log(docMetadata);
-                console.log('validated:');
-                console.log(validatedDocMetadata);
-                this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
-              }
+    const that = this;
+    function executeSync(docMetadata) {
+        return new Promise((resolve, reject) => {
+          if(pagesToAdd.length || forceSync) {
+            if(pagesToAdd.length > 1) {
+              $('#m2-loading').show();
             }
-          });
+            // first add the new pages
+            that.syncUtils.createFiles(pagesToAdd)
+            .then(results => {
+              // then update the metadata and docList.
+              docMetadata.caretAt = caretAt;
+              docMetadata.pageIds = pageIds;
+              docMetadata.lastModified = new Date().toISOString();
+              docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
+
+              that.syncUtils.syncByRevision(that.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+                if(that._isMounted) {
+                  that.setState({ docMetadata: validatedDocMetadata });
+                  $('.m2-sync-failed').hide();
+                  if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+                    console.log('doc metadata:');
+                    console.log(docMetadata);
+                    console.log('validated:');
+                    console.log(validatedDocMetadata);
+                    that.getDocList(validatedDocMetadata).then(docList => that.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+                  }
+                }
+              });
+            })
+            .then(results => {
+              // then remove the unused pages
+              const removeThese = _.difference(docMetadata.pageIds, pageIds)
+              removeThese.map(pageId => {
+                 del(pageId).catch(() => console.log('page not cached, did not remove.'));
+              });
+              return that.syncUtils.deleteFiles(removeThese).then(resolve);
+            })
+            .catch(err => reject());
+          } else {
+            resolve();
+          }
         })
-        .then(results => {
-          // then remove the unused pages
-          const removeThese = _.difference(docMetadata.pageIds, pageIds)
-          removeThese.map(pageId => {
-             del(pageId).catch(() => console.log('page not cached, did not remove.'));
-          });
-          return this.syncUtils.deleteFiles(removeThese).then(resolve);
-        })
-        .catch(err => reject());
-      } else {
-        resolve();
-      }
-    })
+    }
+
+    return executeSync(docMetadata);
   }
 
   componentWillUnmount() {
@@ -428,6 +434,13 @@ class Doc extends React.Component {
 
       let sel = window.getSelection();
       selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
+
+      if(e.key === 'Tab' && e.type === 'keydown'){
+        //add tab
+        document.execCommand('insertHTML', false, '    ');
+        //prevent focusing on next element
+        e.preventDefault()
+      }
 
       if(e.key === 'Enter' && e.type === 'keydown') {
         // if the current line is not empty, prevent default and continue the string in a newline

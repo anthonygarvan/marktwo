@@ -221,8 +221,7 @@ function initialize(gapi) {
           // otherwise use the new version and update server version
           set(name, JSON.stringify(newData));
           console.log(`Updating ${name}, fileId ${newData.fileId}`);
-          update(newData.fileId, newData);
-          resolve(newData);
+          update(newData.fileId, newData, () => resolve(newData));
         }
       })
     })
