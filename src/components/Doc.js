@@ -239,12 +239,12 @@ class Doc extends React.Component {
     const pagesToAdd = _.difference(pageIds, docMetadata.pageIds).map(pageId => ({name: pageId, data: pages[pageId]}));
 
     console.log('initial doc metadata');
-    console.log(docMetadata);
+    console.log(JSON.stringify(docMetadata));
 
-    const that = this;
-    function executeSync(docMetadata) {
+    function executeSync(that, docMetadata) {
         return new Promise((resolve, reject) => {
           if(pagesToAdd.length || forceSync) {
+            console.log('syncing...');
             if(pagesToAdd.length > 1) {
               $('#m2-loading').show();
             }
@@ -256,16 +256,17 @@ class Doc extends React.Component {
               docMetadata.pageIds = pageIds;
               docMetadata.lastModified = new Date().toISOString();
               docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
-
+              console.log('syncing by revision...');
               that.syncUtils.syncByRevision(that.props.currentDoc, docMetadata).then(validatedDocMetadata => {
                 if(that._isMounted) {
                   that.setState({ docMetadata: validatedDocMetadata });
                   $('.m2-sync-failed').hide();
-                  if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-                    console.log('doc metadata:');
-                    console.log(docMetadata);
-                    console.log('validated:');
-                    console.log(validatedDocMetadata);
+                  console.log('doc metadata:');
+                  console.log(JSON.stringify(docMetadata));
+                  console.log('validated:');
+                  console.log(JSON.stringify(validatedDocMetadata));
+                if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+                    console.log('out of date, updating docList...');
                     that.getDocList(validatedDocMetadata).then(docList => that.initializeFromDocList(docList, validatedDocMetadata.caretAt));
                   }
                 }
@@ -286,7 +287,7 @@ class Doc extends React.Component {
         })
     }
 
-    return executeSync(docMetadata);
+    return executeSync(this, docMetadata);
   }
 
   componentWillUnmount() {
