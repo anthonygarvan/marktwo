@@ -12,7 +12,7 @@ import download from 'in-browser-download';
 import raw from 'raw.macro';
 import _ from 'lodash';
 import $ from 'jquery';
-import { get } from 'idb-keyval';
+import { get, set } from 'idb-keyval';
 const tryItNowText  = raw('./tryItNow.md');
 
 
@@ -39,6 +39,8 @@ class MarkTwo extends React.Component {
       searchString: '',
       searchResults: [],
       showShelf: false,
+      darkMode: false,
+      offlineMode: false,
     };
 
   }
@@ -56,6 +58,8 @@ class MarkTwo extends React.Component {
     } else {
       this.setState({ ...defaultAppData, appData: defaultAppData });
     }
+
+    get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
   }
 
   refreshDocs(defaultAppData) {
@@ -210,6 +214,13 @@ class MarkTwo extends React.Component {
     }
   }
 
+  setDarkMode(value) {
+    this.setState({ darkMode: value }, () => {
+      this.state.darkMode ? $('body').addClass('m2-dark-mode') : $('body').removeClass('m2-dark-mode');
+      set('darkMode', JSON.stringify(value));
+    })
+  }
+
   render() {
     return <div>
     {this.state.currentDoc && <Doc key={this.state.currentDoc}
@@ -231,7 +242,8 @@ class MarkTwo extends React.Component {
       showDocs={(val) => this.setState({ showDocs: val, viewArchive: false }, this.refreshDocs)}
       showSearch={() => this.setState({ showSearch: true })}
       showAbout={() => this.setState({ showAbout: true })}
-      showHelp={() => this.setState({ showHelp: true })}/>
+      showHelp={() => this.setState({ showHelp: true })}
+      showSettings={() => this.setState({ showSettings: true })}/>
 
     {this.state.showSearch && <div className="m2-search modal is-active">
     <div className="modal-background" onClick={() => this.setState({ showSearch: false, searchString: '', searchResults: [] })}></div>
@@ -311,6 +323,35 @@ class MarkTwo extends React.Component {
     </div>
   </div>}
 
+  {this.state.showSettings && <div className="m2-settings modal is-active">
+  <div className="modal-background" onClick={() => this.setState({ showSettings: false })}></div>
+    <div className="modal-card">
+    <header className="modal-card-head">
+      <p className="modal-card-title">Settings</p>
+      <button className="delete" aria-label="close" onClick={() => this.setState({ showSettings: false })}></button>
+    </header>
+    <section className="modal-card-body">
+      <div className="field">
+        <input id="m2-dark-mode-switch" type="checkbox"
+          name="m2-dark-mode-switch"
+          className="switch"
+          checked={this.state.darkMode}
+          onChange={(e) => this.setDarkMode(e.target.checked)}/>
+        <label htmlFor="m2-dark-mode-switch">Dark mode</label>
+      </div>
+
+      <div className="field">
+        <input id="m2-offline-mode-switch" type="checkbox"
+          name="m2-offline-mode-switch"
+          className="switch"
+          checked={this.state.offlineMode}
+          onChange={(e) => this.setState({ offlineMode: e.target.checked })}/>
+        <label htmlFor="m2-offline-mode-switch">Offline mode</label>
+      </div>
+    </section>
+  </div></div>}
+
+
     {this.state.showAbout && <div className="m2-about modal is-active">
     <div className="modal-background" onClick={() => this.setState({ showAbout: false })}></div>
       <div className="modal-card">
@@ -332,6 +373,7 @@ class MarkTwo extends React.Component {
         <a href="https://github.com/anthonygarvan/marktwo" target="_blank">Source</a>
     </footer>
     </div></div>}
+
 
     {this.state.showHelp && <div className="m2-help modal is-active">
     <div className="modal-background" onClick={() => this.setState({ showHelp: false })}></div>

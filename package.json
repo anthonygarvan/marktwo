@@ -10,6 +10,7 @@
     "@fortawesome/react-fontawesome": "^0.1.5",
     "async": "^3.1.0",
     "bulma": "^0.7.5",
+    "bulma-switch": "^2.0.0",
     "google-client-api": "^1.0.4",
     "idb-keyval": "^3.2.0",
     "in-browser-download": "^2.0.0",

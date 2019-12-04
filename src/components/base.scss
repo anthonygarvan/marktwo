@@ -6,13 +6,24 @@ $pretty--color-success: $primary;
 $pretty--color-default: $primary;
 $text: #474C6D;
 
-@import '../../node_modules/bulma/bulma.sass';
+@import '~bulma';
+@import '~bulma-switch';
 
 body {
   font-size: 14px;
   @include tablet {
     font-size: 16px;
   }
+  &.m2-dark-mode {
+    background-color: #1b1b1d;
+    .m2-doc {
+      color: #cdced0;
+    }
+  }
+}
+
+.switch[type=checkbox]:checked + label::before, .switch[type=checkbox]:checked + label:before {
+    background: $primary;
 }
 
 a:hover {
