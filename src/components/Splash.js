@@ -5,6 +5,7 @@ import './Splash.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import $ from 'jquery';
+import logo from '../img/logo512.png';
 
 
 class Splash extends React.Component {
@@ -86,10 +87,10 @@ class Splash extends React.Component {
             handleSwitchUser={this.handleSwitchUser}
             tryItNow={false} />}
       {!this.state.tryItNow && this.state.isAuthenticated === null && <div className="m2-load-screen">
-            <h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
+            <h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
         </div>}
       {!this.state.tryItNow && this.state.isAuthenticated === false && <div className="m2-splash">
-      <div className="m2-hero"><h1 className="title is-1"><img src="/img/logo512.png" alt="logo" />MarkTwo<img src="/img/logo512.png" alt="logo" /></h1>
+      <div className="m2-hero"><h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
           <a className="button is-primary is-outlined" href="/try-it-now">Try it now</a>

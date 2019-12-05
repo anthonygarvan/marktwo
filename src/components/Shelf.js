@@ -2,6 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import './Shelf.scss';
+import anonymous from '../img/anonymous.png';
 
 class Shelf extends React.Component {
   constructor(props) {
@@ -15,7 +16,7 @@ class Shelf extends React.Component {
 
   getUserProfile() {
     if(this.props.tryItNow) {
-      this.setState({ userEmail: 'anonymous.bunny@gmail.com', photoUrl: '/img/anonymous.png', userName: 'Anonymous Bunny' });
+      this.setState({ userEmail: 'anonymous.bunny@gmail.com', photoUrl: anonymous, userName: 'Anonymous Bunny' });
     } else {
       const profile = this.props.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
       this.setState({ userEmail: profile.getEmail(), photoUrl: profile.getImageUrl(), userName: profile.getName() })

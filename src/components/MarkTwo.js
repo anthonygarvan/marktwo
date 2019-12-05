@@ -13,7 +13,9 @@ import raw from 'raw.macro';
 import _ from 'lodash';
 import $ from 'jquery';
 import { get, set } from 'idb-keyval';
+import me from '../img/me.jpg';
 const tryItNowText  = raw('./tryItNow.md');
+
 
 
 class MarkTwo extends React.Component {
@@ -60,6 +62,7 @@ class MarkTwo extends React.Component {
     }
 
     get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
+    get('offlineMode').then(value => value && this.setState({ offlineMode: JSON.parse(value)}))
   }
 
   refreshDocs(defaultAppData) {
@@ -232,7 +235,8 @@ class MarkTwo extends React.Component {
       tryItNow={this.props.tryItNow}
       initialData={this.state.initialData || (this.props.tryItNow && tryItNowText)}
       goToBlock={this.state.goToBlock}
-      setDocData={(allLines, doc) => this.setState({ allLines, doc })} /> }
+      setDocData={(allLines, doc) => this.setState({ allLines, doc })}
+      offlineMode={this.state.offlineMode} /> }
     <Shelf handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
@@ -345,7 +349,7 @@ class MarkTwo extends React.Component {
           name="m2-offline-mode-switch"
           className="switch"
           checked={this.state.offlineMode}
-          onChange={(e) => this.setState({ offlineMode: e.target.checked })}/>
+          onChange={(e) => this.setState({ offlineMode: e.target.checked }, () => set('offlineMode', this.state.offlineMode))}/>
         <label htmlFor="m2-offline-mode-switch">Offline mode</label>
       </div>
     </section>
@@ -365,7 +369,7 @@ class MarkTwo extends React.Component {
 
           <p>MarkTwo is my second attempt at a markdown editor, and obviously my best. </p>
 
-          <div className="m2-me"><img src="/img/me.jpg" alt="developer" /></div>
+          <div className="m2-me"><img src={me} alt="developer" /></div>
       </section>
       <footer className="modal-card-foot">
         <a href="/privacy.txt" target="_blank">Privacy</a>

@@ -24,6 +24,22 @@ body {
           color: #cdced0;
         }
       }
+
+      code {
+        background-color: black;
+      }
+
+      strong {
+        color: white;
+      }
+
+      &.content blockquote {
+        background-color: black;
+      }
+
+      &.content table thead th {
+        color: #cdced0;
+      }
     }
   }
 }
