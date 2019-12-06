@@ -5,6 +5,7 @@ import './Splash.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import $ from 'jquery';
+import { get, set } from 'idb-keyval';
 import logo from '../img/logo512.png';
 
 
@@ -36,11 +37,17 @@ class Splash extends React.Component {
                     } catch {}
                     const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
                     this.setState({ isAuthenticated, gapi, userEmail });
+                    set('userEmail', userEmail);
                 } else {
                   this.setState({ isAuthenticated, gapi });
                 }
             });
             });
+      })
+      .catch(() => {
+        get('userEmail').then(userEmail => {
+          this.setState({ isAuthenticated: true, offlineMode: true, userEmail })
+        })
       });
   }
 
@@ -55,6 +62,7 @@ class Splash extends React.Component {
         if(isAuthenticated) {
           const userEmail = this.state.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
           this.setState({ isAuthenticated, userEmail });
+          set('userEmail', userEmail);
           $('.m2-is-signed-out').hide();
         }
       });
@@ -77,7 +85,8 @@ class Splash extends React.Component {
         handleLogout={() => window.location = "/"}
         handleLogin={() => alert("You're in anonymous mode! To log in please sign in under your google account")}
         handleSwitchUser={() => alert("Sorry! Can't switch users in anonymous mode.")}
-        tryItNow={true} />}
+        tryItNow={true}
+        offlineMode={this.state.offlineMode} />}
       {!this.state.tryItNow && this.state.isAuthenticated &&
           <MarkTwo key={this.state.userEmail}
             userEmail={this.state.userEmail}
@@ -85,7 +94,8 @@ class Splash extends React.Component {
             handleLogout={this.handleLogout}
             handleLogin={this.handleLogin}
             handleSwitchUser={this.handleSwitchUser}
-            tryItNow={false} />}
+            tryItNow={false}
+            offlineMode={this.state.offlineMode} />}
       {!this.state.tryItNow && this.state.isAuthenticated === null && <div className="m2-load-screen">
             <h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
         </div>}
