@@ -77,7 +77,10 @@ class Splash extends React.Component {
 
   handleLogout() {
     this.state.gapi.auth2.getAuthInstance().signOut()
-      .then(() => this.setState( { isAuthenticated: false }, () => $(window).scrollTop(0)));
+      .then(() => this.setState( { isAuthenticated: false }, () => {
+        $(window).scrollTop(0);
+        $('body').removeClass('m2-dark-mode');
+      }));
   }
 
   render() {
