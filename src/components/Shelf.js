@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import './Shelf.scss';
 import anonymous from '../img/anonymous.png';
+import user from '../img/user.png';
+import { set, get } from 'idb-keyval';
 
 class Shelf extends React.Component {
   constructor(props) {
@@ -18,8 +20,20 @@ class Shelf extends React.Component {
     if(this.props.tryItNow) {
       this.setState({ userEmail: 'anonymous.bunny@gmail.com', photoUrl: anonymous, userName: 'Anonymous Bunny' });
     } else {
-      const profile = this.props.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
-      this.setState({ userEmail: profile.getEmail(), photoUrl: profile.getImageUrl(), userName: profile.getName() })
+      if(this.props.gapi) {
+        const profile = this.props.gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile();
+        const userEmail = profile.getEmail();
+        const userName = profile.getName();
+        this.setState({ userEmail, photoUrl: profile.getImageUrl(), userName })
+        set('userEmail', userEmail);
+        set('userName', userName);
+      } else {
+        get('userEmail').then(userEmail => {
+          get('userName').then(userName => {
+            this.setState({ userEmail, userName, photoUrl: user });
+          })
+        })
+      }
     }
   }
 

@@ -11,6 +11,7 @@ import md5 from 'md5';
 import moment from 'moment';
 import shortid from 'shortid';
 import syncUtils from './syncUtils';
+import syncUtilsOffline from './syncUtilsOffline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
 import { del, set } from 'idb-keyval';
@@ -527,7 +528,7 @@ class Doc extends React.Component {
     this._isMounted = true;
     $('#m2-doc').hide();
     if(!this.props.tryItNow) {
-      this.syncUtils = syncUtils(this.props.gapi);
+      this.syncUtils = this.props.gapi ? syncUtils(this.props.gapi) : syncUtilsOffline();
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
