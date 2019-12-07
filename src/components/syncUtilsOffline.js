@@ -6,7 +6,12 @@ function initialize() {
   function findOrFetch(name) {
     return new Promise(resolve => {
       get(name).then(localVersion => {
-        resolve(JSON.parse(localVersion));
+        if(localVersion) {
+          resolve(JSON.parse(localVersion));
+        } else {
+          resolve(false);
+        }
+
       })
     })
   }
