@@ -20,7 +20,11 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 ##### Numbered lists
 1. The first step
 1. The second step
-    a. First part of the second step
+    1. First part of the second step
+
+#### Todo lists
+- [ ] Isn't it nice to get things done?
+- [x] Finish implementing TODO lists
 
 ##### Block quotes
 > _Far and away the best prize that life has to offer is to work hard at work worth doing._

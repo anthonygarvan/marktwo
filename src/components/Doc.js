@@ -397,6 +397,8 @@ class Doc extends React.Component {
       renderedNode = $(`<div>${html}</div>`)
     }
 
+    renderedNode.find('input[type=checkbox]').closest('li').addClass('m2-todo-list')
+    renderedNode.find('input[checked]').closest('li').addClass('m2-todo-done')
     return renderedNode;
   }
 

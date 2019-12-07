@@ -34,6 +34,11 @@
     }
   }
 
+  table.m2-edit-mode {
+    font-family: monospace;
+    font-size: 0.9rem;
+  }
+
   img {
     max-width: 100%;
   }
@@ -66,4 +71,12 @@
   font-size: 1.1rem;
   text-align: center;
   background-color: lighten($primary, 35%);
+}
+
+.m2-todo-list {
+  list-style: none;
+
+  &.m2-todo-done {
+    text-decoration: line-through;
+  }
 }

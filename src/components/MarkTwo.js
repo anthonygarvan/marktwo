@@ -443,6 +443,12 @@ Links: [Text in brackets](https://link-in-parentheses.com)`}</pre>
     1. Again, four spaces starts a sub-list`}
 </pre>
 
+<h5>Todo lists</h5>
+<pre>
+{`- [ ] A dash, a space, brackets with a space in between
+- [x] An x in the middle marks it as done`}
+</pre>
+
 <h5>Tables</h5>
 <pre>
 {`| Header1  | Header2 |

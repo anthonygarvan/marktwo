@@ -5,6 +5,7 @@ $fontFamily: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubun
 $pretty--color-success: $primary;
 $pretty--color-default: $primary;
 $text: #474C6D;
+$darkModePrimary: #9295f5;
 
 @import '~bulma';
 @import '~bulma-switch';
@@ -15,9 +16,18 @@ body {
     font-size: 16px;
   }
   &.m2-dark-mode {
-    background-color: #1b1b1d;
+    background-color: #212127;
+
+    a {
+      color: $darkModePrimary;
+      &:hover {
+        color: lighten($darkModePrimary, 10%);
+      }
+    }
+
     .m2-doc {
       color: #cdced0;
+
 
       &.content {
         h1,h2,h3,h4,h5,h6 {
@@ -26,15 +36,29 @@ body {
       }
 
       code {
-        background-color: black;
+        background-color: #171515;
       }
+
+      .m2-edit-mode {
+        border-left: 3px solid rgba($darkModePrimary, 0.4);
+      }
+
+      &.m2-syncing .m2-edit-mode {
+        border-left: 3px solid rgba($darkModePrimary, 0.15);
+      }
+
 
       strong {
         color: white;
       }
 
+      hr {
+        background-color: #4d4d52;
+      }
+
       &.content blockquote {
-        background-color: black;
+        background-color: #2a2a2d;
+        border-left: 5px solid #3e3e42;
       }
 
       &.content table thead th {
