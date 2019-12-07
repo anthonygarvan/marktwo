@@ -62,12 +62,18 @@ function initialize() {
     newData.revision++;
     return new Promise(resolve => {
       set(name, JSON.stringify(newData))
-      .then((data) => resolve(data));
+      .then(() => resolve(newData));
     });
   }
 
+  function createFiles(files) {
+    // this is handled synchronously
+    return new Promise(resolve => resolve());
+  }
 
-  return { deleteFile,
+
+  return { createFiles,
+    deleteFile,
     deleteFiles,
     findOrFetch,
     findOrFetchFiles,
