@@ -523,7 +523,7 @@ class Doc extends React.Component {
     }
 
     this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
-    this.props.offlineMode ? $('.m2-offline').show() : $('.m2-offline').hide();
+    (this.props.offlineMode && !this.props.tryItNow) ? $('.m2-offline').show() : $('.m2-offline').hide();
     // Due to the complexities of cross-platform editing of html in react, this component is not
     // a "real" react component - it's stitched together with jquery and raw html.
     // However, key variables are still scoped to hang off of state, in order to take advantage of
@@ -537,7 +537,7 @@ class Doc extends React.Component {
     $('#m2-doc').hide();
     if(!this.props.tryItNow) {
       this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
-      this.props.offlineMode ? $('.m2-offline').show() : $('.m2-offline').hide();
+      (this.props.offlineMode && !this.props.tryItNow) ? $('.m2-offline').show() : $('.m2-offline').hide();
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {

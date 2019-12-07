@@ -59,7 +59,7 @@ class Shelf extends React.Component {
     </div>
       <a className="m2-close" onClick={() => this.props.setShelf(false)}><FontAwesomeIcon icon={faTimes} /></a>
     </div>
-    : <div className="m2-menu"><a onClick={() => this.props.setShelf(true)}><FontAwesomeIcon icon={faEllipsisV} /></a></div>
+    : <div className="m2-menu"><a className="m2-ellipsis" onClick={() => this.props.setShelf(true)}><FontAwesomeIcon icon={faEllipsisV} /></a></div>
   }
 }
 

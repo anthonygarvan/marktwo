@@ -5,7 +5,7 @@ $fontFamily: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubun
 $pretty--color-success: $primary;
 $pretty--color-default: $primary;
 $text: #474C6D;
-$darkModePrimary: #9295f5;
+$darkModePrimary: #a1a2ef;
 
 @import '~bulma';
 @import '~bulma-switch';
@@ -18,7 +18,16 @@ body {
   &.m2-dark-mode {
     background-color: #212127;
 
-    a {
+    .m2-doc,.m2-ellipsis {
+      a {
+        color: $darkModePrimary;
+        &:hover {
+          color: lighten($darkModePrimary, 10%);
+        }
+      }
+    }
+
+    .m2-ellipsis {
       color: $darkModePrimary;
       &:hover {
         color: lighten($darkModePrimary, 10%);
