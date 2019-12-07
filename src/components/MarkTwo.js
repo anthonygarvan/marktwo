@@ -53,20 +53,22 @@ class MarkTwo extends React.Component {
   componentDidMount() {
     this.appDataKey = `appData_${this.props.userEmail}`;
     get('offlineMode').then(offlineMode => {
-      this.syncUtils = (offlineMode || !this.state.gapi) ? syncUtilsOffline() : syncUtils(this.state.gapi);
-      const currentDoc = shortid.generate();
-      const defaultAppData = { currentDoc,
-        docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
-        revision: 0 };
+      offlineMode = (offlineMode && JSON.parse(offlineMode)) || !this.state.gapi;
+      this.setOfflineMode(offlineMode).then(() => {
+        this.syncUtils = this.state.offlineMode ? syncUtilsOffline() : syncUtils(this.state.gapi);
+        const currentDoc = shortid.generate();
+        const defaultAppData = { currentDoc,
+          docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
+          revision: 0 };
 
-      if(!this.props.tryItNow) {
-        this.refreshDocs(defaultAppData);
-      } else {
-        this.setState({ ...defaultAppData, appData: defaultAppData });
-      }
+        if(!this.props.tryItNow) {
+          this.refreshDocs(defaultAppData);
+        } else {
+          this.setState({ ...defaultAppData, appData: defaultAppData });
+        }
 
-      get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
-      get('offlineMode').then(value => value && this.setState({ offlineMode: JSON.parse(value)}))
+        get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
+      });
     })
   }
 
@@ -229,10 +231,12 @@ class MarkTwo extends React.Component {
     })
   }
 
-  setOfflineMode(value) {
-    this.setState({ offlineMode: value }, () => {
-      this.syncUtils = this.state.offlineMode ? syncUtilsOffline() : syncUtils(this.state.gapi);
-      set('offlineMode', JSON.stringify(value));
+  setOfflineMode(value, callback) {
+    return new Promise(resolve => {
+      this.setState({ offlineMode: value }, () => {
+        this.syncUtils = this.state.offlineMode ? syncUtilsOffline() : syncUtils(this.state.gapi);
+        set('offlineMode', JSON.stringify(value)).then(resolve);
+      })
     })
   }
 

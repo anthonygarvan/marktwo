@@ -31,8 +31,7 @@ class Doc extends React.Component {
           $('#m2-loading').hide();
           callback();
         }).catch(err => {
-            $('.m2-sync-failed').show();
-            $('.m2-is-signed-out').show();
+            !this.props.offlineMode && $('.m2-is-signed-out').show();
             callback();
         }));
       } else {
@@ -266,7 +265,6 @@ class Doc extends React.Component {
               that.syncUtils.syncByRevision(that.props.currentDoc, docMetadata).then(validatedDocMetadata => {
                 if(that._isMounted) {
                   that.setState({ docMetadata: validatedDocMetadata });
-                  $('.m2-sync-failed').hide();
                   console.log('doc metadata:');
                   console.log(JSON.stringify(docMetadata));
                   console.log('validated:');
@@ -523,6 +521,7 @@ class Doc extends React.Component {
     }
 
     this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
+    this.props.offlineMode ? $('.m2-offline').show() : $('.m2-offline').hide();
     // Due to the complexities of cross-platform editing of html in react, this component is not
     // a "real" react component - it's stitched together with jquery and raw html.
     // However, key variables are still scoped to hang off of state, in order to take advantage of
@@ -535,7 +534,8 @@ class Doc extends React.Component {
     this._isMounted = true;
     $('#m2-doc').hide();
     if(!this.props.tryItNow) {
-      this.syncUtils = (this.props.offlineMode || !this.props.gapi) ? syncUtilsOffline() : syncUtils(this.props.gapi);
+      this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
+      this.props.offlineMode ? $('.m2-offline').show() : $('.m2-offline').hide();
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
@@ -566,7 +566,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
         <div className="bar"></div>
       </div>
-      <div className="m2-sync-failed" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
+      <div className="m2-offline" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
       <div className="m2-is-signed-out" style={ {display: 'none' } }>You've been signed out. <a onClick={this.props.handleLogin}>Sign back in</a></div>
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
