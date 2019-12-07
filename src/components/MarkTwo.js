@@ -31,6 +31,8 @@ class MarkTwo extends React.Component {
     this.takeFileAction = this.takeFileAction.bind(this);
     this.sync = this.sync.bind(this);
     this.refreshDocs = this.refreshDocs.bind(this);
+    this.setOfflineMode = this.setOfflineMode.bind(this);
+    this.setDarkMode = this.setDarkMode.bind(this);
 
     marked.setOptions({
       breaks: true,
@@ -49,21 +51,23 @@ class MarkTwo extends React.Component {
   }
 
   componentDidMount() {
-    this.syncUtils = this.state.gapi ? syncUtils(this.state.gapi) : syncUtilsOffline();
     this.appDataKey = `appData_${this.props.userEmail}`;
-    const currentDoc = shortid.generate();
-    const defaultAppData = { currentDoc,
-      docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
-      revision: 0 };
+    get('offlineMode').then(offlineMode => {
+      this.syncUtils = offlineMode ? syncUtils(this.state.gapi) : syncUtilsOffline();
+      const currentDoc = shortid.generate();
+      const defaultAppData = { currentDoc,
+        docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
+        revision: 0 };
 
-    if(!this.props.tryItNow) {
-      this.refreshDocs(defaultAppData);
-    } else {
-      this.setState({ ...defaultAppData, appData: defaultAppData });
-    }
+      if(!this.props.tryItNow) {
+        this.refreshDocs(defaultAppData);
+      } else {
+        this.setState({ ...defaultAppData, appData: defaultAppData });
+      }
 
-    get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
-    get('offlineMode').then(value => value && this.setState({ offlineMode: JSON.parse(value)}))
+      get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
+      get('offlineMode').then(value => value && this.setState({ offlineMode: JSON.parse(value)}))
+    })
   }
 
   refreshDocs(defaultAppData) {
@@ -225,6 +229,13 @@ class MarkTwo extends React.Component {
     })
   }
 
+  setOfflineMode(value) {
+    this.setState({ offlineMode: value }, () => {
+      this.syncUtils = this.state.offlineMode ? syncUtilsOffline() : syncUtils(this.state.gapi);
+      set('offlineMode', JSON.stringify(value));
+    })
+  }
+
   render() {
     return <div>
     {this.state.currentDoc && <Doc key={this.state.currentDoc}
@@ -350,7 +361,7 @@ class MarkTwo extends React.Component {
           name="m2-offline-mode-switch"
           className="switch"
           checked={this.state.offlineMode}
-          onChange={(e) => this.setState({ offlineMode: e.target.checked }, () => set('offlineMode', this.state.offlineMode))}/>
+          onChange={(e) => this.setOfflineMode(e.target.checked)}/>
         <label htmlFor="m2-offline-mode-switch">Offline mode</label>
       </div>
     </section>

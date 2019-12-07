@@ -46,7 +46,11 @@ class Doc extends React.Component {
     const debounced = _.debounce(() => this.syncQueue.push(), 3000)
 
     this.initiateSync = (forceSync) => {
-    if(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get()) {
+    const intentionallyOffline = props.offlineMode;
+    const online = !props.offlineMode && props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get();
+    const lostConnection = !props.offlineMode && !(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get());
+
+    if(online || intentionallyOffline) {
         $('.m2-is-signed-out').hide();
         $('#m2-doc').addClass('m2-syncing');
         if(forceSync) {
@@ -54,11 +58,14 @@ class Doc extends React.Component {
         } else {
           debounced();
         }
-    } else {
+    }
+
+    if(lostConnection) {
       if(!this.props.tryItNow) {
         $('.m2-is-signed-out').show();
       }
-    }}
+    }
+    }
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
     this.getDocList = this.getDocList.bind(this);
@@ -516,6 +523,8 @@ class Doc extends React.Component {
         const docList = this.state.allLines.map(id => ({ id, text: this.state.doc[id] }));
         this.initializeFromDocList(docList, nextProps.goToBlock);
     }
+
+    this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
     // Due to the complexities of cross-platform editing of html in react, this component is not
     // a "real" react component - it's stitched together with jquery and raw html.
     // However, key variables are still scoped to hang off of state, in order to take advantage of
@@ -528,7 +537,7 @@ class Doc extends React.Component {
     this._isMounted = true;
     $('#m2-doc').hide();
     if(!this.props.tryItNow) {
-      this.syncUtils = this.props.gapi ? syncUtils(this.props.gapi) : syncUtilsOffline();
+      this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
