@@ -1,5 +1,4 @@
 import React from 'react';
-import getGoogleApi from 'google-client-api';
 import MarkTwo from './MarkTwo';
 import './Splash.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,6 +6,7 @@ import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 import $ from 'jquery';
 import { get, set } from 'idb-keyval';
 import logo from '../img/logo512.png';
+import $script from 'scriptjs';
 
 
 class Splash extends React.Component {
@@ -19,37 +19,35 @@ class Splash extends React.Component {
   }
 
   componentWillMount() {
-    try {
-      getGoogleApi().then(googleApi => {
-              const gapi = googleApi;
-              gapi.load('client:auth2', () => {
+    $script('https://apis.google.com/js/client.js', () => {
+          const gapi = window.gapi;
+          gapi.load('client:auth2', () => {
 
-                const initSettings = {
-                  client_id: '346746556737-32h3br6e6beeerm71norabl2icv4rl7e.apps.googleusercontent.com',
-                  scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
-                  discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
-                  response_type: 'id_token permission'}
+            const initSettings = {
+              client_id: '346746556737-32h3br6e6beeerm71norabl2icv4rl7e.apps.googleusercontent.com',
+              scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata',
+              discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+              response_type: 'id_token permission'}
 
-                gapi.client.init(initSettings).then(() => {
-                    let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
-                    if(isAuthenticated) {
-                      try {
-                        window.gtag('event', 'login', {'method': 'Google'});
-                      } catch {}
-                      const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
-                      this.setState({ isAuthenticated, gapi, userEmail });
-                      set('userEmail', userEmail);
-                  } else {
-                    this.setState({ isAuthenticated, gapi });
-                  }
-              });
-              });
-        })
-    } catch(e) {
+            gapi.client.init(initSettings).then(() => {
+                let isAuthenticated = gapi.auth2.getAuthInstance().isSignedIn.get();
+                if(isAuthenticated) {
+                  try {
+                    window.gtag('event', 'login', {'method': 'Google'});
+                  } catch {}
+                  const userEmail = gapi.auth2.getAuthInstance().currentUser.get().getBasicProfile().getEmail();
+                  this.setState({ isAuthenticated, gapi, userEmail });
+                  set('userEmail', userEmail);
+              } else {
+                this.setState({ isAuthenticated, gapi });
+              }
+          });
+          });
+    }, () => {
       get('userEmail').then(userEmail => {
         this.setState({ isAuthenticated: true, offlineMode: true, userEmail })
       })
-    }
+    })
   }
 
   handleLogin() {
