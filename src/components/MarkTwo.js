@@ -257,6 +257,7 @@ class MarkTwo extends React.Component {
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
       tryItNow={this.props.tryItNow}
+      offlineMode={this.state.offlineMode}
       showShelf={this.state.showShelf}
       setShelf={(val) => this.setState({ showShelf: val })}
       showDocs={(val) => this.setState({ showDocs: val, viewArchive: false }, this.refreshDocs)}
