@@ -537,7 +537,7 @@ class Doc extends React.Component {
     this._isMounted = true;
     $('#m2-doc').hide();
     if(!this.props.tryItNow) {
-      this.syncUtils = this.props.offlineMode ? syncUtilsOffline() : syncUtils(this.props.gapi);
+      this.syncUtils = (this.props.offlineMode || !this.props.gapi) ? syncUtilsOffline() : syncUtils(this.props.gapi);
       let docMetadataDefault = { pageIds: [], revision: 0, pageLengths: [] };
 
       this.syncUtils.initializeData(this.props.currentDoc, docMetadataDefault).then(docMetadata => {
