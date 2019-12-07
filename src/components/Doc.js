@@ -58,9 +58,7 @@ class Doc extends React.Component {
         } else {
           debounced();
         }
-    }
-
-    if(lostConnection) {
+    } else {
       if(!this.props.tryItNow) {
         $('.m2-is-signed-out').show();
       }
