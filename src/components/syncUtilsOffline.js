@@ -55,7 +55,10 @@ function initialize() {
 
   function syncByRevision(name, newData) {
     newData.revision++;
-    set(name, JSON.stringify(newData));
+    return new Promise(resolve => {
+      set(name, JSON.stringify(newData))
+      .then((data) => resolve(data));
+    });
   }
 
 
