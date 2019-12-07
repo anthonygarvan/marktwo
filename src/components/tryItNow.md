@@ -44,3 +44,4 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 - MarkTwo is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times
 - Saves & syncs your exact location in a document, so you can pick up right where you left off after restarting a tab or switching devices
 - Automatic text expansion for `/now` and `/today`
+- Offline mode ⚡ and dark mode 🌗 available from `Settings` menu
