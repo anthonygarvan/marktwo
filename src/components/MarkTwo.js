@@ -7,6 +7,7 @@ import './MarkTwo.scss';
 import marked from 'marked';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import syncUtils from './syncUtils';
+import syncUtilsOffline from './syncUtilsOffline';
 import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import download from 'in-browser-download';
 import raw from 'raw.macro';
@@ -48,7 +49,7 @@ class MarkTwo extends React.Component {
   }
 
   componentDidMount() {
-    this.syncUtils = syncUtils(this.state.gapi);
+    this.syncUtils = this.state.gapi ? syncUtils(this.state.gapi) : syncUtilsOffline();
     this.appDataKey = `appData_${this.props.userEmail}`;
     const currentDoc = shortid.generate();
     const defaultAppData = { currentDoc,
