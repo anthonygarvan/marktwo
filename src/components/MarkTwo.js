@@ -53,7 +53,7 @@ class MarkTwo extends React.Component {
   componentDidMount() {
     this.appDataKey = `appData_${this.props.userEmail}`;
     get('offlineMode').then(offlineMode => {
-      offlineMode = (offlineMode && JSON.parse(offlineMode)) || !this.state.gapi;
+      offlineMode = !this.props.tryItNow ? ((offlineMode && JSON.parse(offlineMode)) || !this.state.gapi) : false;
       this.setState({ offlineMode }, () => {
         this.syncUtils = this.state.offlineMode ? syncUtilsOffline() : syncUtils(this.state.gapi);
         const currentDoc = shortid.generate();
