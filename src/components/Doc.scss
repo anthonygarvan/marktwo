@@ -80,3 +80,20 @@
     text-decoration: line-through;
   }
 }
+
+#m2-autocomplete {
+  position: fixed;
+  border: 1px solid lightgrey;
+  background-color: white;
+  div {
+    padding: 0.5rem;
+    cursor: pointer;
+    &:not(:last-child) {
+      border-bottom: 1px solid lightgrey;
+    }
+
+    &.m2-selected {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+}

@@ -6,6 +6,7 @@ $pretty--color-success: $primary;
 $pretty--color-default: $primary;
 $text: #474C6D;
 $darkModePrimary: #a1a2ef;
+$darkModeDark: #212127;
 
 @import '~bulma';
 @import '~bulma-switch';
@@ -16,8 +17,16 @@ body {
     font-size: 16px;
   }
   &.m2-dark-mode {
-    background-color: #212127;
+    background-color: $darkModeDark;
+    #m2-autocomplete {
+      background-color: lighten($darkModeDark, 10%);
+      color: #cdced0;
+      border: 1px solid lighten($darkModeDark, 15%);
 
+      div:not(:last-child) {
+        border-bottom: 1px solid lighten($darkModeDark, 15%);
+      }
+    }
     .m2-doc,.m2-ellipsis {
       a {
         color: $darkModePrimary;

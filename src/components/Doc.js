@@ -431,6 +431,9 @@ class Doc extends React.Component {
       }
     });
 
+    let autocompleteActive = false;
+    let autocompleteSelectedIndex = 0;
+    let autocompleteDropdownAbove;
     $('#m2-doc').on('keydown keyup mouseup', (e) => {
       const doc = this.state.doc;
       this.initiateSync();
@@ -449,9 +452,134 @@ class Doc extends React.Component {
         e.preventDefault()
       }
 
+      const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
+      const hashtagOrMentionRegex = new RegExp("[#@][^\\s]+$")
+
+      if(hashtagOrMentionRegex.test(s)) {
+        $('#m2-autocomplete').show();
+        const matchedText = s.match(hashtagOrMentionRegex)[0]
+        const findRegex = new RegExp(`(?:[\\s]|^)${matchedText}[^\\s]+|^${matchedText}[^\\s]*`, 'g')
+        const results = _.uniq(_.flatten(this.state.allLines.map(id => id !== selectedBlock[0].id && this.state.doc[id].match(findRegex)).filter(r => r)));
+
+        $('#m2-autocomplete').html(results.map(r => `<div>${r.trim()}</div>`).join('\n'))
+        autocompleteSelectedIndex && $(`#m2-autocomplete div:nth-child(${autocompleteSelectedIndex})`).addClass('m2-selected');
+
+        $('#m2-autocomplete div').hover(function() {
+          $('#m2-autocomplete div').removeClass('m2-selected');
+          $(this).addClass('m2-selected');
+          autocompleteSelectedIndex = $('#m2-autocomplete div').index(this);
+        });
+
+        function verticalPositionAutocomplete() {
+          const range = sel.getRangeAt(0).cloneRange();
+          const rects = range.getClientRects();
+          if (rects.length > 0) {
+            let vPos;
+            autocompleteDropdownAbove = rects[0].top / window.outerHeight < 0.6;
+            if(autocompleteDropdownAbove) {
+              vPos = rects[0].top + 20;
+            } else {
+              vPos = rects[0].top - (10 + $('#m2-autocomplete').height());
+            }
+            $('#m2-autocomplete').css('top', vPos);
+          }
+        }
+
+        verticalPositionAutocomplete();
+
+        if(!autocompleteActive) {
+          const range = sel.getRangeAt(0).cloneRange();
+          const rects = range.getClientRects();
+          if (rects.length > 0) {
+              $('#m2-autocomplete').css('left', rects[0].left - (10 *  matchedText.length))
+          }
+        }
+
+        function selectEntry() {
+          const anchorNode = $(sel.anchorNode)[0];
+          const caretOffset = sel.anchorOffset
+          const endOfWord = sel.anchorNode.data.substring(sel.anchorOffset).match(/[^\s]*/);
+          const endOffset = endOfWord ? caretOffset + endOfWord[0].length : caretOffset;
+          const startOffset = endOfWord ? endOffset - (matchedText.length + endOfWord[0].length) : endOffset - matchedText.length;
+          sel.removeAllRanges();
+          let range = document.createRange();
+          range.setStart(anchorNode, startOffset);
+          range.setEnd(anchorNode, endOffset);
+          sel.addRange(range);
+
+          const newText = results[autocompleteSelectedIndex - 1];
+          document.execCommand('insertHTML', false, `${newText} `);
+
+          setTimeout(() => {
+            autocompleteActive = false;
+            $('m2-doc').focus();
+            $('#m2-autocomplete').hide();
+            range = document.createRange();
+            sel = window.getSelection();
+            range.setStart(anchorNode, startOffset + newText.length + 1);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }, 50)
+        }
+
+        $('#m2-autocomplete div').mousedown(function() {
+          e.preventDefault();
+          e.stopPropagation();
+          $('#m2-autocomplete div').removeClass('m2-selected');
+          $(this).addClass('m2-selected');
+          autocompleteSelectedIndex = $('#m2-autocomplete div').index(this) + 1;
+          selectEntry();
+        });
+
+
+        $(window).on('scroll', verticalPositionAutocomplete);
+        autocompleteActive = true;
+
+        if(e.key == 'ArrowDown' && e.type === 'keydown' && results.length) {
+          autocompleteSelectedIndex++;
+          if(!autocompleteDropdownAbove) {
+            // let caret move down
+            if(autocompleteSelectedIndex <= results.length) {
+              e.preventDefault();
+            }
+          } else {
+            // wrap around
+            autocompleteSelectedIndex = autocompleteSelectedIndex > results.length ? 1 : autocompleteSelectedIndex;
+            e.preventDefault();
+          }
+        }
+
+        if(e.key == 'ArrowUp' && e.type === 'keydown' && results.length) {
+          autocompleteSelectedIndex--;
+          if(!autocompleteDropdownAbove) {
+            // wrap around
+            autocompleteSelectedIndex = autocompleteSelectedIndex < 1 ? results.length : autocompleteSelectedIndex;
+            e.preventDefault();
+          } else {
+            // let the caret move up
+            autocompleteSelectedIndex = Math.max(autocompleteSelectedIndex, 0);
+            if(autocompleteSelectedIndex !== 0) {
+              e.preventDefault();
+            }
+          }
+        }
+
+        if(e.key == 'Enter' && e.type === 'keydown') {
+          e.preventDefault();
+          if(autocompleteSelectedIndex > 0 && autocompleteSelectedIndex <= results.length) {
+            selectEntry();
+          }
+        }
+      } else {
+        $('#m2-autocomplete').hide();
+        autocompleteActive = false;
+        autocompleteSelectedIndex = 0;
+      }
+
       if(e.key === 'Enter' && e.type === 'keydown') {
         // if the current line is not empty, prevent default and continue the string in a newline
-        if(selectedBlock && selectedBlock[0]) {
+        if(selectedBlock && selectedBlock[0] && !(autocompleteSelectedIndex > 0)) {
           e.preventDefault();
           if(selectedBlock[0].nodeName === 'PRE' || !((sel.anchorNode.data === '\n\u200B') || (sel.anchorNode.tagName === 'BR'))) {
             // do not start a new block
@@ -568,6 +696,7 @@ class Doc extends React.Component {
         <div className="bar"></div>
         <div className="bar"></div>
       </div>
+      <div id="m2-autocomplete" style={ { display: 'none' } }></div>
       <div className="m2-offline" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
       <div className="m2-is-signed-out" style={ {display: 'none' } }>You've been signed out. <a onClick={this.props.handleLogin}>Sign back in</a></div>
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
