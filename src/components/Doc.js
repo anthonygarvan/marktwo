@@ -16,6 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
 import { del, set } from 'idb-keyval';
 import async from 'async';
+import emoji from 'emoji-dictionary';
 
 class Doc extends React.Component {
   constructor(props) {
@@ -453,13 +454,24 @@ class Doc extends React.Component {
       }
 
       const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
-      const hashtagOrMentionRegex = new RegExp("[#@][^\\s#@]+$")
+      const autocompleteRegex = new RegExp("[#@:/][^\\s#@]+$")
+      const slashCommands = ['/now', '/today'];
 
-      if(hashtagOrMentionRegex.test(s)) {
+      if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
-        const matchedText = s.match(hashtagOrMentionRegex)[0]
-        const findRegex = new RegExp(`(?:[\\s]|^)${matchedText}[^\\s]+|^${matchedText}[^\\s]*`, 'g')
-        const results = _.uniq(_.flatten(this.state.allLines.map(id => id !== selectedBlock[0].id && this.state.doc[id].match(findRegex)).filter(r => r)));
+        const matchedText = s.match(autocompleteRegex)[0]
+        let results;
+        if(matchedText.startsWith(':')) {
+          results = emoji.names.filter(n => n.startsWith(matchedText.replace(/:/g, '')))
+          results = results.map(r => `${emoji.getUnicode(r)} ${r}`)
+        } else if(matchedText.startsWith('/')) {
+          results = slashCommands.filter(s => s.startsWith(matchedText));
+        } else {
+          const findRegex = new RegExp(`(?:[\\s]|^)${matchedText}[^\\s]+|^${matchedText}[^\\s]*`, 'g')
+          results = _.uniq(_.flatten(this.state.allLines.map(id => id !== selectedBlock[0].id && this.state.doc[id].match(findRegex)).filter(r => r)));
+        }
+
+        results = results.slice(0, 10);
 
         $('#m2-autocomplete').html(results.map(r => `<div>${r.trim()}</div>`).join('\n'))
         autocompleteSelectedIndex && $(`#m2-autocomplete div:nth-child(${autocompleteSelectedIndex})`).addClass('m2-selected');
@@ -507,7 +519,21 @@ class Doc extends React.Component {
           range.setEnd(anchorNode, endOffset);
           sel.addRange(range);
 
-          const newText = results[autocompleteSelectedIndex - 1];
+          let newText = results[autocompleteSelectedIndex - 1];
+          if(newText.split(' ')[1] && emoji.getUnicode(newText.split(' ')[1])) {
+            newText = emoji.getUnicode(newText.split(' ')[1]);
+          }
+
+          if(newText.startsWith('/')) {
+            switch(newText) {
+              case '/now':
+                newText = moment().format('LLL');
+                break;
+              case '/today':
+                newText = moment().format('LL');
+                break;
+            }
+          }
           document.execCommand('insertHTML', false, `${newText} `);
 
           setTimeout(() => {
