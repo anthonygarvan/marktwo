@@ -453,7 +453,7 @@ class Doc extends React.Component {
       }
 
       const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
-      const hashtagOrMentionRegex = new RegExp("[#@][^\\s]+$")
+      const hashtagOrMentionRegex = new RegExp("[#@][^\\s#@]+$")
 
       if(hashtagOrMentionRegex.test(s)) {
         $('#m2-autocomplete').show();
