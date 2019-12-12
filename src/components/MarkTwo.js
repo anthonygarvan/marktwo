@@ -46,6 +46,7 @@ class MarkTwo extends React.Component {
       showShelf: false,
       darkMode: false,
       offlineMode: false,
+      spellcheck: true,
     };
 
   }
@@ -67,7 +68,8 @@ class MarkTwo extends React.Component {
           this.setState({ ...defaultAppData, appData: defaultAppData });
         }
 
-        get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)))
+        get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)));
+        get('spellcheck').then(value => value && this.setSpellcheck(JSON.parse(value)));
       });
     })
   }
@@ -240,6 +242,15 @@ class MarkTwo extends React.Component {
     })
   }
 
+  setSpellcheck(value, callback) {
+    return new Promise(resolve => {
+      this.setState({ spellcheck: value }, () => {
+        set('spellcheck', JSON.stringify(value)).then(resolve);
+        $('body').attr('spellcheck', this.state.spellcheck);
+      })
+    })
+  }
+
   render() {
     return <div>
     {this.state.currentDoc && <Doc key={this.state.currentDoc}
@@ -252,7 +263,8 @@ class MarkTwo extends React.Component {
       initialData={this.state.initialData || (this.props.tryItNow && tryItNowText)}
       goToBlock={this.state.goToBlock}
       setDocData={(allLines, doc) => this.setState({ allLines, doc })}
-      offlineMode={this.state.offlineMode} /> }
+      offlineMode={this.state.offlineMode}
+      spellcheck={this.state.spellcheck} /> }
     <Shelf handleLogout={this.props.handleLogout}
       handleSwitchUser={this.props.handleSwitchUser}
       gapi={this.props.gapi}
@@ -368,6 +380,15 @@ class MarkTwo extends React.Component {
           checked={this.state.offlineMode}
           onChange={(e) => this.setOfflineMode(e.target.checked)}/>
         <label htmlFor="m2-offline-mode-switch">Offline mode</label>
+      </div>
+
+      <div className="field">
+        <input id="m2-spellcheck-switch" type="checkbox"
+          name="m2-spellcheck-switch"
+          className="switch"
+          checked={this.state.spellcheck}
+          onChange={(e) => this.setSpellcheck(e.target.checked)}/>
+        <label htmlFor="m2-spellcheck-switch">Spellcheck</label>
       </div>
     </section>
   </div></div>}
