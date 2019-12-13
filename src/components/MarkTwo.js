@@ -196,7 +196,7 @@ class MarkTwo extends React.Component {
       searchRegex = new RegExp(keywords.join('|'), 'ig');
     }
     const whitespaceRegex = new RegExp('^[\\s\\n]*$')
-    const searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, text: this.state.doc[id] }))
+    const searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, text: this.state.doc[id] })).slice(0, 1000)
 
     this.setState({ searchResults });
   }
