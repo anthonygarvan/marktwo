@@ -496,16 +496,17 @@ var success = "Text sandwiched by three backticks renders a code block";
 {`---`}
 </pre>
 
-<h5>Text Expansion</h5>
+<h5>Text Tricks</h5>
 <p>MarkTwo expands the strings <code>/today</code> and <code>/now</code> into the current date or date and time for your locale.
-</p>
-<pre>{`# Star date: /today`}</pre>
+Also, to make things easier to find later, <code>#hashtags</code> and <code>@mentions</code> autocomplete.
+You can also search for and enter emojis with colons like this: <code>:emojis:</code></p>
+<pre>{`# Star date: /today
+#hashtags, @mentions
+:smiley_face:`}</pre>
 <p><b>That's it, enjoy!</b></p>
 <p><br /></p>
       </section>
     </div></div>}
-
-
   </div>
   }
 }
