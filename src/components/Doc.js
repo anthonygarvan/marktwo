@@ -454,15 +454,16 @@ class Doc extends React.Component {
       }
 
       const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
-      const autocompleteRegex = new RegExp("[#@:/][^\\s#@]+$")
+      const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]+$))|(?:[\\s]([#@:/][^\\s#@]+$))")
       const slashCommands = ['/now', '/today'];
 
       if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
-        const matchedText = s.match(autocompleteRegex)[0]
+        const matchedText = s.match(autocompleteRegex)[0].trim();
         let results;
         if(matchedText.startsWith(':')) {
-          results = emoji.names.filter(n => n.startsWith(matchedText.replace(/:/g, '')))
+          var emojiRegex = new RegExp(`${matchedText.replace(/:/g, '')}`, 'i');
+          results = emoji.names.filter(n => n.match(emojiRegex))
           results = results.map(r => `${emoji.getUnicode(r)} ${r}`)
         } else if(matchedText.startsWith('/')) {
           results = slashCommands.filter(s => s.startsWith(matchedText));
