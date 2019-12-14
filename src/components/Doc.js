@@ -247,52 +247,47 @@ class Doc extends React.Component {
     console.log('initial doc metadata');
     console.log(JSON.stringify(docMetadata));
 
-    function executeSync(that, docMetadata) {
-        return new Promise((resolve, reject) => {
-          if(pagesToAdd.length || forceSync) {
-            console.log('syncing...');
-            if(pagesToAdd.length > 1) {
-              $('#m2-loading').show();
+    if(pagesToAdd.length || forceSync) {
+      console.log('syncing...');
+      if(pagesToAdd.length > 1) {
+        $('#m2-loading').show();
+      }
+      // first add the new pages
+      return this.syncUtils.createFiles(pagesToAdd)
+      .then(results => {
+        // then update the metadata and docList.
+        docMetadata.caretAt = caretAt;
+        docMetadata.pageIds = pageIds;
+        docMetadata.lastModified = new Date().toISOString();
+        docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
+        console.log('syncing by revision...');
+        return new Promise(resolve => {
+          this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+            if(this._isMounted) {
+              this.setState({ docMetadata: validatedDocMetadata }, resolve);
+              console.log('doc metadata:');
+              console.log(JSON.stringify(docMetadata));
+              console.log('validated:');
+              console.log(JSON.stringify(validatedDocMetadata));
+            if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+                console.log('out of date, updating docList...');
+                this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+              }
             }
-            // first add the new pages
-            that.syncUtils.createFiles(pagesToAdd)
-            .then(results => {
-              // then update the metadata and docList.
-              docMetadata.caretAt = caretAt;
-              docMetadata.pageIds = pageIds;
-              docMetadata.lastModified = new Date().toISOString();
-              docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
-              console.log('syncing by revision...');
-              that.syncUtils.syncByRevision(that.props.currentDoc, docMetadata).then(validatedDocMetadata => {
-                if(that._isMounted) {
-                  that.setState({ docMetadata: validatedDocMetadata });
-                  console.log('doc metadata:');
-                  console.log(JSON.stringify(docMetadata));
-                  console.log('validated:');
-                  console.log(JSON.stringify(validatedDocMetadata));
-                if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-                    console.log('out of date, updating docList...');
-                    that.getDocList(validatedDocMetadata).then(docList => that.initializeFromDocList(docList, validatedDocMetadata.caretAt));
-                  }
-                }
-              });
-            })
-            .then(results => {
-              // then remove the unused pages
-              const removeThese = _.difference(docMetadata.pageIds, pageIds)
-              removeThese.map(pageId => {
-                 del(pageId).catch(() => console.log('page not cached, did not remove.'));
-              });
-              return that.syncUtils.deleteFiles(removeThese).then(resolve);
-            })
-            .catch(err => reject());
-          } else {
-            resolve();
-          }
         })
+        })
+      })
+      .then(results => {
+        // then remove the unused pages
+        const removeThese = _.difference(docMetadata.pageIds, pageIds)
+        removeThese.map(pageId => {
+           del(pageId).catch(() => console.log('page not cached, did not remove.'));
+        });
+        return this.syncUtils.deleteFiles(removeThese);
+      })
+    } else {
+      return new Promise(resolve => resolve());
     }
-
-    return executeSync(this, docMetadata);
   }
 
   componentWillUnmount() {
