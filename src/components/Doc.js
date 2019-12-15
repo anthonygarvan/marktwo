@@ -281,7 +281,7 @@ class Doc extends React.Component {
       .then(keys => {
         // then remove the unused pages
         const localPages = keys.filter(k => k.startsWith(`${this.props.currentDoc}.`));
-        const removeThese = _.difference(localPages, docMetadata.pageIds)
+        const removeThese = _.difference(localPages, this.state.docMetadata.pageIds)
         removeThese.map(pageId => {
            del(pageId).catch(() => console.log('page not cached, did not remove.'));
         });
@@ -290,7 +290,7 @@ class Doc extends React.Component {
         return this.syncUtils.getPagesForDoc(this.props.currentDoc);
       })
       .then(remotePages => {
-        const removeThese = _.difference(remotePages, docMetadata.pageIds)
+        const removeThese = _.difference(remotePages, this.state.docMetadata.pageIds)
         return this.syncUtils.deleteFiles(removeThese);
       })
     } else {
