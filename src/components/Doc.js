@@ -542,7 +542,7 @@ class Doc extends React.Component {
 
           setTimeout(() => {
             autocompleteActive = false;
-            $('m2-doc').focus();
+            $('#m2-doc').focus();
             $('#m2-autocomplete').hide();
             range = document.createRange();
             sel = window.getSelection();
