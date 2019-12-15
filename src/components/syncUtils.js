@@ -89,6 +89,16 @@ function initialize(gapi) {
       })
   }
 
+  function getPagesForDoc(docId) {
+    return new Promise(resolve => {
+      gapi.client.drive.files.list({q: `name contains '${docId}'`, spaces: 'appDataFolder', pageSize: 1000 })
+      .then(response => {
+          console.log(response);
+          resolve(response.result.files.map(f => f.name).filter(name => name !== docId));
+      })
+    })
+  }
+
   function findOrFetch(name) {
     return new Promise(resolve => {
       get(name).then(localVersion => {
@@ -237,7 +247,8 @@ function initialize(gapi) {
     findOrFetch,
     findOrFetchFiles,
     syncByRevision,
-    initializeData }
+    initializeData,
+    getPagesForDoc}
 }
 
 export default initialize;

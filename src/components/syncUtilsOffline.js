@@ -71,6 +71,10 @@ function initialize() {
     return new Promise(resolve => resolve());
   }
 
+  function getPagesForDoc(docId) {
+    return new Promise(resolve => resolve([]));
+  }
+
 
   return { createFiles,
     deleteFile,

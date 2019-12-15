@@ -14,7 +14,7 @@ import syncUtils from './syncUtils';
 import syncUtilsOffline from './syncUtilsOffline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBolt } from '@fortawesome/free-solid-svg-icons';
-import { del, set } from 'idb-keyval';
+import { del, set, keys } from 'idb-keyval';
 import async from 'async';
 import emoji from 'emoji-dictionary';
 
@@ -277,12 +277,20 @@ class Doc extends React.Component {
         })
         })
       })
-      .then(results => {
+      .then(results => keys())
+      .then(keys => {
         // then remove the unused pages
-        const removeThese = _.difference(docMetadata.pageIds, pageIds)
+        const localPages = keys.filter(k => k.startsWith(`${this.props.currentDoc}.`));
+        const removeThese = _.difference(localPages, docMetadata.pageIds)
         removeThese.map(pageId => {
            del(pageId).catch(() => console.log('page not cached, did not remove.'));
         });
+      })
+      .then(() => {
+        return this.syncUtils.getPagesForDoc(this.props.currentDoc);
+      })
+      .then(remotePages => {
+        const removeThese = _.difference(remotePages, docMetadata.pageIds)
         return this.syncUtils.deleteFiles(removeThese);
       })
     } else {
