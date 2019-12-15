@@ -186,13 +186,13 @@ function initialize(gapi) {
             }
           }
 
-          // file does not yet exist on server, perhaps internet not available during file creation
+          // file does not yet exist on server
           if(cachedData && !remoteData) {
             create(name, cachedData, response => {
               console.log(response);
               cachedData.fileId = response.id;
               set(name, JSON.stringify(cachedData));
-              resolve(cachedData);
+              syncByRevision(name, cachedData).then(() => resolve(cachedData));
             });
           }
 
@@ -209,7 +209,7 @@ function initialize(gapi) {
               console.log(response);
               defaultData.fileId = response.id;
               set(name, JSON.stringify(defaultData));
-              resolve(defaultData);
+              syncByRevision(name, defaultData).then(() => resolve(defaultData));
             });
           }
         })
