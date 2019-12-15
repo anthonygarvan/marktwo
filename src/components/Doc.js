@@ -540,20 +540,18 @@ class Doc extends React.Component {
           }
           document.execCommand('insertHTML', false, `${newText} `);
 
-          setTimeout(() => {
-            $('#m2-doc').focus();
-            autocompleteActive = false;
-            $('#m2-autocomplete').hide();
-            range = document.createRange();
-            sel = window.getSelection();
-            range.setStart(anchorNode, startOffset + newText.length + 1);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }, 50)
+          $('#m2-doc').focus();
+          autocompleteActive = false;
+          $('#m2-autocomplete').hide();
+          range = document.createRange();
+          sel = window.getSelection();
+          range.setStart(anchorNode, startOffset + newText.length + 1);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
         }
 
-        $('#m2-autocomplete div').mousedown(function() {
+        $('#m2-autocomplete div').mousedown(function(e) {
           e.preventDefault();
           e.stopPropagation();
           $('#m2-autocomplete div').removeClass('m2-selected');
@@ -561,6 +559,8 @@ class Doc extends React.Component {
           autocompleteSelectedIndex = $('#m2-autocomplete div').index(this) + 1;
           selectEntry();
         });
+
+        $('#m2-autocomplete div').click(e => e.preventDefault());
 
 
         $(window).on('scroll', verticalPositionAutocomplete);
