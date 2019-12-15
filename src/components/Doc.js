@@ -512,7 +512,6 @@ class Doc extends React.Component {
         }
 
         function selectEntry() {
-          $('#m2-doc').focus();
           const anchorNode = $(sel.anchorNode)[0];
           const caretOffset = sel.anchorOffset
           const endOfWord = sel.anchorNode.data.substring(sel.anchorOffset).match(/[^\s]*/);
@@ -542,6 +541,7 @@ class Doc extends React.Component {
           document.execCommand('insertHTML', false, `${newText} `);
 
           setTimeout(() => {
+            $('#m2-doc').focus();
             autocompleteActive = false;
             $('#m2-autocomplete').hide();
             range = document.createRange();
