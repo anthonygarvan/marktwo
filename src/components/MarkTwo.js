@@ -210,7 +210,19 @@ class MarkTwo extends React.Component {
           }
           break;
       case 'export':
-        const text = this.state.allLines.map(id => this.state.doc[id]).join('\n\n');
+        let lastTag;
+        const blocks = [];
+        this.state.allLines.forEach((id, i) => {
+          const nextTag = $(marked(this.state.doc[id])).length && $(marked(this.state.doc[id]))[0].tagName;
+          if(lastTag === 'P' && nextTag === 'P') {
+            blocks.push('\n' + this.state.doc[id]);
+          } else {
+            blocks.push(this.state.doc[id]);
+          }
+          lastTag = nextTag;
+        })
+
+        const text = blocks.join('\n');
         const title = this.state.docs.filter(f => f.id === this.state.currentDoc).title || 'Untitled';
         download(text, `${title}.txt`);
         break;
