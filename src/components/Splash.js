@@ -103,7 +103,7 @@ class Splash extends React.Component {
       {!this.state.tryItNow && this.state.isAuthenticated === null && <div className="m2-load-screen">
             <h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
         </div>}
-      {!this.state.tryItNow && this.state.isAuthenticated === false && <div className="m2-splash">
+      {!this.state.tryItNow && this.state.isAuthenticated === false && <div className="m2-splash-container"><div className="m2-splash">
       <div className="m2-hero"><h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
@@ -142,7 +142,7 @@ class Splash extends React.Component {
             </div>
         </div>
       </div>
-    </div>}</div>
+    </div></div>}</div>
   }
 }
 
