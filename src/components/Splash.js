@@ -16,6 +16,7 @@ class Splash extends React.Component {
     this.handleLogout = this.handleLogout.bind(this);
     this.handleSwitchUser = this.handleSwitchUser.bind(this);
     this.state = { tryItNow: document.location.pathname.startsWith('/try-it-now'), isAuthenticated: null };
+    Error.stackTraceLimit = 100;
   }
 
   componentWillMount() {
