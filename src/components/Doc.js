@@ -261,7 +261,7 @@ class Doc extends React.Component {
         docMetadata.lastModified = new Date().toISOString();
         docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
         console.log('syncing by revision...');
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
           this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
             if(this._isMounted) {
               this.setState({ docMetadata: validatedDocMetadata }, resolve);
@@ -274,7 +274,7 @@ class Doc extends React.Component {
                 this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
               }
             }
-        })
+        }).catch(e => reject())
         })
       })
       .then(results => keys())
