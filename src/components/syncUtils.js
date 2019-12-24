@@ -90,12 +90,12 @@ function initialize(gapi) {
   }
 
   function getPagesForDoc(docId) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       gapi.client.drive.files.list({q: `name contains '${docId}'`, spaces: 'appDataFolder', pageSize: 1000 })
       .then(response => {
           console.log(response);
           resolve(response.result.files.map(f => f.name).filter(name => name !== docId));
-      })
+      }).catch(e => reject())
     })
   }
 
