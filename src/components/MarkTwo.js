@@ -441,9 +441,9 @@ class MarkTwo extends React.Component {
         <p>Thanks for using MarkTwo!</p>
           <ul>
           <li>When you select a block (paragraph), it automatically transforms that HTML into markdown,
-        and when you exit the block, it renders to HTML.</li>
-      <li>MarkTwo continuously and efficiently syncs the document you're working via Google Drive. When the edit indicator bar turns light blue, it means changes are being made.
-      Once it turns dark blue, the changes are synced (a few seconds after you're done editing).</li>
+        and when you exit the block, it renders to HTML. Since Markdown can be multiline, you'll have to press enter twice to exit a block.</li>
+      <li>MarkTwo continuously and efficiently syncs the document you're working via Google Drive. When the edit indicator bar turns light blue (or dark pink in dark mode), it means changes are being made.
+      Once it turns dark blue (bright pink in dark mode), the changes are synced (a few seconds after you're done editing).</li>
           <li>We do not have access to your documents, they are as secure as your Google account (we recommend enabling two factor authentication).</li>
         </ul>
         <h2>Writing with MarkTwo</h2>
