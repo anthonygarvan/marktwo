@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { get, set, del } from 'idb-keyval';
 
 function initialize(gapi) {
-  function create(name, data, callback) {
+  function create(name, data) {
     const boundary = '-------314159265358979323846';
     const delimiter = "\r\n--" + boundary + "\r\n";
     const close_delim = "\r\n--" + boundary + "--";
@@ -32,15 +32,12 @@ function initialize(gapi) {
         },
         body: multipartRequestBody});
 
-    if (!callback) {
-      callback = function(file) {
-        console.log(file)
-      };
-    }
-    request.execute(callback);
+    return new Promise(resolve => {
+      request.execute(result => resolve(result));
+    })
   }
 
-  function update(fileId, data, callback) {
+  function update(fileId, data) {
     const boundary = '-------314159265358979323846';
     const delimiter = "\r\n--" + boundary + "\r\n";
     const close_delim = "\r\n--" + boundary + "--";
@@ -67,24 +64,21 @@ function initialize(gapi) {
         },
         body: multipartRequestBody});
 
-    if (!callback) {
-      callback = function(file) {
-        console.log(file)
-      };
-    }
-    request.execute(callback);
+    return new Promise(resolve => {
+      request.execute(result => resolve(result));
+    });
   }
 
-  function find(name, callback) {
-    gapi.client.drive.files.list({q: `name='${name}'`, spaces: 'appDataFolder' })
+  function find(name) {
+    return gapi.client.drive.files.list({q: `name='${name}'`, spaces: 'appDataFolder' })
       .then(response => {
           console.log(response);
           if(response.result.files.length) {
-            gapi.client.drive.files.get({ fileId: response.result.files[0].id, alt: 'media' }).then(response => {
-              callback(response.result);
+            return gapi.client.drive.files.get({ fileId: response.result.files[0].id, alt: 'media' }).then(response => {
+              return response.result;
             });
           } else {
-            callback(false);
+            throw `File not found: ${name}`;
           }
       })
   }
@@ -100,17 +94,13 @@ function initialize(gapi) {
   }
 
   function findOrFetch(name) {
-    return new Promise(resolve => {
-      get(name).then(localVersion => {
+    return get(name).then(localVersion => {
         if(localVersion) {
-          resolve(JSON.parse(localVersion));
+          return JSON.parse(localVersion);
         } else {
-          find(name, fileData => {
-            resolve(fileData);
-          });
+          return find(name);
         }
       })
-    })
   }
 
   function findOrFetchFiles(names) {
@@ -160,7 +150,7 @@ function initialize(gapi) {
   function createFiles(files) {
     return async.series(files.map(file => {
       return function(callback) {
-        create(file.name, file.data, (result) => {
+        create(file.name, file.data).then(result => {
           if(!result.name) {
               callback(`Create request failed for ${file.name}`);
             } else {
@@ -172,47 +162,45 @@ function initialize(gapi) {
 
 
   function initializeData(name, defaultData) {
-    return new Promise(resolve => {
-      find(name, remoteData => {
-        get(name).then(cachedData => {
+    return find(name).then(remoteData => {
+        return get(name).then(cachedData => {
           cachedData =  cachedData && JSON.parse(cachedData);
 
           // normal page reload
           if(cachedData && remoteData) {
             if(remoteData.revision >= cachedData.revision) {
-              resolve(remoteData);
+              return remoteData;
             } else {
-              resolve(cachedData)
+              return cachedData
             }
           }
 
           // file does not yet exist on server
           if(cachedData && !remoteData) {
-            create(name, cachedData, response => {
+            return create(name, cachedData).then(response => {
               console.log(response);
               cachedData.fileId = response.id;
               set(name, JSON.stringify(cachedData));
-              syncByRevision(name, cachedData).then(() => resolve(cachedData));
+              return syncByRevision(name, cachedData);
             });
           }
 
           // new device
           if(!cachedData && remoteData) {
             set(name, JSON.stringify(remoteData))
-            resolve(remoteData);
+            return remoteData;
           }
 
           // app being loaded for the first time
           if(!cachedData && !remoteData) {
             set(name, JSON.stringify(defaultData));
-            create(name, defaultData, response => {
+            return create(name, defaultData).then(response => {
               console.log(response);
               defaultData.fileId = response.id;
               set(name, JSON.stringify(defaultData));
-              syncByRevision(name, defaultData).then(() => resolve(defaultData));
+              return syncByRevision(name, defaultData);
             });
           }
-        })
         })
     })
   }
@@ -220,21 +208,19 @@ function initialize(gapi) {
   function syncByRevision(name, newData) {
     newData.revision++;
     set(name, JSON.stringify(newData));
-    return new Promise(resolve => {
-      find(name, remoteData => {
+    return find(name).then(remoteData => {
         console.log(remoteData);
         if(remoteData.revision >= newData.revision) {
           // if the server version is at a higher revision, use the server version (fast-forward)
           set(name, JSON.stringify(remoteData));
-          resolve(remoteData);
+          return remoteData;
         } else {
           // otherwise use the new version and update server version
           set(name, JSON.stringify(newData));
           console.log(`Updating ${name}, fileId ${newData.fileId}`);
-          update(newData.fileId, newData, () => resolve(newData));
+          return update(newData.fileId, newData).then(() => newData);
         }
       })
-    })
   }
 
 
