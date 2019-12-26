@@ -78,7 +78,7 @@ function initialize(gapi) {
               return response.result;
             });
           } else {
-            throw `File not found: ${name}`;
+            return false;
           }
       })
   }
