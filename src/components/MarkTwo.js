@@ -92,16 +92,27 @@ class MarkTwo extends React.Component {
   }
 
   sync(appData, additionalState) {
-    this.setState({ ...appData, ...additionalState, appData });
-    return new Promise(resolve => {
-      if(!this.props.tryItNow) {
-        this.syncUtils.syncByRevision(this.appDataKey, appData).then(appData => {
-          this.setState({ ...appData, appData }, resolve)
-        });
-      } else {
-        resolve();
-      }
-    })
+    if(!this.syncing) {
+      console.log(`starting sync: ${JSON.stringify(appData)}`);
+      this.syncing = true;
+      this.setState({ ...appData, ...additionalState, appData });
+      return new Promise(resolve => {
+        if(!this.props.tryItNow) {
+          this.syncUtils.syncByRevision(this.appDataKey, appData).then(appData => {
+            console.log(`finished sync: ${JSON.stringify(appData)}`);
+            this.setState({ ...appData, appData }, () => {
+              this.syncing = false;
+              resolve();
+            });
+          });
+        } else {
+          this.syncing = false;
+          resolve();
+        }
+      })
+    } else {
+      setTimeout(() => this.sync(appData, additionalState), 200);
+    }
   }
 
   openFile(id) {
@@ -114,7 +125,9 @@ class MarkTwo extends React.Component {
   }
 
   startNewFile() {
+    console.log(`old doc: ${JSON.stringify(this.state.currentDoc)}`);
     this.setState({ currentDoc: false }, () => {
+      console.log(`current doc: ${JSON.stringify(this.state.currentDoc)}`);
       $(window).scrollTop(0);
       const appData = _.cloneDeep(this.state.appData);
       const id = shortid.generate();
