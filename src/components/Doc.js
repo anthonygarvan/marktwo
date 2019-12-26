@@ -706,7 +706,7 @@ class Doc extends React.Component {
           this.getDocList(docMetadata).then((docList) => {
             if(this._isMounted) {
               this.initializeEditor();
-              this.initializeFromDocList(docList, docMetadata.caretAt);
+              this.initializeFromDocList(docList, docMetadata.caretAt || docList[0].id);
             }
           })
         }
