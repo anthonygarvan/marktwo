@@ -15,7 +15,9 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { get, set } from 'idb-keyval';
 import me from '../img/me.jpg';
+import { faBolt } from '@fortawesome/free-solid-svg-icons';
 const tryItNowText  = raw('./tryItNow.md');
+
 
 
 
@@ -347,10 +349,10 @@ class MarkTwo extends React.Component {
       <section className="modal-card-body">
         <div>
           <label className="m2-import">
-            <span className="button is-text is-clear">Import</span>
-            <input type="file" onChange={this.handleImport} accept=".txt,.md" />
+            <span className="button is-text is-clear" disabled={this.state.offlineMode}>Import</span>
+            <input type="file" onChange={this.handleImport} accept=".txt,.md" disabled={this.state.offlineMode} />
           </label>
-          <button className="button is-outline" onClick={this.startNewFile}>New</button></div>
+          <button className="button is-outline" onClick={this.startNewFile}  disabled={this.state.offlineMode}>New</button></div>
         <table className="table is-striped is-fullwidth">
           <thead>
             <tr>
@@ -408,7 +410,7 @@ class MarkTwo extends React.Component {
           className="switch"
           checked={this.state.offlineMode}
           onChange={(e) => this.setOfflineMode(e.target.checked)}/>
-        <label htmlFor="m2-offline-mode-switch">Offline mode</label>
+        <label htmlFor="m2-offline-mode-switch">Offline mode <FontAwesomeIcon icon={faBolt} /></label>
       </div>
 
       <div className="field">
