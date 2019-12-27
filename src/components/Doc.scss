@@ -1,9 +1,12 @@
 @import './base.scss';
 
 .m2-doc {
-  max-width: 800px;
+  max-width: calc(100vw - 4rem);
+  @include tablet {
+    max-width: 800px;
+  }
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   padding-bottom: 60vh;
   min-height: 100vh;
   &:focus {

@@ -674,6 +674,39 @@ class Doc extends React.Component {
         });
       }
     });
+
+    $('#m2-doc').on('focusout', (e) => {
+      const oldSelectedBlock = $('.m2-edit-mode');
+      if(oldSelectedBlock[0]) {
+        let markdown = oldSelectedBlock[0].innerText.replace(/\u200B/g, '');
+        let id = oldSelectedBlock.attr('id');
+        if(!id || !oldSelectedBlock[0].isSameNode(document.getElementById(id))) {
+          id = shortid.generate();
+          oldSelectedBlock.attr('id', id);
+        }
+        const doc = this.state.doc;
+        doc[id] = markdown.trim();
+
+        const blocks = oldSelectedBlock[0].nodeName === 'PRE' ? [markdown] : markdown.split('\n\n');
+        const nodes = blocks.map((block, i) => {
+          block = block.replace(/\/now/gi, moment().format('LLL'));
+          block = block.replace(/\/today/gi, moment().format('LL'));
+
+          const renderedNode = this.getNodeForBlock(block);
+          if(i > 0) {
+            id = shortid.generate();
+          }
+          renderedNode.attr('id', id);
+          doc[id] = block.trim();
+
+          return renderedNode[0].outerHTML;
+        });
+        oldSelectedBlock.replaceWith($(nodes.join('\n')));
+        this.setState({ doc }, () => {
+          this.props.setDocData(this.state.allLines, this.state.doc);
+        });
+      }
+      });
   }
 
   shouldComponentUpdate(nextProps, nextState) {
