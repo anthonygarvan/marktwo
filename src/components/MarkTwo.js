@@ -198,19 +198,23 @@ class MarkTwo extends React.Component {
   handleSearch(e) {
     e.preventDefault();
     console.log(this.state.searchString);
-    const exactMatchRegex = /^"(.+)"$/
-    let searchRegex;
-    if(exactMatchRegex.test(this.state.searchString)) {
-      searchRegex = new RegExp(this.state.searchString
-          .match(exactMatchRegex)[1].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'ig');
+    let searchResults;
+    if(!this.state.searchString) {
+      searchResults = this.state.allLines.filter(id => this.state.doc[id].startsWith('// ')).map(id => ({ id, text: this.state.doc[id].replace('// ', '') })).slice(0, 1000)
     } else {
-      const keywords = this.state.searchString.split(' ')
-              .map(t => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')) // comment out regex expressions
-      searchRegex = new RegExp(keywords.join('|'), 'ig');
+      const exactMatchRegex = /^"(.+)"$/
+      let searchRegex;
+      if(exactMatchRegex.test(this.state.searchString)) {
+        searchRegex = new RegExp(this.state.searchString
+            .match(exactMatchRegex)[1].replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'ig');
+      } else {
+        const keywords = this.state.searchString.split(' ')
+                .map(t => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')) // comment out regex expressions
+        searchRegex = new RegExp(keywords.join('|'), 'ig');
+      }
+      const whitespaceRegex = new RegExp('^[\\s\\n]*$')
+      searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, text: this.state.doc[id] })).slice(0, 1000)
     }
-    const whitespaceRegex = new RegExp('^[\\s\\n]*$')
-    const searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, text: this.state.doc[id] })).slice(0, 1000)
-
     this.setState({ searchResults });
   }
 
@@ -298,7 +302,7 @@ class MarkTwo extends React.Component {
       showShelf={this.state.showShelf}
       setShelf={(val) => this.setState({ showShelf: val })}
       showDocs={(val) => this.setState({ showDocs: val, viewArchive: false }, this.refreshDocs)}
-      showSearch={() => this.setState({ showSearch: true })}
+      showSearch={() => this.setState({ showSearch: true }, () => this.handleSearch({ preventDefault: () => {}}))}
       showAbout={() => this.setState({ showAbout: true })}
       showHelp={() => this.setState({ showHelp: true })}
       showSettings={() => this.setState({ showSettings: true })}/>
@@ -519,6 +523,13 @@ var success = "Text sandwiched by three backticks renders a code block";
 <p>A line consisting solely of three or more dashes renders a horizontal rule.</p>
 <pre>
 {`---`}
+</pre>
+
+<h5>Bookmarks</h5>
+<p>A line that starts with two slashes and a space gets rendered as a bookmark,
+  and shows up by default in the <code>Search</code> view.</p>
+<pre>
+{`// January notes`}
 </pre>
 
 <h5>Text Tricks</h5>

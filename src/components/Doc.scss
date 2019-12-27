@@ -77,6 +77,19 @@
   background-color: lighten($primary, 35%);
 }
 
+.m2-bookmark {
+  color: lighten(black, 50%);
+  font-size: 1.2rem;
+  &:not(.m2-edit-mode) {
+    text-transform: uppercase;
+  }
+  hr {
+    width: 6rem;
+    margin: 0.7rem 0;
+    border-bottom: 4px solid $primary;
+  }
+}
+
 .m2-todo-list {
   list-style: none;
 

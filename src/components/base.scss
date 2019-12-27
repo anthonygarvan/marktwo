@@ -39,6 +39,10 @@ body {
       }
     }
 
+    .m2-bookmark hr {
+      border-bottom: 4px solid $darkModePrimary;
+    }
+
     .m2-ellipsis {
       color: $darkModePrimary;
       &:hover {

@@ -37,6 +37,12 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 | Hot dog           |          no        |      yes         |
 | Burrito           |          no        |      yes         |
 
+
+// Bookmarks
+
+Not a standard markdown feature, but very handy! Start a line with `// ` and it will show
+up by default in the Search view.
+
 ## And more!
 - Import and export markdown via the `Docs` menu.
 - Optimized for very large documents, perfect for keeping a running list of notes or journal
