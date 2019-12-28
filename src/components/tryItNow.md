@@ -40,16 +40,15 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 
 // Bookmarks
 
-Not a standard markdown feature, but very handy! Start a line with `// ` and it will show
-up by default in the Search view.
+Not a standard markdown feature, but very handy! Start a line with `// ` and it will show up by default in the Search view.
 
-## And more!
-- Import and export markdown via the `Docs` menu.
-- Optimized for very large documents, perfect for keeping a running list of notes or journal
-- Easily search your doc to match keywords and use quotes for "exact strings"
-- MarkTwo is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times
-- Saves & syncs your exact location in a document, so you can pick up right where you left off after restarting a tab or switching devices
-- Offline mode ⚡ and dark mode 🌗 available from `Settings` menu
+#### Advanced text entry
 - Automatic text expansion for `/now` and `/today`
 - Want to make sure you can find something later? #hashtags and @mentions autocomplete.
 - Use colons to search for :emojis: 😊
+
+## And more!
+- Offline mode ⚡ and dark mode 🌗 available from `Settings` menu
+- Import and export markdown via the `Docs` menu.
+- Easily search your doc to match keywords and use quotes for "exact strings"
+- MarkTwo is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times
