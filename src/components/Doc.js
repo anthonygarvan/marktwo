@@ -448,6 +448,7 @@ class Doc extends React.Component {
     $('#m2-doc').on('keydown keyup mouseup', (e) => {
       const doc = this.state.doc;
       this.initiateSync();
+      const that = this;
 
       if(selectedBlock) {
         this.oldSelectedBlock = selectedBlock;
@@ -465,7 +466,7 @@ class Doc extends React.Component {
 
       const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
       const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]+$))|(?:[\\s]([#@:/][^\\s#@]+$))")
-      const slashCommands = ['/now', '/today'];
+      const slashCommands = ['/now', '/today', '/image'];
 
       if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
@@ -542,6 +543,33 @@ class Doc extends React.Component {
                 break;
               case '/today':
                 newText = moment().format('LL');
+                break;
+              case '/image':
+                if(!that.props.offlineMode) {
+                  const input = document.createElement('input');
+                  const replaceThis = `m2img/${shortid.generate()}`;
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        var reader = new FileReader();
+
+                        reader.onload = function (e) {
+                            console.log(e.target.result);
+                        };
+
+                        reader.readAsDataURL(e.target.files[0]);
+                        console.log(e.target.files[0].name);
+
+                        // here, syncUtil to upload file to google drive and replace dummy url with webLink url
+                    }
+                  })
+                  input.click();
+                  newText = `![alt-text](${replaceThis})`;
+                } else {
+                  newText = '![alt-text](imgUrl)';
+                }
+
                 break;
             }
           }
