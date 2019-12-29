@@ -75,8 +75,13 @@ function initialize() {
     return new Promise(resolve => resolve([]));
   }
 
+  function createImage() {
+    return new Promise(resolve => resolve());
+  }
+
 
   return { createFiles,
+    createImage,
     deleteFile,
     deleteFiles,
     findOrFetch,

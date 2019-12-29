@@ -37,6 +37,42 @@ function initialize(gapi) {
     })
   }
 
+  function createImage(name, dataUrl) {
+    const boundary = '-------314159265358979323846';
+    const delimiter = "\r\n--" + boundary + "\r\n";
+    const close_delim = "\r\n--" + boundary + "--";
+
+    const mimeType = dataUrl.match(/data:(image\/[a-z]+);/)[1]
+    const data = dataUrl.split(',')[1];
+    const metadata = {
+      name,
+      mimeType,
+      parents: ['appDataFolder']
+    };
+
+    const multipartRequestBody =
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        `Content-Type: ${mimeType}\r\n\r\n` +
+        data +
+        close_delim;
+
+    const request = gapi.client.request({
+        path: '/upload/drive/v3/files',
+        method: 'POST',
+        params: {uploadType: 'multipart'},
+        headers: {
+          'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+        },
+        body: multipartRequestBody});
+
+    return new Promise(resolve => {
+      request.execute(result => resolve(result));
+    })
+  }
+
   function update(fileId, data) {
     const boundary = '-------314159265358979323846';
     const delimiter = "\r\n--" + boundary + "\r\n";
@@ -225,6 +261,7 @@ function initialize(gapi) {
 
 
   return { create,
+    createImage,
     createFiles,
     update,
     find,

@@ -441,6 +441,41 @@ class Doc extends React.Component {
         }
       }
     });
+    const that = this;
+    const modal = document.querySelector('#m2-img-dialog');
+
+    modal.querySelector('.m2-img-cancel').addEventListener('click', () => {
+      modal.close();
+    });
+
+    modal.querySelector('.m2-img-select').addEventListener('click', () => {
+      modal.close($(modal.querySelector('input')).data('webUrl'));
+    });
+
+    modal.querySelector('input').addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+          var reader = new FileReader();
+
+          const fileName = e.target.files[0].name;
+          reader.onload = function(e) {
+              console.log(e.target.result);
+              // here, syncUtil to upload file to google drive and replace dummy url with webLink url
+              that.syncUtils.createImage(`img/${fileName}`, e.target.result)
+              .then(result => {
+                console.log(result);
+                $(modal.querySelector('input')).data('webUrl', 'https://test.com/beef.png');
+              });
+          };
+
+          reader.readAsDataURL(e.target.files[0]);
+          console.log(e.target.files[0].name);
+      }
+    });
+
+    modal.addEventListener('close', () => {
+      document.execCommand('insertHTML', false, `![alt-text](${modal.returnValue || 'imgUrl'})`);
+    });
+
 
     let autocompleteActive = false;
     let autocompleteSelectedIndex = 0;
@@ -546,26 +581,8 @@ class Doc extends React.Component {
                 break;
               case '/image':
                 if(!that.props.offlineMode) {
-                  const input = document.createElement('input');
-                  const replaceThis = `m2img/${shortid.generate()}`;
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.addEventListener('change', function(e) {
-                    if (e.target.files && e.target.files[0]) {
-                        var reader = new FileReader();
-
-                        reader.onload = function (e) {
-                            console.log(e.target.result);
-                        };
-
-                        reader.readAsDataURL(e.target.files[0]);
-                        console.log(e.target.files[0].name);
-
-                        // here, syncUtil to upload file to google drive and replace dummy url with webLink url
-                    }
-                  })
-                  input.click();
-                  newText = `![alt-text](${replaceThis})`;
+                  document.querySelector('#m2-img-dialog').showModal();
+                  newText = '';
                 } else {
                   newText = '![alt-text](imgUrl)';
                 }
@@ -794,6 +811,14 @@ class Doc extends React.Component {
         <div className="bar"></div>
         <div className="bar"></div>
       </div>
+      <dialog id="m2-img-dialog" className="content">
+        <h3>Please select an image...</h3>
+        <p><input type="file" accept="image/*" /></p>
+        <div className="actions">
+          <button className="button is-text m2-img-cancel">cancel</button>
+          <button className="button is-primary m2-img-select">Ok</button>
+        </div>
+      </dialog>
       <div id="m2-autocomplete" style={ { display: 'none' } }></div>
       <div className="m2-offline" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
       <div className="m2-is-signed-out" style={ {display: 'none' } }>You've been signed out. <a onClick={this.props.handleLogin}>Sign back in</a></div>
