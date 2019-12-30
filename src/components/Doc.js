@@ -17,6 +17,7 @@ import { faBolt } from '@fortawesome/free-solid-svg-icons';
 import { del, set, keys } from 'idb-keyval';
 import async from 'async';
 import emoji from 'emoji-dictionary';
+import dialogPolyfill from 'dialog-polyfill';
 
 class Doc extends React.Component {
   constructor(props) {
@@ -443,6 +444,7 @@ class Doc extends React.Component {
     });
     const that = this;
     const modal = document.querySelector('#m2-img-dialog');
+    dialogPolyfill.registerDialog(modal);
 
     modal.querySelector('#m2-img-cancel').addEventListener('click', () => {
       modal.close();

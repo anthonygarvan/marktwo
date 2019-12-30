@@ -10,6 +10,7 @@ $darkModeDark: #212127;
 
 @import '~bulma';
 @import '~bulma-switch';
+@import './dialog-polyfill';
 
 body {
   font-size: 14px;
