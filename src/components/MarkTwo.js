@@ -15,7 +15,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { get, set } from 'idb-keyval';
 import me from '../img/me.jpg';
-import { faBolt } from '@fortawesome/free-solid-svg-icons';
+import { faBolt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 const tryItNowText  = raw('./tryItNow.md');
 
 
@@ -35,6 +35,7 @@ class MarkTwo extends React.Component {
     this.refreshDocs = this.refreshDocs.bind(this);
     this.setOfflineMode = this.setOfflineMode.bind(this);
     this.setDarkMode = this.setDarkMode.bind(this);
+    this.handleViewImageFolder = this.handleViewImageFolder.bind(this);
 
     marked.setOptions({
       breaks: true,
@@ -282,6 +283,12 @@ class MarkTwo extends React.Component {
     })
   }
 
+  handleViewImageFolder(e) {
+    this.syncUtils.getImagesFolder().then(id => {
+      window.open(`https://drive.google.com/drive/u/0/folders/${id}`, '_blank')
+    });
+  }
+
   render() {
     return <div>
     {this.state.currentDoc && <Doc key={this.state.currentDoc}
@@ -421,6 +428,11 @@ class MarkTwo extends React.Component {
           onChange={(e) => this.setSpellcheck(e.target.checked)}/>
         <label htmlFor="m2-spellcheck-switch">Spellcheck</label>
       </div>
+
+      <div className="field">
+        <p><FontAwesomeIcon icon={faInfoCircle} /> Images you upload via <code>/image</code> are served out of your Google Drive.</p>
+        <a className="button" onClick={this.handleViewImageFolder}>View uploaded images</a>
+      </div>
     </section>
   </div></div>}
 
@@ -532,6 +544,13 @@ var success = "Text sandwiched by three backticks renders a code block";
   and shows up by default in the <code>Search</code> view.</p>
 <pre>
 {`// January notes`}
+</pre>
+
+<h5>Images</h5>
+<p>Link to images across the web with standard markdown syntax, or upload your own with the <code>/image</code> command.</p>
+<pre>
+{`![alt-text](https://images.com/image-url.png)
+/image`}
 </pre>
 
 <h5>Text Tricks</h5>

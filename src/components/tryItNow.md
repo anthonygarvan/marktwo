@@ -42,6 +42,12 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 
 Not a standard markdown feature, but very handy! Start a line with `// ` and it will show up by default in the Search view.
 
+#### Images
+
+Supports stardard markdown syntax to link to images. You can also upload new images with the `/image` slash command.
+
+![deception](/img/deception.jpg)
+
 #### Advanced text entry
 - Automatic text expansion for `/now` and `/today`
 - Want to make sure you can find something later? #hashtags and @mentions autocomplete.

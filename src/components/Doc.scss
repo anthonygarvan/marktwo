@@ -45,7 +45,8 @@
   }
 
   img {
-    max-width: 100%;
+    width: 60%;
+    margin-left: 20%;
   }
 
   .m2-edit-mode {
@@ -112,6 +113,16 @@
 
     &.m2-selected {
       background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+#m2-img-dialog {
+  padding: 2.5rem 2.5rem 1rem 2.5rem;
+  input {
+    margin-bottom: 1.6rem;
+    &:focus {
+      outline: none;
     }
   }
 }

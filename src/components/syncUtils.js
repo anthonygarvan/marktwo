@@ -38,38 +38,61 @@ function initialize(gapi) {
   }
 
   function createImage(name, dataUrl) {
-    const boundary = '-------314159265358979323846';
-    const delimiter = "\r\n--" + boundary + "\r\n";
-    const close_delim = "\r\n--" + boundary + "--";
+    return getImagesFolder().then(imageFolderId => {
+      const boundary = '-------314159265358979323846';
+      const delimiter = "\r\n--" + boundary + "\r\n";
+      const close_delim = "\r\n--" + boundary + "--";
 
-    const mimeType = dataUrl.match(/data:(image\/[a-z]+);/)[1]
-    const data = dataUrl.split(',')[1];
-    const metadata = {
-      name,
-      mimeType,
-      parents: ['appDataFolder']
-    };
+      const mimeType = dataUrl.match(/data:(image\/[a-z]+);/)[1]
+      const data = dataUrl.split(',')[1];
+      const metadata = {
+        name,
+        mimeType,
+        parents: [imageFolderId]
+      };
 
-    const multipartRequestBody =
-        delimiter +
-        'Content-Type: application/json\r\n\r\n' +
-        JSON.stringify(metadata) +
-        delimiter +
-        `Content-Type: ${mimeType}\r\n\r\n` +
-        data +
-        close_delim;
+      const multipartRequestBody =
+          delimiter +
+          'Content-Type: application/json\r\n\r\n' +
+          JSON.stringify(metadata) +
+          delimiter +
+          'Content-Transfer-Encoding: base64\n' +
+          `Content-Type: ${mimeType}\r\n\r\n` +
+          data +
+          close_delim;
 
-    const request = gapi.client.request({
-        path: '/upload/drive/v3/files',
-        method: 'POST',
-        params: {uploadType: 'multipart'},
-        headers: {
-          'Content-Type': 'multipart/related; boundary="' + boundary + '"'
-        },
-        body: multipartRequestBody});
+      const request = gapi.client.request({
+          path: '/upload/drive/v3/files',
+          method: 'POST',
+          params: {uploadType: 'multipart'},
+          headers: {
+            'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+          },
+          body: multipartRequestBody});
 
-    return new Promise(resolve => {
-      request.execute(result => resolve(result));
+      return new Promise(resolve => {
+        request.execute(result => resolve(result));
+      })
+    })
+  }
+
+  function getImagesFolder() {
+    return gapi.client.drive.files.list({q: `name='MarkTwo-Media'` })
+    .then(response => {
+      if(response.result.files.length) {
+        return response.result.files[0].id
+      } else {
+        const metadata = {
+          name: 'MarkTwo-Media',
+          mimeType: 'application/vnd.google-apps.folder'
+        };
+        return gapi.client.drive.files.create({
+          resource: metadata,
+          fields: 'id'
+        }).then(file => {
+          return file.result.id;
+        });
+      }
     })
   }
 
@@ -263,6 +286,7 @@ function initialize(gapi) {
   return { create,
     createImage,
     createFiles,
+    getImagesFolder,
     update,
     find,
     deleteFile,

@@ -444,11 +444,11 @@ class Doc extends React.Component {
     const that = this;
     const modal = document.querySelector('#m2-img-dialog');
 
-    modal.querySelector('.m2-img-cancel').addEventListener('click', () => {
+    modal.querySelector('#m2-img-cancel').addEventListener('click', () => {
       modal.close();
     });
 
-    modal.querySelector('.m2-img-select').addEventListener('click', () => {
+    modal.querySelector('#m2-img-select').addEventListener('click', () => {
       modal.close($(modal.querySelector('input')).data('webUrl'));
     });
 
@@ -459,11 +459,13 @@ class Doc extends React.Component {
           const fileName = e.target.files[0].name;
           reader.onload = function(e) {
               console.log(e.target.result);
-              // here, syncUtil to upload file to google drive and replace dummy url with webLink url
-              that.syncUtils.createImage(`img/${fileName}`, e.target.result)
+              that.syncUtils.createImage(`m2img.${fileName}`, e.target.result)
               .then(result => {
                 console.log(result);
-                $(modal.querySelector('input')).data('webUrl', 'https://test.com/beef.png');
+                $(modal.querySelector('input')).data('webUrl', `https://drive.google.com/uc?export=view&id=${result.id}`);
+                //that.syncUtils.getLinkForFile(result.id).then(link => {
+                //    $(modal.querySelector('input')).data('webUrl', link);
+                //})
               });
           };
 
@@ -473,7 +475,13 @@ class Doc extends React.Component {
     });
 
     modal.addEventListener('close', () => {
-      document.execCommand('insertHTML', false, `![alt-text](${modal.returnValue || 'imgUrl'})`);
+      const sel = window.getSelection();
+      const caretAt = $('#m2-img-dialog').data('selectedBlock')
+      this.state.doc[caretAt] = this.state.doc[caretAt].replace('/m2img', `![alt-text](${modal.returnValue || 'imgUrl'})`);
+      this.setState({ doc: this.state.doc }, () => {
+        this.initializeFromDocList(this.state.allLines.map(id => ({ id, text: this.state.doc[id] })), caretAt);
+      });
+      modal.returnValue = '';
     });
 
 
@@ -530,17 +538,19 @@ class Doc extends React.Component {
         });
 
         function verticalPositionAutocomplete() {
-          const range = sel.getRangeAt(0).cloneRange();
-          const rects = range.getClientRects();
-          if (rects.length > 0) {
-            let vPos;
-            autocompleteDropdownAbove = rects[0].top / window.outerHeight < 0.6;
-            if(autocompleteDropdownAbove) {
-              vPos = rects[0].top + 20;
-            } else {
-              vPos = rects[0].top - (10 + $('#m2-autocomplete').height());
+          if(autocompleteActive) {
+            const range = sel.getRangeAt(0).cloneRange();
+            const rects = range.getClientRects();
+            if (rects.length > 0) {
+              let vPos;
+              autocompleteDropdownAbove = rects[0].top / window.outerHeight < 0.6;
+              if(autocompleteDropdownAbove) {
+                vPos = rects[0].top + 20;
+              } else {
+                vPos = rects[0].top - (10 + $('#m2-autocomplete').height());
+              }
+              $('#m2-autocomplete').css('top', vPos);
             }
-            $('#m2-autocomplete').css('top', vPos);
           }
         }
 
@@ -581,8 +591,7 @@ class Doc extends React.Component {
                 break;
               case '/image':
                 if(!that.props.offlineMode) {
-                  document.querySelector('#m2-img-dialog').showModal();
-                  newText = '';
+                  newText = '/m2img';
                 } else {
                   newText = '![alt-text](imgUrl)';
                 }
@@ -601,6 +610,12 @@ class Doc extends React.Component {
           range.collapse(true);
           sel.removeAllRanges();
           sel.addRange(range);
+
+          if(newText === '/m2img') {
+            const modal = $('#m2-img-dialog');
+            modal.data('selectedBlock', $(anchorNode).closest('#m2-doc > *').attr('id'));
+            modal[0].showModal();
+          }
         }
 
         $('#m2-autocomplete div').mousedown(function(e) {
@@ -814,9 +829,9 @@ class Doc extends React.Component {
       <dialog id="m2-img-dialog" className="content">
         <h3>Please select an image...</h3>
         <p><input type="file" accept="image/*" /></p>
-        <div className="actions">
-          <button className="button is-text m2-img-cancel">cancel</button>
-          <button className="button is-primary m2-img-select">Ok</button>
+        <div className="actions is-pulled-right">
+          <button id="m2-img-cancel" className="button is-text">cancel</button>
+          <button id="m2-img-select" className="button is-primary">Ok</button>
         </div>
       </dialog>
       <div id="m2-autocomplete" style={ { display: 'none' } }></div>
