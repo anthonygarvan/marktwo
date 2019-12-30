@@ -448,14 +448,18 @@ class MarkTwo extends React.Component {
           <p>MarkTwo was created by me, Anthony Garvan. I&apos;m a software developer based out of Chicago.
             I love spending time with my family, working with my team, and tinkering with random projects like this one.</p>
 
-          <p>MarkTwo is my second attempt at a markdown editor, and obviously my best. </p>
-
-          <div className="m2-me"><img src={me} alt="developer" /></div>
+          <p>MarkTwo is my second attempt at a markdown editor, and obviously my best. It took many months to get right,
+            if you enjoy using it please consider showing your appreciation by buying me a cup of coffee ☕❤️.</p>
+          <div className="m2-me"><img className="m2-profile" src={me} alt="developer" />
+          <div>
+          </div></div>
       </section>
       <footer className="modal-card-foot">
         <a href="/privacy.txt" target="_blank">Privacy</a>
         <a href="/terms.txt" target="_blank">Terms</a>
         <a href="https://github.com/anthonygarvan/marktwo" target="_blank">Source</a>
+        <a className="m2-coffee is-pulled-right" href="https://www.buymeacoffee.com/GDsZofV" target="_blank">
+          <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee"/></a>
     </footer>
     </div></div>}
 

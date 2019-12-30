@@ -88,11 +88,18 @@
   .m2-me {
     margin-top: 3rem;
     text-align: center;
-    img {
-      margin: 0 auto;
+    .m2-profile {
       width: 6rem;
       border-radius: 6rem;
       border: 2px solid $primary;
+    }
+  }
+
+  .m2-coffee {
+    position: absolute;
+    right: 0px;
+    img {
+      width: 180px;
     }
   }
 }
