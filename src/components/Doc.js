@@ -453,6 +453,7 @@ class Doc extends React.Component {
     });
 
     modal.querySelector('input').addEventListener('change', function(e) {
+      $('#m2-img-select').addClass('is-loading');
       if (e.target.files && e.target.files[0]) {
           var reader = new FileReader();
 
@@ -463,6 +464,7 @@ class Doc extends React.Component {
               .then(result => {
                 console.log(result);
                 $(modal.querySelector('input')).data('webUrl', `https://drive.google.com/uc?export=view&id=${result.id}`);
+                $('#m2-img-select').removeClass('is-loading');
                 $('#m2-img-select').attr('disabled', null);
               });
           };
@@ -831,7 +833,7 @@ class Doc extends React.Component {
         <p><input type="file" accept="image/*" /></p>
         <div className="actions is-pulled-right">
           <button id="m2-img-cancel" className="button is-text">cancel</button>
-          <button id="m2-img-select" className="button is-primary" disabled>Ok</button>
+          <button id="m2-img-select" className="button" disabled>Ok</button>
         </div>
       </dialog>
       <div id="m2-autocomplete" style={ { display: 'none' } }></div>

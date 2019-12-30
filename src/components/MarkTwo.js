@@ -15,6 +15,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import { get, set } from 'idb-keyval';
 import me from '../img/me.jpg';
+import coffee from '../img/coffee.png';
 import { faBolt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 const tryItNowText  = raw('./tryItNow.md');
 
@@ -459,7 +460,7 @@ class MarkTwo extends React.Component {
         <a href="/terms.txt" target="_blank">Terms</a>
         <a href="https://github.com/anthonygarvan/marktwo" target="_blank">Source</a>
         <a className="m2-coffee is-pulled-right" href="https://www.buymeacoffee.com/GDsZofV" target="_blank">
-          <img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee"/></a>
+          <img src={coffee} alt="Buy Me A Coffee"/></a>
     </footer>
     </div></div>}
 
