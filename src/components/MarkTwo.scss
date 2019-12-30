@@ -75,9 +75,24 @@
 
 .m2-about {
   footer  {
-    text-align: right;
+    text-align: left;
     a {
       margin-right: 2rem;
+    }
+
+    .m2-coffee {
+      position: absolute;
+      right: 0px;
+      bottom: 0.6rem;
+      @include tablet {
+        bottom: 0.3rem;
+      }
+      img {
+        width: 8rem;
+        @include tablet {
+          width: 180px;
+        }
+      }
     }
   }
 
@@ -92,14 +107,6 @@
       width: 6rem;
       border-radius: 6rem;
       border: 2px solid $primary;
-    }
-  }
-
-  .m2-coffee {
-    position: absolute;
-    right: 0px;
-    img {
-      width: 180px;
     }
   }
 }

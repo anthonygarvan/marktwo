@@ -45,8 +45,11 @@
   }
 
   img {
-    width: 60%;
-    margin-left: 20%;
+    width: 100%;
+    @include tablet {
+      width: 60%;
+      margin-left: 20%;
+    }
   }
 
   .m2-edit-mode {
