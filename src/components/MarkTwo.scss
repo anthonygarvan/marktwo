@@ -77,7 +77,10 @@
   footer  {
     text-align: left;
     a {
-      margin-right: 2rem;
+      margin-right: 4vw;
+      @include tablet {
+        margin-right: 2rem;
+      }
     }
 
     .m2-coffee {
