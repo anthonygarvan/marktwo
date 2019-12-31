@@ -436,9 +436,12 @@ class Doc extends React.Component {
         } else {
           const sel = window.getSelection();
           const selectedBlock = $(sel.anchorNode).closest('#m2-doc > *');
-          const doc = _.clone(this.state.doc);
-          doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
-          this.setState({ doc });
+
+          if(selectedBlock && selectedBlock[0]) {
+            const doc = _.clone(this.state.doc);
+            doc[selectedBlock[0].id] = this.turndownService.turndown(selectedBlock[0].outerHTML);
+            this.setState({ doc });
+          }
         }
       }
     });
@@ -619,7 +622,7 @@ class Doc extends React.Component {
 
           if(newText === '/m2img') {
             const modal = $('#m2-img-dialog');
-            modal.data('selectedBlock', $(anchorNode).closest('#m2-doc > *').attr('id'));
+            modal.data('selectedBlock', $(sel.anchorNode).closest('#m2-doc > *').attr('id'));
             modal[0].showModal();
           }
         }
