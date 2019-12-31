@@ -610,7 +610,9 @@ class Doc extends React.Component {
           $('#m2-autocomplete').hide();
           range = document.createRange();
           sel = window.getSelection();
-          range.setStart(anchorNode, startOffset + newText.length + 1);
+          const parent = $(sel.anchorNode)[0].parentElement;
+          parent.normalize();
+          range.setStart(parent.firstChild, startOffset + newText.length + 1);
           range.collapse(true);
           sel.removeAllRanges();
           sel.addRange(range);

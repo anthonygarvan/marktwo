@@ -44,7 +44,7 @@ Not a standard markdown feature, but very handy! Start a line with `// ` and it 
 
 #### Images
 
-Supports stardard markdown syntax to link to images. You can also upload new images with the `/image` slash command.
+Supports standard markdown syntax to link to images. You can also upload new images with the `/image` slash command.
 
 ![deception](/img/deception.jpg)
 
