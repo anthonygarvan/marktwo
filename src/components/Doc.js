@@ -515,12 +515,11 @@ class Doc extends React.Component {
       }
 
       const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
-      const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]+$))|(?:[\\s]([#@:/][^\\s#@]+$))")
+      const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]+$))|(?:[\\s\u200B]([#@:/][^\\s#@]+$))")
       const slashCommands = ['/now', '/today', '/image'];
-
       if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
-        const matchedText = s.match(autocompleteRegex)[0].trim();
+        const matchedText = s.match(autocompleteRegex)[0].replace('\u200B', '').trim();
         let results;
         if(matchedText.startsWith(':')) {
           var emojiRegex = new RegExp(`${matchedText.replace(/:/g, '')}`, 'i');
@@ -698,7 +697,7 @@ class Doc extends React.Component {
             }
           } else {
             // if the line is empty, start a new block
-            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
+            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
             const id = shortid.generate();
             const newBlock = $(`<p id=${id}>${initialContent || '\u200B'}</p>`);
             doc[id] = initialContent || '';
