@@ -571,6 +571,8 @@ class Doc extends React.Component {
         }
 
         function selectEntry() {
+          $(sel.anchorNode)[0].parentElement.normalize();
+          sel = window.getSelection();
           const anchorNode = $(sel.anchorNode)[0];
           const caretOffset = sel.anchorOffset
           const endOfWord = sel.anchorNode.data.substring(sel.anchorOffset).match(/[^\s]*/);
