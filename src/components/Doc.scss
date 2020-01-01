@@ -1,12 +1,11 @@
 @import './base.scss';
 
 .m2-doc {
-  max-width: calc(100vw - 3rem);
+  max-width: calc(100vw - 3.4rem);
   @include tablet {
     max-width: 800px;
   }
-  margin-left: 1.8rem;
-  margin-right: 0.5rem;
+  margin-left: 1.7rem;
   @include tablet {
     margin: 0 auto;
   }
