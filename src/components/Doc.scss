@@ -61,11 +61,18 @@
   .m2-edit-mode {
     white-space: pre-wrap;
     padding-left: 0.5rem;
+    border-left: 3px solid rgba($primary, 0.4);
     @include tablet {
       padding-left: 1rem;
     }
-    border-left: 3px solid rgba($primary, 0.4);
   }
+
+  ul,ol {
+    &.m2-edit-mode {
+      line-height: 1.85rem;
+    }
+  }
+
 
   &.m2-syncing .m2-edit-mode {
     border-left: 3px solid rgba($primary, 0.15);
