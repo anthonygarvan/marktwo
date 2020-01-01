@@ -1,11 +1,15 @@
 @import './base.scss';
 
 .m2-doc {
-  max-width: calc(100vw - 3.5rem);
+  max-width: calc(100vw - 3rem);
   @include tablet {
     max-width: 800px;
   }
-  margin: 0 auto;
+  margin-left: 1.8rem;
+  margin-right: 0.5rem;
+  @include tablet {
+    margin: 0 auto;
+  }
   padding: 0;
   padding-bottom: 60vh;
   padding-top: 2rem;
@@ -15,7 +19,10 @@
   }
 
   &>* {
-    padding: 0.5rem 1rem 0.5rem 1rem;
+    padding: 0.5rem 0rem 0.5rem 0rem;
+    @include tablet {
+      padding: 0.5rem 1rem 0.5rem 1rem;
+    }
     margin: 0rem !important;
     border-left: 3px solid transparent;
   }
@@ -54,6 +61,10 @@
 
   .m2-edit-mode {
     white-space: pre-wrap;
+    padding-left: 0.5rem;
+    @include tablet {
+      padding-left: 1rem;
+    }
     border-left: 3px solid rgba($primary, 0.4);
   }
 
