@@ -204,9 +204,9 @@ class MarkTwo extends React.Component {
     console.log(this.state.searchString);
     let searchResults;
     if(!this.state.searchString) {
-      searchResults = this.state.allLines.filter(id => this.state.doc[id].startsWith('// ')).map(id => ({ id, text: this.state.doc[id].replace('// ', '') })).slice(0, 1000)
+      searchResults = this.state.allLines.filter(id => this.state.doc[id].startsWith('// ')).map(id => ({ id, html: this.state.doc[id].replace('// ', '') })).slice(0, 1000)
     } else {
-      const exactMatchRegex = /^"(.+)"$/
+      const exactMatchRegex = /^"(.+)"$/;
       let searchRegex;
       if(exactMatchRegex.test(this.state.searchString)) {
         searchRegex = new RegExp(this.state.searchString
@@ -217,7 +217,7 @@ class MarkTwo extends React.Component {
         searchRegex = new RegExp(keywords.join('|'), 'ig');
       }
       const whitespaceRegex = new RegExp('^[\\s\\n]*$')
-      searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, text: this.state.doc[id] })).slice(0, 1000)
+      searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, html: marked(this.state.doc[id]).replace(searchRegex, (m) => `<mark>${m}</mark>`) })).slice(0, 1000)
     }
     this.setState({ searchResults });
   }
@@ -341,7 +341,7 @@ class MarkTwo extends React.Component {
         <div className="m2-search-results">
         {this.state.searchResults.length ? this.state.searchResults.map(r =>
           <div key={r.id} className="m2-search-result" onClick={() => this.setState({ goToBlock: r.id, showSearch: false, searchString: '', searchResults: [], showShelf: false })}
-            dangerouslySetInnerHTML={ { __html: marked(r.text) } }>
+            dangerouslySetInnerHTML={ { __html: r.html } }>
           </div>) : <p><em>Didn't find anything...</em></p>}</div>
       </section>
     </div></div>}
@@ -431,8 +431,7 @@ class MarkTwo extends React.Component {
       </div>
 
       <div className="field">
-        <p><FontAwesomeIcon icon={faInfoCircle} /> Images you upload via <code>/image</code> are served out of your Google Drive.</p>
-        <a className="button" onClick={this.handleViewImageFolder}>View uploaded images</a>
+        <p><FontAwesomeIcon icon={faInfoCircle} />&nbsp;&nbsp;Images you upload via <code>/image</code> are served out of your Google Drive <a onClick={this.handleViewImageFolder}>here</a>.</p>
       </div>
     </section>
   </div></div>}
