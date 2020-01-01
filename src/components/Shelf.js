@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faEllipsisV, faSearch, faFileAlt, faCog } from '@fortawesome/free-solid-svg-icons';
 import './Shelf.scss';
 import anonymous from '../img/anonymous.png';
 import user from '../img/user.png';
@@ -49,9 +49,9 @@ class Shelf extends React.Component {
       </div>
     </div>
     <div className="m2-menu-links">
-      <div><a onClick={this.props.showSearch}>Search</a></div>
-      <div><a onClick={() => this.props.showDocs(true)}>Docs</a></div>
-      <div><a onClick={this.props.showSettings}>Settings</a></div>
+      <div><a onClick={this.props.showSearch}><FontAwesomeIcon icon={faSearch} />&nbsp;&nbsp;Search</a></div>
+      <div><a onClick={() => this.props.showDocs(true)}><FontAwesomeIcon icon={faFileAlt} />&nbsp;&nbsp;Docs</a></div>
+      <div><a onClick={this.props.showSettings}><FontAwesomeIcon icon={faCog} />&nbsp;&nbsp;Settings</a></div>
     </div>
     <div className="m2-menu-footer">
       <a onClick={this.props.showHelp}>Help</a>
