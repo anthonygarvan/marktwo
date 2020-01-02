@@ -17,6 +17,10 @@
     outline: none;
   }
 
+  &.m2-serif {
+    font-family: "Roboto Slab", serif;
+  }
+
   &>* {
     padding: 0.5rem 0rem 0.5rem 0rem;
     @include tablet {

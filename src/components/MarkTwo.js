@@ -17,6 +17,7 @@ import { get, set } from 'idb-keyval';
 import me from '../img/me.jpg';
 import coffee from '../img/coffee.png';
 import { faBolt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import 'typeface-roboto-slab';
 const tryItNowText  = raw('./tryItNow.md');
 
 
@@ -51,6 +52,7 @@ class MarkTwo extends React.Component {
       darkMode: false,
       offlineMode: false,
       spellcheck: true,
+      serif: false,
     };
 
   }
@@ -74,6 +76,7 @@ class MarkTwo extends React.Component {
 
         get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)));
         get('spellcheck').then(value => value && this.setSpellcheck(JSON.parse(value)));
+        get('serif').then(value => value && this.setSerif(JSON.parse(value)));
       });
     })
   }
@@ -284,6 +287,19 @@ class MarkTwo extends React.Component {
     })
   }
 
+  setSerif(value, callback) {
+    return new Promise(resolve => {
+      this.setState({ serif: value }, () => {
+        set('serif', JSON.stringify(value)).then(resolve);
+        if(this.state.serif) {
+          $('#m2-doc').addClass('m2-serif');
+        } else {
+          $('#m2-doc').removeClass('m2-serif');
+        }
+      })
+    })
+  }
+
   handleViewImageFolder(e) {
     this.syncUtils.getImagesFolder().then(id => {
       window.open(`https://drive.google.com/drive/u/0/folders/${id}`, '_blank')
@@ -428,6 +444,15 @@ class MarkTwo extends React.Component {
           checked={this.state.spellcheck}
           onChange={(e) => this.setSpellcheck(e.target.checked)}/>
         <label htmlFor="m2-spellcheck-switch">Spellcheck</label>
+      </div>
+
+      <div className="field">
+        <input id="m2-serif-switch" type="checkbox"
+          name="m2-serif-switch"
+          className="switch"
+          checked={this.state.serif}
+          onChange={(e) => this.setSerif(e.target.checked)}/>
+        <label htmlFor="m2-serif-switch">Serif font</label>
       </div>
 
       <div className="field">
