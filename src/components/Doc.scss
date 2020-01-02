@@ -71,13 +71,6 @@
     }
   }
 
-  ul,ol {
-    &.m2-edit-mode {
-      line-height: 1.85rem;
-    }
-  }
-
-
   &.m2-syncing .m2-edit-mode {
     border-left: 3px solid rgba($primary, 0.15);
   }
