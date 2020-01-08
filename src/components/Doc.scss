@@ -49,6 +49,10 @@
     }
   }
 
+  input[type=checkbox] {
+    cursor: pointer;
+  }
+
   table.m2-edit-mode {
     font-family: monospace;
     font-size: 0.9rem;

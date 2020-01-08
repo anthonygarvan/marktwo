@@ -48,6 +48,10 @@ Supports standard markdown syntax to link to images. You can also upload new ima
 
 ![deception](/img/deception.jpg)
 
+#### Other HTML
+The markdown spec is not intended to completely replace HTML, which you can fall back to if you want a particular tag or style. For example you can highlight text with the `mark` tag <mark>like this</mark>, or underline with the `u` tag <u>like this</u>.
+<center><em>The center tag is also handy!</em></center>
+
 #### Advanced text entry
 - Automatic text expansion for `/now` and `/today`
 - Want to make sure you can find something later? #hashtags and @mentions autocomplete.

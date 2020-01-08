@@ -582,6 +582,16 @@ var success = "Text sandwiched by three backticks renders a code block";
 /image`}
 </pre>
 
+<h5>HTML</h5>
+<p>The markdown spec is not intended to completely replace HTML. If you'd like a particular tag or style, you can just include it as HTML and it will render.
+For example:
+</p>
+<pre>
+{`Render highlighted text with the mark tag like <mark>this</mark>
+And underlined text <u>like this</u>
+<center>This will be centered</center>`}
+</pre>
+
 <h5>Text Tricks</h5>
 <p>MarkTwo expands the strings <code>/today</code> and <code>/now</code> into the current date or date and time for your locale.
 Also, to make things easier to find later, <code>#hashtags</code> and <code>@mentions</code> autocomplete.

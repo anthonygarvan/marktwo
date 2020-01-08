@@ -404,6 +404,11 @@ class Doc extends React.Component {
       renderedNode = $(`<div>${html}</div>`)
     }
 
+    let checkboxes = renderedNode.find('input[type=checkbox]');
+    checkboxes.each((i, el) => {
+      el.replaceWith($(`<span contenteditable="false" idx="${i}">${el.outerHTML}</span>`)[0]);
+    })
+    renderedNode.find('input[type=checkbox]').attr('disabled', false);
     renderedNode.find('input[type=checkbox]').closest('li').addClass('m2-todo-list')
     renderedNode.find('input[checked]').closest('li').addClass('m2-todo-done')
 
@@ -514,8 +519,8 @@ class Doc extends React.Component {
         e.preventDefault()
       }
 
-      const s = sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
-      const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]+$))|(?:[\\s\u200B]([#@:/][^\\s#@]+$))")
+      const s = sel.anchorNode && sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
+      const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]*$))|(?:[\\s\u200B]([#@:/][^\\s#@]*$))")
       const slashCommands = ['/now', '/today', '/image'];
       if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
@@ -743,12 +748,43 @@ class Doc extends React.Component {
           });
           this.oldSelectedBlock.replaceWith($(nodes.join('\n')));
 
+          bindCheckboxEvent(this, id);
+
         }
         this.setState({ doc }, () => {
           this.props.setDocData(this.state.allLines, this.state.doc);
         });
       }
     });
+
+    function bindCheckboxEvent(that, id) {
+      $(`#${id} input[type=checkbox]`).change(function() {
+        this.checked ? $(this).closest('li').addClass('m2-todo-done') : $(this).closest('li').removeClass('m2-todo-done');
+
+        const lines = [];
+        let idx = 0;
+        that.state.doc[id].split('\n')
+          .forEach(line => {
+            if(/-\s+\[[x\s]\]/.test(line)) {
+              if(idx == parseInt(this.parentElement.getAttribute('idx'))) {
+                if(this.checked) {
+                  line = line.replace(/-\s+\[\s\]/, '- [x]');
+                } else {
+                  line = line.replace(/-\s+\[x\]/, '- [ ]');
+                }
+              }
+              idx++;
+            }
+            lines.push(line);
+          })
+
+        that.state.doc[id] = lines.join('\n')
+
+        that.setState({ doc: that.state.doc }, () => {
+          that.props.setDocData(that.state.allLines, that.state.doc);
+        });
+      })
+    }
 
     $('#m2-doc').on('focusout', (e) => {
       const oldSelectedBlock = $('.m2-edit-mode');
@@ -777,6 +813,8 @@ class Doc extends React.Component {
           return renderedNode[0].outerHTML;
         });
         oldSelectedBlock.replaceWith($(nodes.join('\n')));
+
+        bindCheckboxEvent(this, id);
         this.setState({ doc }, () => {
           this.props.setDocData(this.state.allLines, this.state.doc);
         });
