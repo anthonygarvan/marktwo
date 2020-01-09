@@ -25,6 +25,7 @@ class Doc extends React.Component {
 
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
+    this.bindCheckboxEvents = this.bindCheckboxEvents.bind(this);
     this.syncQueue = async.queue((forceSync, callback) => {
       if (!this.props.tryItNow) {
         this.getAllLines()
@@ -93,6 +94,7 @@ class Doc extends React.Component {
       const visibleDocList = _.slice(docList, startIndex, endIndex);
 
       document.querySelector('#m2-doc').innerHTML = visibleDocList.map(entry => this.getNodeForBlock(entry.text)[0].outerHTML).join('\n')
+      this.bindCheckboxEvents();
       Array.from(document.querySelector('#m2-doc').children).forEach((el, i) => {
         el.id = visibleDocList[i].id;
       });
@@ -359,6 +361,7 @@ class Doc extends React.Component {
         return newBlock[0].outerHTML
       }).join('\n');
       $('#m2-doc > *:last-child').after(newHtml);
+      this.bindCheckboxEvents();
     }
 
     if(scrollPercent < 0.1 && startIndex > 0) {
@@ -370,6 +373,7 @@ class Doc extends React.Component {
         return newBlock[0].outerHTML
       }).join('\n');
       $('#m2-doc > *:first-child').before(newHtml);
+      this.bindCheckboxEvents();
     }
 
     if((endIndex - startIndex) > 500) {
@@ -747,44 +751,13 @@ class Doc extends React.Component {
             return renderedNode[0].outerHTML;
           });
           this.oldSelectedBlock.replaceWith($(nodes.join('\n')));
-
-          bindCheckboxEvent(this, id);
-
+          this.bindCheckboxEvents();
         }
         this.setState({ doc }, () => {
           this.props.setDocData(this.state.allLines, this.state.doc);
         });
       }
     });
-
-    function bindCheckboxEvent(that, id) {
-      $(`#${id} input[type=checkbox]`).change(function() {
-        this.checked ? $(this).closest('li').addClass('m2-todo-done') : $(this).closest('li').removeClass('m2-todo-done');
-
-        const lines = [];
-        let idx = 0;
-        that.state.doc[id].split('\n')
-          .forEach(line => {
-            if(/-\s+\[[x\s]\]/.test(line)) {
-              if(idx == parseInt(this.parentElement.getAttribute('idx'))) {
-                if(this.checked) {
-                  line = line.replace(/-\s+\[\s\]/, '- [x]');
-                } else {
-                  line = line.replace(/-\s+\[x\]/, '- [ ]');
-                }
-              }
-              idx++;
-            }
-            lines.push(line);
-          })
-
-        that.state.doc[id] = lines.join('\n')
-
-        that.setState({ doc: that.state.doc }, () => {
-          that.props.setDocData(that.state.allLines, that.state.doc);
-        });
-      })
-    }
 
     $('#m2-doc').on('focusout', (e) => {
       const oldSelectedBlock = $('.m2-edit-mode');
@@ -813,8 +786,7 @@ class Doc extends React.Component {
           return renderedNode[0].outerHTML;
         });
         oldSelectedBlock.replaceWith($(nodes.join('\n')));
-
-        bindCheckboxEvent(this, id);
+        this.bindCheckboxEvents();
         this.setState({ doc }, () => {
           this.props.setDocData(this.state.allLines, this.state.doc);
         });
@@ -864,6 +836,37 @@ class Doc extends React.Component {
         $('#m2-loading').hide()
       })
     }
+  }
+
+  bindCheckboxEvents() {
+    const that = this;
+    $(`input[type=checkbox]`).change(function() {
+      this.checked ? $(this).closest('li').addClass('m2-todo-done') : $(this).closest('li').removeClass('m2-todo-done');
+
+      const lines = [];
+      let idx = 0;
+      const id = $(this).closest('#m2-doc>*')[0].id
+      that.state.doc[id].split('\n')
+        .forEach(line => {
+          if(/-\s+\[[x\s]\]/.test(line)) {
+            if(idx == parseInt(this.parentElement.getAttribute('idx'))) {
+              if(this.checked) {
+                line = line.replace(/-\s+\[\s\]/, '- [x]');
+              } else {
+                line = line.replace(/-\s+\[x\]/, '- [ ]');
+              }
+            }
+            idx++;
+          }
+          lines.push(line);
+        })
+
+      that.state.doc[id] = lines.join('\n')
+
+      that.setState({ doc: that.state.doc }, () => {
+        that.props.setDocData(that.state.allLines, that.state.doc);
+      });
+    })
   }
 
 
