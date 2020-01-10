@@ -416,6 +416,7 @@ class Doc extends React.Component {
     renderedNode.find('input[type=checkbox]').closest('li').addClass('m2-todo-list')
     renderedNode.find('input[checked]').closest('li').addClass('m2-todo-done')
 
+    renderedNode.find('a').attr('contenteditable', false).attr('target', '_blank');
     if(block.startsWith('// ')) {
       renderedNode = $(`<div class="m2-bookmark">${block.replace('// ', '')}<hr /></div>`)
     }
