@@ -13,7 +13,7 @@ import shortid from 'shortid';
 import syncUtils from './syncUtils';
 import syncUtilsOffline from './syncUtilsOffline';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBolt } from '@fortawesome/free-solid-svg-icons';
+import { faBolt, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { del, set, keys } from 'idb-keyval';
 import async from 'async';
 import emoji from 'emoji-dictionary';
@@ -26,6 +26,9 @@ class Doc extends React.Component {
     this.sync = this.sync.bind(this);
     this.getAllLines = this.getAllLines.bind(this);
     this.bindCheckboxEvents = this.bindCheckboxEvents.bind(this);
+    this.showReminders = this.showReminders.bind(this);
+    this.viewReminder = this.viewReminder.bind(this);
+    this.closeReminder = this.closeReminder.bind(this);
     this.syncQueue = async.queue((forceSync, callback) => {
       if (!this.props.tryItNow) {
         this.getAllLines()
@@ -433,6 +436,7 @@ class Doc extends React.Component {
 
     $(window).on('focus', (e) => {
       this.initiateSync(true);
+      this.showReminders();
     })
 
     document.querySelector('#m2-doc').addEventListener('paste', () => setTimeout(this.getAllLines, 50))
@@ -613,7 +617,6 @@ class Doc extends React.Component {
                 } else {
                   newText = '![alt-text](imgUrl)';
                 }
-
                 break;
             }
           }
@@ -826,6 +829,7 @@ class Doc extends React.Component {
             if(this._isMounted) {
               this.initializeEditor();
               this.initializeFromDocList(docList, docMetadata.caretAt || docList[0].id);
+              this.showReminders();
             }
           })
         }
@@ -870,6 +874,51 @@ class Doc extends React.Component {
     })
   }
 
+  showReminders() {
+    let shownReminders = sessionStorage.getItem('shownReminders');
+    shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
+    const reminders = this.state.allLines.filter(id => {
+      return /\-\s+\[\s\]\s.*🎗.*;/.test(this.state.doc[id])
+    }).map(id => {
+      let match = this.state.doc[id].match(/\-\s+\[\s\]\s(.*)🎗(.*);/)
+      let date = moment(match[2]);
+      let snippet = match[1]
+      return {id, date, snippet};
+    }).filter(reminder => {
+      return reminder.date.isBefore(moment())
+    }).filter(reminder => {
+      return shownReminders.indexOf(reminder.id) === -1;
+    })
+
+    if(reminders.length) {
+      $('#m2-reminder').attr('blockId', reminders[0].id);
+      $('#m2-reminder em').text(reminders[0].snippet);
+      $('#m2-reminder').show();
+    } else {
+      $('#m2-reminder').hide();
+    }
+  }
+
+  viewReminder() {
+    let shownReminders = sessionStorage.getItem('shownReminders');
+    shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
+    const blockId = $('#m2-reminder').attr('blockId');
+    shownReminders.push(blockId);
+    sessionStorage.setItem('shownReminders', JSON.stringify(shownReminders));
+    const docList = this.state.allLines.map(id => ({ id, text: this.state.doc[id] }));
+    this.initializeFromDocList(docList, blockId);
+    this.showReminders();
+  }
+
+  closeReminder() {
+    let shownReminders = sessionStorage.getItem('shownReminders');
+    shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
+    const blockId = $('#m2-reminder').attr('blockId');
+    shownReminders.push(blockId);
+    sessionStorage.setItem('shownReminders', JSON.stringify(shownReminders));
+    this.showReminders();
+  }
+
 
   render() {
     return <div>
@@ -889,6 +938,10 @@ class Doc extends React.Component {
       <div id="m2-autocomplete" style={ { display: 'none' } }></div>
       <div className="m2-offline" style={ {display: 'none' } }><FontAwesomeIcon icon={faBolt} /></div>
       <div className="m2-is-signed-out" style={ {display: 'none' } }>You've been signed out. <a onClick={this.props.handleLogin}>Sign back in</a></div>
+      <div className="m2-reminder" id="m2-reminder" style={ {display: 'none' } }>
+        <div>You have a reminder. <a onClick={this.viewReminder}>View</a></div>
+        <div><em></em></div>
+        <a className="m2-close-reminder" onClick={this.closeReminder}><FontAwesomeIcon icon={faTimes} /></a></div>
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }
 }

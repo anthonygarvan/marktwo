@@ -90,7 +90,7 @@
   font-size: 2rem;
 }
 
-.m2-is-signed-out {
+.m2-is-signed-out,.m2-reminder {
   position: fixed;
   top: 0px;
   width: 100%;
@@ -98,6 +98,17 @@
   font-size: 1.1rem;
   text-align: center;
   background-color: lighten($primary, 35%);
+
+  .m2-close-reminder {
+    position: fixed;
+    right: 1.5rem;
+    top: 1.5rem;
+    font-size: 2rem;
+  }
+
+  em {
+    opacity: 60%;
+  }
 }
 
 .m2-bookmark {
