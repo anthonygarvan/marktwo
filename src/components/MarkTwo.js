@@ -537,10 +537,15 @@ Links: [Text in brackets](https://link-in-parentheses.com)`}</pre>
     1. Again, four spaces starts a sub-list`}
 </pre>
 
-<h5>Todo lists</h5>
+<h5>Todo lists and Reminders</h5>
+<p>MarkTwo supports the standard syntax for todo lists. Additionally,
+it supports reminders&mdash;when a not-done todo list item contains a reminder string,
+you'll get a banner reminder when you load MarkTwo on or after that day. The format for a reminder string
+is :reminder-ribbon: [date][semi-colon].</p>
 <pre>
 {`- [ ] A dash, a space, brackets with a space in between
-- [x] An x in the middle marks it as done`}
+- [x] An x in the middle marks it as done
+- [ ] Reminders looks like this 🎗 July 2, 2024;`}
 </pre>
 
 <h5>Tables</h5>

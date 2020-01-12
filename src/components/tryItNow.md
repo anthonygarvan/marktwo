@@ -22,9 +22,10 @@ Supports **bold**, _italics_, ~strike-through~, `inline code blocks`, and [links
 1. The second step
     1. First part of the second step
 
-#### Todo lists
+#### Todo lists and reminders
 - [ ] Isn't it nice to get things done?
 - [x] Finish implementing TODO lists
+- [ ] Get a haircut! 🎗 July 2, 2024;
 
 ##### Block quotes
 > _Far and away the best prize that life has to offer is to work hard at work worth doing._
