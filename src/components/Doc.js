@@ -473,7 +473,7 @@ class Doc extends React.Component {
       }
     });
     const that = this;
-    const modal = document.querySelector('#m2-img-dialog');
+    let modal = document.querySelector('#m2-img-dialog');
     dialogPolyfill.registerDialog(modal);
 
     modal.querySelector('#m2-img-cancel').addEventListener('click', () => {
@@ -518,6 +518,28 @@ class Doc extends React.Component {
       modal.querySelector('input').value = null;
     });
 
+    modal = document.querySelector('#m2-date-dialog');
+    dialogPolyfill.registerDialog(modal);
+
+    modal.querySelector('#m2-date-cancel').addEventListener('click', () => {
+      modal.close();
+    });
+
+    modal.querySelector('#m2-date-select').addEventListener('click', () => {
+      modal.close($(modal.querySelector('input')).val());
+    });
+
+    modal.addEventListener('close', () => {
+      const sel = window.getSelection();
+      const caretAt = $('#m2-date-dialog').data('selectedBlock')
+      this.state.doc[caretAt] = this.state.doc[caretAt].replace('/m2date', modal.returnValue ? moment(modal.returnValue).format('LL') : '');
+      this.setState({ doc: this.state.doc }, () => {
+        this.initializeFromDocList(this.state.allLines.map(id => ({ id, text: this.state.doc[id] })), caretAt);
+      });
+      modal.returnValue = '';
+      modal.querySelector('input').value = null;
+    });
+
 
     let autocompleteActive = false;
     let autocompleteSelectedIndex = 0;
@@ -543,7 +565,7 @@ class Doc extends React.Component {
 
       const s = sel.anchorNode && sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
       const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]*$))|(?:[\\s\u200B]([#@:/][^\\s#@]*$))")
-      const slashCommands = ['/now', '/today', '/image'];
+      const slashCommands = ['/now', '/today', '/image', '/date'];
       if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
         const matchedText = s.match(autocompleteRegex)[0].replace('\u200B', '').trim();
@@ -631,6 +653,9 @@ class Doc extends React.Component {
                   newText = '![alt-text](imgUrl)';
                 }
                 break;
+              case '/date':
+                newText = '/m2date';
+                break;
             }
           }
           document.execCommand('insertHTML', false, `${newText} `);
@@ -649,6 +674,12 @@ class Doc extends React.Component {
 
           if(newText === '/m2img') {
             const modal = $('#m2-img-dialog');
+            modal.data('selectedBlock', $(sel.anchorNode).closest('#m2-doc > *').attr('id'));
+            modal[0].showModal();
+          }
+
+          if(newText === '/m2date') {
+            const modal = $('#m2-date-dialog');
             modal.data('selectedBlock', $(sel.anchorNode).closest('#m2-doc > *').attr('id'));
             modal[0].showModal();
           }
@@ -955,6 +986,15 @@ class Doc extends React.Component {
         <div className="actions is-pulled-right">
           <button id="m2-img-cancel" className="button is-text">cancel</button>
           <button id="m2-img-select" className="button" disabled>Ok</button>
+        </div>
+      </dialog>
+
+      <dialog id="m2-date-dialog" className="content">
+        <h3>Please select a date...</h3>
+        <p><input type="date" /></p>
+        <div className="actions is-pulled-right">
+          <button id="m2-date-cancel" className="button is-text">cancel</button>
+          <button id="m2-date-select" className="button">Ok</button>
         </div>
       </dialog>
       <div id="m2-autocomplete" style={ { display: 'none' } }></div>
