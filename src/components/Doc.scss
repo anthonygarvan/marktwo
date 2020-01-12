@@ -66,6 +66,11 @@
     }
   }
 
+  .m2-reminder-text {
+    border-bottom: 2px dotted lightgreen;
+    padding-bottom: 0.2rem;
+  }
+
   .m2-edit-mode {
     white-space: pre-wrap;
     padding-left: 0.5rem;
@@ -100,7 +105,8 @@
   background-color: lighten($primary, 35%);
 
   .m2-reminder-snippet {
-    width: 80vw;
+    padding-left: 10vw;
+    padding-right: 10vw;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

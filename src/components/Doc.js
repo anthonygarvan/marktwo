@@ -404,6 +404,18 @@ class Doc extends React.Component {
   }
 
   getNodeForBlock(block) {
+    block = block.split('\n').map(line => {
+      if(/\-\s+\[\s\]\s.*🎗.*;/.test(line)) {
+        let matchedDate = moment(line.match(/\-\s+\[\s\]\s.*🎗(.*);/)[1]);
+        if(matchedDate.isValid()) {
+          line = line.replace(/🎗.*;/, (reminderText) => {
+            return `<span class="m2-reminder-text">${reminderText}</span>`
+          });
+        }
+      }
+      return line
+    }).join('\n');
+
     let html = marked(block || '').replace(/\\/g, '');
     let renderedNode = $(html || '<p>\u200B</p>');
     const isVoidNode = new RegExp(/^(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|KEYGEN|LINK|META|PARAM|SOURCE|TRACK|WBR)$/);
@@ -423,6 +435,7 @@ class Doc extends React.Component {
     if(block.startsWith('// ')) {
       renderedNode = $(`<div class="m2-bookmark">${block.replace('// ', '')}<hr /></div>`)
     }
+    renderedNode.html()
 
     return renderedNode;
   }
