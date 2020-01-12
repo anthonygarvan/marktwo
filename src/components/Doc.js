@@ -870,6 +870,7 @@ class Doc extends React.Component {
 
       that.setState({ doc: that.state.doc }, () => {
         that.props.setDocData(that.state.allLines, that.state.doc);
+        that.initiateSync();
       });
     })
   }
@@ -877,13 +878,21 @@ class Doc extends React.Component {
   showReminders() {
     let shownReminders = sessionStorage.getItem('shownReminders');
     shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
-    const reminders = this.state.allLines.filter(id => {
-      return /\-\s+\[\s\]\s.*🎗.*;/.test(this.state.doc[id])
-    }).map(id => {
-      let match = this.state.doc[id].match(/\-\s+\[\s\]\s(.*)🎗(.*);/)
+
+    const lines = [];
+    this.state.allLines.forEach(id => {
+      this.state.doc[id].split('\n').forEach(text => {
+        lines.push({ id, text });
+      });
+    });
+
+    const reminders = lines.filter(lineObj => {
+      return /\-\s+\[\s\]\s.*🎗.*;/.test(lineObj.text)
+    }).map((lineObj, i) => {
+      let match = lineObj.text.match(/\-\s+\[\s\]\s(.*)🎗(.*);/)
       let date = moment(match[2]);
-      let snippet = match[1]
-      return {id, date, snippet};
+      let snippet = match[1];
+      return {id: `${lineObj.id}.${i}`, date, snippet};
     }).filter(reminder => {
       return reminder.date.isBefore(moment())
     }).filter(reminder => {
@@ -891,7 +900,7 @@ class Doc extends React.Component {
     })
 
     if(reminders.length) {
-      $('#m2-reminder').attr('blockId', reminders[0].id);
+      $('#m2-reminder').attr('reminderId', reminders[0].id);
       $('#m2-reminder em').text(reminders[0].snippet);
       $('#m2-reminder').show();
     } else {
@@ -902,19 +911,19 @@ class Doc extends React.Component {
   viewReminder() {
     let shownReminders = sessionStorage.getItem('shownReminders');
     shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
-    const blockId = $('#m2-reminder').attr('blockId');
-    shownReminders.push(blockId);
+    const reminderId = $('#m2-reminder').attr('reminderId');
+    shownReminders.push(reminderId);
     sessionStorage.setItem('shownReminders', JSON.stringify(shownReminders));
     const docList = this.state.allLines.map(id => ({ id, text: this.state.doc[id] }));
-    this.initializeFromDocList(docList, blockId);
+    this.initializeFromDocList(docList, reminderId.split('.')[0]);
     this.showReminders();
   }
 
   closeReminder() {
     let shownReminders = sessionStorage.getItem('shownReminders');
     shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
-    const blockId = $('#m2-reminder').attr('blockId');
-    shownReminders.push(blockId);
+    const reminderId = $('#m2-reminder').attr('reminderId');
+    shownReminders.push(reminderId);
     sessionStorage.setItem('shownReminders', JSON.stringify(shownReminders));
     this.showReminders();
   }
@@ -940,7 +949,7 @@ class Doc extends React.Component {
       <div className="m2-is-signed-out" style={ {display: 'none' } }>You've been signed out. <a onClick={this.props.handleLogin}>Sign back in</a></div>
       <div className="m2-reminder" id="m2-reminder" style={ {display: 'none' } }>
         <div>You have a reminder. <a onClick={this.viewReminder}>View</a></div>
-        <div><em></em></div>
+        <div className="m2-reminder-snippet"><em></em></div>
         <a className="m2-close-reminder" onClick={this.closeReminder}><FontAwesomeIcon icon={faTimes} /></a></div>
       <div id="m2-doc" className="m2-doc content" contentEditable="true"></div></div>
   }

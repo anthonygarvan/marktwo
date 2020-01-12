@@ -99,6 +99,13 @@
   text-align: center;
   background-color: lighten($primary, 35%);
 
+  .m2-reminder-snippet {
+    width: 80vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .m2-close-reminder {
     position: fixed;
     right: 1.5rem;
