@@ -475,7 +475,7 @@ class MarkTwo extends React.Component {
         and much more. I&apos;ll do my best to get back to you within two business days.</p>
       <br />
       <form name="m2-contact" method="post">
-        <input type="hidden" name="form-name" value="contact" />
+        <input type="hidden" name="form-name" value="m2-contact" />
 
       <div className="field">
         <label className="label">Name</label>
