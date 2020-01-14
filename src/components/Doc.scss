@@ -3,7 +3,7 @@
 .m2-doc {
   max-width: calc(100vw - 3.4rem);
   @include tablet {
-    max-width: 800px;
+    max-width: calc(min(800px, 86vw));
   }
   margin-left: 1.7rem;
   @include tablet {
