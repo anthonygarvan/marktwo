@@ -331,7 +331,8 @@ class MarkTwo extends React.Component {
       showSearch={() => this.setState({ showSearch: true }, () => this.handleSearch({ preventDefault: () => {}}))}
       showAbout={() => this.setState({ showAbout: true })}
       showHelp={() => this.setState({ showHelp: true })}
-      showSettings={() => this.setState({ showSettings: true })}/>
+      showSettings={() => this.setState({ showSettings: true })}
+      showContact={() => this.setState({ showContact: true })}/>
 
     {this.state.showSearch && <div className="m2-search modal is-active">
     <div className="modal-background" onClick={() => this.setState({ showSearch: false, searchString: '', searchResults: [] })}></div>
@@ -458,6 +459,55 @@ class MarkTwo extends React.Component {
       <div className="field">
         <p><FontAwesomeIcon icon={faInfoCircle} />&nbsp;&nbsp;Images you upload via <code>/image</code> are served out of your Google Drive <a onClick={this.handleViewImageFolder}>here</a>.</p>
       </div>
+    </section>
+  </div></div>}
+
+  {this.state.showContact && <div className="m2-contact modal is-active">
+  <div className="modal-background" onClick={() => this.setState({ showContact: false })}></div>
+    <div className="modal-card">
+    <header className="modal-card-head">
+      <p className="modal-card-title">Thanks for reaching out!</p>
+      <button className="delete" aria-label="close" onClick={() => this.setState({ showContact: false })}></button>
+    </header>
+    <section className="modal-card-body">
+      <p>I welcome bug reports, feature requests,
+        questions, comments, complaints, gossip, tirades, manifestos, rants,
+        and much more. I&apos;ll do my best to get back to you within two business days.</p>
+      <br />
+      <form name="m2-contact" method="post">
+        <input type="hidden" name="form-name" value="contact" />
+
+      <div className="field">
+        <label className="label">Name</label>
+        <div className="control">
+          <input className="input" type="text" placeholder="Your name..." name="name" />
+        </div>
+      </div>
+
+      <div className="field">
+        <label className="label">Email</label>
+        <div className="control">
+          <input className="input" type="email" placeholder="your@email.com" name="email" />
+        </div>
+      </div>
+
+      <div className="field">
+        <label className="label">Message</label>
+        <div className="control">
+          <textarea className="textarea" placeholder="Your message..." name="message"></textarea>
+        </div>
+      </div>
+
+
+      <div className="field is-grouped">
+        <div className="control">
+          <button type="submit" className="button is-link">Submit</button>
+        </div>
+        <div className="control">
+          <button className="button is-text" onClick={() => this.setState({ showContact: false })}>Cancel</button>
+        </div>
+      </div>
+    </form>
     </section>
   </div></div>}
 
