@@ -474,7 +474,7 @@ class MarkTwo extends React.Component {
         questions, comments, complaints, gossip, tirades, manifestos, rants,
         and much more. I&apos;ll do my best to get back to you within two business days.</p>
       <br />
-      <form name="m2-contact" method="post">
+      <form name="m2-contact" method="post" action="/submitted">
         <input type="hidden" name="form-name" value="m2-contact" />
 
       <div className="field">
