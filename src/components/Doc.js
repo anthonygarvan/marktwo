@@ -419,6 +419,13 @@ class Doc extends React.Component {
     }).join('\n');
 
 
+    const mentionOrHashtagRegex = new RegExp("(?:^([#@][^\\s#@]+))|(?:[\\s\u200B]([#@][^\\s#@]+))", 'g')
+    block = block.replace(mentionOrHashtagRegex, mentionOrHashtag => {
+      const html = `<button contenteditable="false" onclick="handleMentionOrHashtagSearch('${mentionOrHashtag.trim()}')" class="m2-mention-hashtag">${mentionOrHashtag.trim()}</button>`;
+      return mentionOrHashtag.startsWith(' ') ? ` ${html}` : html;
+    });
+
+
     let html = marked(block || '').replace(/\\/g, '');
     let renderedNode = $(html || '<p>\u200B</p>');
     const isVoidNode = new RegExp(/^(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|KEYGEN|LINK|META|PARAM|SOURCE|TRACK|WBR)$/);
@@ -436,14 +443,9 @@ class Doc extends React.Component {
 
     renderedNode.find('a').attr('contenteditable', false).attr('target', '_blank');
 
-    const mentionOrHashtagRegex = new RegExp("(?:^([#@][^\\s#@<]+))|(?:[\\s\u200B]([#@][^\\s#@<]+))", 'g')
-    renderedNode.html(renderedNode.html().replace(mentionOrHashtagRegex, mentionOrHashtag => {
-      return `<button contenteditable="false" onclick="handleMentionOrHashtagSearch('${mentionOrHashtag.trim()}')" class="m2-mention-hashtag">${mentionOrHashtag.trim()}</button>`;
-    }));
     if(block.startsWith('// ')) {
       renderedNode = $(`<div class="m2-bookmark">${block.replace('// ', '')}<hr /></div>`)
     }
-    renderedNode.html()
 
     return renderedNode;
   }
