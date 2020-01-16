@@ -71,6 +71,21 @@
     padding-bottom: 0.2rem;
   }
 
+  .m2-mention-hashtag {
+    border: none;
+    background-color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: $primary;
+    cursor: pointer;
+    &:focus {
+      outline: none;
+    }
+    &:hover {
+      color: darken($primary, 10%);
+    }
+  }
+
   .m2-edit-mode {
     white-space: pre-wrap;
     padding-left: 0.5rem;

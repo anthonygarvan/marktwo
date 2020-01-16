@@ -404,6 +404,8 @@ class Doc extends React.Component {
   }
 
   getNodeForBlock(block) {
+
+    // Pre-process reminders
     block = block.split('\n').map(line => {
       if(/\-\s+\[\s\]\s.*🎗.*;/.test(line)) {
         let matchedDate = moment(line.match(/\-\s+\[\s\]\s.*🎗(.*);/)[1]);
@@ -415,6 +417,7 @@ class Doc extends React.Component {
       }
       return line
     }).join('\n');
+
 
     let html = marked(block || '').replace(/\\/g, '');
     let renderedNode = $(html || '<p>\u200B</p>');
@@ -432,6 +435,11 @@ class Doc extends React.Component {
     renderedNode.find('input[checked]').closest('li').addClass('m2-todo-done')
 
     renderedNode.find('a').attr('contenteditable', false).attr('target', '_blank');
+
+    const mentionOrHashtagRegex = new RegExp("(?:^([#@][^\\s#@<]+))|(?:[\\s\u200B]([#@][^\\s#@<]+))", 'g')
+    renderedNode.html(renderedNode.html().replace(mentionOrHashtagRegex, mentionOrHashtag => {
+      return `<button contenteditable="false" onclick="handleMentionOrHashtagSearch('${mentionOrHashtag.trim()}')" class="m2-mention-hashtag">${mentionOrHashtag.trim()}</button>`;
+    }));
     if(block.startsWith('// ')) {
       renderedNode = $(`<div class="m2-bookmark">${block.replace('// ', '')}<hr /></div>`)
     }
@@ -577,7 +585,7 @@ class Doc extends React.Component {
         } else if(matchedText.startsWith('/')) {
           results = slashCommands.filter(s => s.startsWith(matchedText));
         } else {
-          const findRegex = new RegExp(`(?:[\\s]|^)${matchedText}[^\\s]+|^${matchedText}[^\\s]*`, 'g')
+          const findRegex = new RegExp(`(?:[\\s]|^)${matchedText}[^\\s#@]+|^${matchedText}[^\\s#@]+`, 'g')
           results = _.uniq(_.flatten(this.state.allLines.map(id => id !== selectedBlock[0].id && this.state.doc[id].match(findRegex)).filter(r => r)));
         }
 

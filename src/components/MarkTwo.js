@@ -38,6 +38,9 @@ class MarkTwo extends React.Component {
     this.setOfflineMode = this.setOfflineMode.bind(this);
     this.setDarkMode = this.setDarkMode.bind(this);
     this.handleViewImageFolder = this.handleViewImageFolder.bind(this);
+    this.handleMentionOrHashtagSearch = this.handleMentionOrHashtagSearch.bind(this);
+
+    window.handleMentionOrHashtagSearch = this.handleMentionOrHashtagSearch;
 
     marked.setOptions({
       breaks: true,
@@ -304,6 +307,12 @@ class MarkTwo extends React.Component {
     this.syncUtils.getImagesFolder().then(id => {
       window.open(`https://drive.google.com/drive/u/0/folders/${id}`, '_blank')
     });
+  }
+
+  handleMentionOrHashtagSearch(mentionOrHashtag) {
+    this.setState({ searchString: mentionOrHashtag, showSearch: true }, () => {
+      this.handleSearch({ preventDefault: () => {} });
+    })
   }
 
   render() {

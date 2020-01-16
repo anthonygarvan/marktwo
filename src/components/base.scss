@@ -32,7 +32,7 @@ body {
 
     .m2-doc,.m2-ellipsis {
       color: #cdced0;
-      a {
+      a,.m2-mention-hashtag {
         color: $darkModePrimary;
         &:hover {
           color: lighten($darkModePrimary, 10%);
