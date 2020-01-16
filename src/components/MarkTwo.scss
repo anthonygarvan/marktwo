@@ -58,6 +58,11 @@
     width: auto;
   }
 
+  .modal-card-body {
+    height: -webkit-fill-available !important;
+    padding-bottom: 1.5rem;
+  }
+
   .m2-search-results {
     margin-top: 2rem;
     min-height: 15rem;
