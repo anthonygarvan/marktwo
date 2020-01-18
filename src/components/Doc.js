@@ -930,6 +930,17 @@ class Doc extends React.Component {
   }
 
   showReminders() {
+    let hours = 24;
+    let saved = sessionStorage.getItem('saved')
+
+    if(!saved) {
+      sessionStorage.setItem('saved', new Date().getTime());
+    }
+
+    if (saved && (new Date().getTime() - parseInt(saved) > hours * 60 * 60 * 1000)) {
+      sessionStorage.clear()
+    }
+
     let shownReminders = sessionStorage.getItem('shownReminders');
     shownReminders = shownReminders ? JSON.parse(shownReminders) : [];
 
