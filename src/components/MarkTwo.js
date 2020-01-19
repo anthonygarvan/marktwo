@@ -69,7 +69,8 @@ class MarkTwo extends React.Component {
         const currentDoc = shortid.generate();
         const defaultAppData = { currentDoc,
           docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
-          revision: 0};
+          revision: 0,
+          signUpDate: new Date()};
 
         if(!this.props.tryItNow) {
           this.refreshDocs(defaultAppData);

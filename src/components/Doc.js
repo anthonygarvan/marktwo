@@ -407,8 +407,8 @@ class Doc extends React.Component {
 
     // Pre-process reminders
     block = block.split('\n').map(line => {
-      if(/\-\s+\[\s\]\s.*🎗.*;/.test(line)) {
-        let matchedDate = moment(line.match(/\-\s+\[\s\]\s.*🎗(.*);/)[1]);
+      if(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗.*;/.test(line)) {
+        let matchedDate = moment(line.match(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗(.*);/)[1]);
         if(matchedDate.isValid()) {
           line = line.replace(/🎗.*;/, (reminderText) => {
             return `<span class="m2-reminder-text">${reminderText}</span>`
@@ -907,12 +907,12 @@ class Doc extends React.Component {
       const id = $(this).closest('#m2-doc>*')[0].id
       that.state.doc[id].split('\n')
         .forEach(line => {
-          if(/-\s+\[[x\s]\]/.test(line)) {
+          if(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[[x\s]\]/.test(line)) {
             if(idx == parseInt(this.parentElement.getAttribute('idx'))) {
               if(this.checked) {
-                line = line.replace(/-\s+\[\s\]/, '- [x]');
+                line = line.replace(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]/, match => match.replace('[ ]', '[x]'));
               } else {
-                line = line.replace(/-\s+\[x\]/, '- [ ]');
+                line = line.replace(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[x\]/, match => match.replace('[x]', '[ ]'));
               }
             }
             idx++;
@@ -952,9 +952,9 @@ class Doc extends React.Component {
     });
 
     const reminders = lines.filter(lineObj => {
-      return /\-\s+\[\s\]\s.*🎗.*;/.test(lineObj.text)
+      return /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s.*🎗.*;/.test(lineObj.text)
     }).map((lineObj, i) => {
-      let match = lineObj.text.match(/\-\s+\[\s\]\s(.*)🎗(.*);/)
+      let match = lineObj.text.match(/(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s(.*)🎗(.*);/)
       let date = moment(match[2]);
       let snippet = match[1];
       return {id: `${lineObj.id}.${i}`, date, snippet};
