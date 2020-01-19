@@ -69,7 +69,7 @@ class MarkTwo extends React.Component {
         const currentDoc = shortid.generate();
         const defaultAppData = { currentDoc,
           docs: [ {id: currentDoc, title: false, lastModified: new Date()} ],
-          revision: 0 };
+          revision: 0};
 
         if(!this.props.tryItNow) {
           this.refreshDocs(defaultAppData);
@@ -80,6 +80,7 @@ class MarkTwo extends React.Component {
         get('darkMode').then(value => value && this.setDarkMode(JSON.parse(value)));
         get('spellcheck').then(value => value && this.setSpellcheck(JSON.parse(value)));
         get('serif').then(value => value && this.setSerif(JSON.parse(value)));
+        get('signUpDate').then(value => !value && set('signUpDate', JSON.stringify(new Date())));
       });
     })
   }

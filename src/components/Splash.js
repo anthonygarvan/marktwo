@@ -108,7 +108,7 @@ class Splash extends React.Component {
       <div className="m2-hero"><h1 className="title is-1"><img src={logo} alt="logo" />MarkTwo<img src={logo} alt="logo" /></h1>
       <p>A seamless, speedy, syncing markdown editor.</p>
         <div className="m2-cta">
-          <a className="button is-primary is-outlined" href="/try-it-now">Try it now</a>
+          <a className="button is-primary is-outlined" href="/try-it-now">Try the demo</a>
           <button className="button is-primary is-outlined" onClick={this.handleLogin} ><FontAwesomeIcon icon={faGoogle} />&nbsp;&nbsp;Log in with Google</button>
         </div></div>
 
@@ -127,15 +127,15 @@ class Splash extends React.Component {
               <p>MarkTwo is web-native, so it works across devices, and your docs are always synced.</p>
             </div>
         </div>
-
+        <hr />
         <div className="columns">
             <div className="column">
                 <h4 className="title is-4">Private</h4>
                 <p>MarkTwo is a static app backed by your own Google Drive&mdash;we don't store any of your data.</p>
             </div>
             <div className="column">
-              <h4 className="title is-4">Searchable</h4>
-              <p>Using MarkTwo for notes? Easily find what you're looking for with fast, clear search results.</p>
+              <h4 className="title is-4">Powerful</h4>
+              <p>Hashtags, search, reminders, slash commands, and much more help you stay productive.</p>
             </div>
             <div className="column">
               <h4 className="title is-4">Free</h4>

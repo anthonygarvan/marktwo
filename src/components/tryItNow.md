@@ -55,7 +55,7 @@ The markdown spec is not intended to completely replace HTML, which you can fall
 
 #### Advanced text entry
 - Automatic text expansion for `/now` and `/today`. Use `/date` to bring up a date picker.
-- Want to make sure you can find something later? #hashtags and @mentions autocomplete.
+- Want to make sure you can find something later? Try #hashtags and @mentions to stay organized.
 - Use colons to search for :emojis: 😊
 
 ## And more!
