@@ -166,6 +166,10 @@ class Doc extends React.Component {
   getAllLines() {
     let lines = [];
     const usedIds = {};
+    const linesBefore = _.slice(this.state.allLines, 0, this.state.startIndex);
+    const linesAfter = _.slice(this.state.allLines, Math.min(this.state.endIndex, this.state.allLines.length), this.state.allLines.length);
+    _.concat(linesBefore, linesAfter).forEach(id => usedIds[id] = true);
+    
     const blocks = $('#m2-doc > *');
     const doc = _.clone(this.state.doc);
     blocks.each((i, el) => {
@@ -175,8 +179,8 @@ class Doc extends React.Component {
       }
       usedIds[el.id] = true;
       lines.push(el.id);
-    })
-    const allLines = _.concat(_.slice(this.state.allLines, 0, this.state.startIndex), lines, _.slice(this.state.allLines, Math.min(this.state.endIndex, this.state.allLines.length), this.state.allLines.length));
+    });
+    const allLines = _.concat(linesBefore, lines, linesAfter);
     const endIndex = this.state.startIndex + blocks.length;
     return new Promise(resolve => {
         this.setState({ allLines, doc, endIndex });
@@ -300,7 +304,7 @@ class Doc extends React.Component {
       const removeThese = _.difference(remotePages, this.state.docMetadata.pageIds)
       return this.syncUtils.deleteFiles(removeThese);
     })
-  } 
+  }
 
   componentWillUnmount() {
     this._isMounted = false;

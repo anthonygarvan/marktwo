@@ -61,5 +61,5 @@ The markdown spec is not intended to completely replace HTML, which you can fall
 ## And more!
 - Offline mode ⚡ and dark mode 🌗 available from `Settings` menu
 - Import and export markdown via the `Docs` menu.
-- Easily search your doc to match keywords and use quotes for "exact strings"
+- Easily search your doc to match keywords and use quotes for "exact strings". Searching for #todo brings up all undone items from your checklists.
 - MarkTwo is a progressive web app (PWA)–that means you can save to your homescreen on mobile or desktop for an app-like experience with full screen and faster load times

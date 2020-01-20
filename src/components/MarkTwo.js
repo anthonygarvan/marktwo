@@ -213,6 +213,9 @@ class MarkTwo extends React.Component {
     let searchResults;
     if(!this.state.searchString) {
       searchResults = this.state.allLines.filter(id => this.state.doc[id].startsWith('// ')).map(id => ({ id, html: this.state.doc[id].replace('// ', '') })).slice(0, 1000)
+    } else if(/^#todo$/i.test(this.state.searchString)) {
+      let searchRegex = /(?:[\-\*\+]|(?:[0-9]+\.))\s+\[\s\]\s/;
+      searchResults = this.state.allLines.filter(id => searchRegex.test(this.state.doc[id])).map(id => ({ id, html: marked(this.state.doc[id]).replace(searchRegex, (m) => `<mark>${m}</mark>`) })).slice(0, 1000);
     } else {
       const exactMatchRegex = /^"(.+)"$/;
       let searchRegex;
@@ -566,6 +569,7 @@ class MarkTwo extends React.Component {
       <li>MarkTwo continuously and efficiently syncs the document you're working via Google Drive. When the edit indicator bar turns light blue (or dark pink in dark mode), it means changes are being made.
       Once it turns dark blue (bright pink in dark mode), the changes are synced (a few seconds after you're done editing).</li>
           <li>We do not have access to your documents, they are as secure as your Google account (we recommend enabling two factor authentication).</li>
+          <li>You can search for keywords, adding quotes matches "exact terms", and the special keyword #todo searches for all undone checklist tasks.</li>
         </ul>
         <h2>Writing with MarkTwo</h2>
         <p>MarkTwo supports most features of github flavored markdown.</p>
