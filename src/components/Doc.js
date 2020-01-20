@@ -51,23 +51,23 @@ class Doc extends React.Component {
     const debounced = _.debounce(() => this.syncQueue.push(), 3000)
 
     this.initiateSync = (forceSync) => {
-    const intentionallyOffline = props.offlineMode;
-    const online = !props.offlineMode && props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get();
-    const lostConnection = !props.offlineMode && !(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get());
+      const intentionallyOffline = props.offlineMode;
+      const online = !props.offlineMode && props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get();
+      const lostConnection = !props.offlineMode && !(props.gapi && props.gapi.auth2.getAuthInstance().isSignedIn.get());
 
-    if(online || intentionallyOffline) {
-        $('.m2-is-signed-out').hide();
-        $('#m2-doc').addClass('m2-syncing');
-        if(forceSync) {
-          this.syncQueue.push(true);
-        } else {
-          debounced();
+      if(online || intentionallyOffline) {
+          $('.m2-is-signed-out').hide();
+          $('#m2-doc').addClass('m2-syncing');
+          if(forceSync) {
+            this.syncQueue.push(true);
+          } else {
+            debounced();
+          }
+      } else {
+        if(!this.props.tryItNow) {
+          $('.m2-is-signed-out').show();
         }
-    } else {
-      if(!this.props.tryItNow) {
-        $('.m2-is-signed-out').show();
       }
-    }
     }
     this.handleScroll = this.handleScroll.bind(this);
     this.throttledScroll = _.throttle(this.handleScroll, 500);
@@ -254,57 +254,53 @@ class Doc extends React.Component {
     console.log('initial doc metadata');
     console.log(JSON.stringify(docMetadata));
 
-    if(pagesToAdd.length || forceSync) {
-      console.log('syncing...');
-      if(pagesToAdd.length > 1) {
-        $('#m2-loading').show();
-      }
-      // first add the new pages
-      return this.syncUtils.createFiles(pagesToAdd)
-      .then(results => {
-        // then update the metadata and docList.
-        docMetadata.caretAt = caretAt;
-        docMetadata.pageIds = pageIds;
-        docMetadata.lastModified = new Date().toISOString();
-        docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
-        console.log('syncing by revision...');
-        console.log(`is signed in: ${this.props.gapi.auth2.getAuthInstance().isSignedIn.get()}`);
-        return new Promise((resolve, reject) => {
-          this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
-            if(this._isMounted) {
-              this.setState({ docMetadata: validatedDocMetadata }, resolve);
-              console.log('doc metadata:');
-              console.log(JSON.stringify(docMetadata));
-              console.log('validated:');
-              console.log(JSON.stringify(validatedDocMetadata));
-            if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
-                console.log('out of date, updating docList...');
-                this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
-              }
-            }
-        }).catch(e => reject())
-        })
-      })
-      .then(results => keys())
-      .then(keys => {
-        // then remove the unused pages
-        const localPages = keys.filter(k => k.startsWith(`${this.props.currentDoc}.`));
-        const removeThese = _.difference(localPages, this.state.docMetadata.pageIds)
-        removeThese.map(pageId => {
-           del(pageId).catch(() => console.log('page not cached, did not remove.'));
-        });
-      })
-      .then(() => {
-        return this.syncUtils.getPagesForDoc(this.props.currentDoc);
-      })
-      .then(remotePages => {
-        const removeThese = _.difference(remotePages, this.state.docMetadata.pageIds)
-        return this.syncUtils.deleteFiles(removeThese);
-      })
-    } else {
-      return new Promise(resolve => resolve());
+    console.log('syncing...');
+    if(pagesToAdd.length > 1) {
+      $('#m2-loading').show();
     }
-  }
+    // first add the new pages
+    return this.syncUtils.createFiles(pagesToAdd)
+    .then(results => {
+      // then update the metadata and docList.
+      docMetadata.caretAt = caretAt;
+      docMetadata.pageIds = pageIds;
+      docMetadata.lastModified = new Date().toISOString();
+      docMetadata.pageLengths = docMetadata.pageIds.map(pageId => pages[pageId].length);
+      console.log('syncing by revision...');
+      console.log(`is signed in: ${this.props.gapi.auth2.getAuthInstance().isSignedIn.get()}`);
+      return new Promise((resolve, reject) => {
+        this.syncUtils.syncByRevision(this.props.currentDoc, docMetadata).then(validatedDocMetadata => {
+          if(this._isMounted) {
+            this.setState({ docMetadata: validatedDocMetadata }, resolve);
+            console.log('doc metadata:');
+            console.log(JSON.stringify(docMetadata));
+            console.log('validated:');
+            console.log(JSON.stringify(validatedDocMetadata));
+          if(!_.isEqual(docMetadata.pageIds, validatedDocMetadata.pageIds)) {
+              console.log('out of date, updating docList...');
+              this.getDocList(validatedDocMetadata).then(docList => this.initializeFromDocList(docList, validatedDocMetadata.caretAt));
+            }
+          }
+      }).catch(e => reject())
+      })
+    })
+    .then(results => keys())
+    .then(keys => {
+      // then remove the unused pages
+      const localPages = keys.filter(k => k.startsWith(`${this.props.currentDoc}.`));
+      const removeThese = _.difference(localPages, this.state.docMetadata.pageIds)
+      removeThese.map(pageId => {
+         del(pageId).catch(() => console.log('page not cached, did not remove.'));
+      });
+    })
+    .then(() => {
+      return this.syncUtils.getPagesForDoc(this.props.currentDoc);
+    })
+    .then(remotePages => {
+      const removeThese = _.difference(remotePages, this.state.docMetadata.pageIds)
+      return this.syncUtils.deleteFiles(removeThese);
+    })
+  } 
 
   componentWillUnmount() {
     this._isMounted = false;
