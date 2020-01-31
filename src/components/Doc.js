@@ -169,7 +169,7 @@ class Doc extends React.Component {
     const linesBefore = _.slice(this.state.allLines, 0, this.state.startIndex);
     const linesAfter = _.slice(this.state.allLines, Math.min(this.state.endIndex, this.state.allLines.length), this.state.allLines.length);
     _.concat(linesBefore, linesAfter).forEach(id => usedIds[id] = true);
-    
+
     const blocks = $('#m2-doc > *');
     const doc = _.clone(this.state.doc);
     blocks.each((i, el) => {
@@ -483,7 +483,7 @@ class Doc extends React.Component {
       }
     });
     const that = this;
-    let modal = document.querySelector('#m2-img-dialog');
+    const modal = document.querySelector('#m2-img-dialog');
     dialogPolyfill.registerDialog(modal);
 
     modal.querySelector('#m2-img-cancel').addEventListener('click', () => {
@@ -528,26 +528,26 @@ class Doc extends React.Component {
       modal.querySelector('input').value = null;
     });
 
-    modal = document.querySelector('#m2-date-dialog');
-    dialogPolyfill.registerDialog(modal);
+    const dateModal = document.querySelector('#m2-date-dialog');
+    dialogPolyfill.registerDialog(dateModal);
 
-    modal.querySelector('#m2-date-cancel').addEventListener('click', () => {
-      modal.close();
+    dateModal.querySelector('#m2-date-cancel').addEventListener('click', () => {
+      dateModal.close();
     });
 
-    modal.querySelector('#m2-date-select').addEventListener('click', () => {
-      modal.close($(modal.querySelector('input')).val());
+    dateModal.querySelector('#m2-date-select').addEventListener('click', () => {
+      dateModal.close($(dateModal.querySelector('input')).val());
     });
 
-    modal.addEventListener('close', () => {
+    dateModal.addEventListener('close', () => {
       const sel = window.getSelection();
       const caretAt = $('#m2-date-dialog').data('selectedBlock')
-      this.state.doc[caretAt] = this.state.doc[caretAt].replace('/m2date', modal.returnValue ? moment(modal.returnValue).format('LL') : '');
+      this.state.doc[caretAt] = this.state.doc[caretAt].replace('/m2date', dateModal.returnValue ? moment(dateModal.returnValue).format('LL') : '');
       this.setState({ doc: this.state.doc }, () => {
         this.initializeFromDocList(this.state.allLines.map(id => ({ id, text: this.state.doc[id] })), caretAt);
       });
-      modal.returnValue = '';
-      modal.querySelector('input').value = null;
+      dateModal.returnValue = '';
+      dateModal.querySelector('input').value = null;
     });
 
 
