@@ -15,7 +15,7 @@
     "emoji-dictionary": "^1.0.10",
     "idb-keyval": "^3.2.0",
     "in-browser-download": "^2.0.0",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "json-stringify-deterministic": "^1.0.1",
     "lodash": "^4.17.15",
     "marked": "^0.7.0",
