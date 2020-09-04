@@ -28,7 +28,7 @@
     "react-scripts": "3.1.2",
     "scriptjs": "^2.5.9",
     "shortid": "^2.2.15",
-    "showdown": "^1.9.0",
+    "showdown": "^1.9.1",
     "turndown": "^5.0.3",
     "turndown-plugin-gfm": "^1.0.2",
     "typeface-roboto-slab": "^1.1.3"
