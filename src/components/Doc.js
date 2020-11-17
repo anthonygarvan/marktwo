@@ -658,6 +658,7 @@ class Doc extends React.Component {
                 break;
               case '/tomorrow':
                 newText = moment().add(1, 'day').format('LL');
+                break;
               case '/image':
                 if(!that.props.offlineMode) {
                   newText = '/m2img';
