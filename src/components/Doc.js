@@ -575,7 +575,7 @@ class Doc extends React.Component {
 
       const s = sel.anchorNode && sel.anchorNode.data && sel.anchorNode.data.substring(sel.anchorOffset - 50, sel.anchorOffset)
       const autocompleteRegex = new RegExp("(?:^([#@:/][^\\s#@]*$))|(?:[\\s\u200B]([#@:/][^\\s#@]*$))")
-      const slashCommands = ['/now', '/today', '/image', '/date'];
+      const slashCommands = ['/now', '/today', '/tomorrow', '/image', '/date'];
       if(autocompleteRegex.test(s)) {
         $('#m2-autocomplete').show();
         const matchedText = s.match(autocompleteRegex)[0].replace('\u200B', '').trim();
@@ -656,6 +656,8 @@ class Doc extends React.Component {
               case '/today':
                 newText = moment().format('LL');
                 break;
+              case '/tomorrow':
+                newText = moment().add(1, 'day').format('LL');
               case '/image':
                 if(!that.props.offlineMode) {
                   newText = '/m2img';
@@ -798,6 +800,7 @@ class Doc extends React.Component {
           const nodes = blocks.map((block, i) => {
             block = block.replace(/\/now/gi, moment().format('LLL'));
             block = block.replace(/\/today/gi, moment().format('LL'));
+            block = block.replace(/\/tomorrow/gi, moment().add(1, 'day').format('LL'));
 
             const renderedNode = this.getNodeForBlock(block);
             if(i > 0) {
@@ -833,6 +836,7 @@ class Doc extends React.Component {
         const nodes = blocks.map((block, i) => {
           block = block.replace(/\/now/gi, moment().format('LLL'));
           block = block.replace(/\/today/gi, moment().format('LL'));
+          block = block.replace(/\/tomorrow/gi, moment().add(1, 'day').format('LL'));
 
           const renderedNode = this.getNodeForBlock(block);
           if(i > 0) {
