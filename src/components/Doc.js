@@ -769,7 +769,8 @@ class Doc extends React.Component {
             }
           } else {
             // if the line is empty, start a new block
-            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
+            let initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
+            initialContent += `--${sel.anchorNode.data}--|--${sel.anchorNode.tagName}--`;
             const id = shortid.generate();
             const newBlock = $(`<p id=${id}>${initialContent || '\u200B'}</p>`);
             doc[id] = initialContent || '';
