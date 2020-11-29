@@ -755,6 +755,7 @@ class Doc extends React.Component {
       }
 
       if(e.key === 'Enter' && e.type === 'keydown') {
+        e.preventDefault(); // testing this
         // if the current line is not empty, prevent default and continue the string in a newline
         if(selectedBlock && selectedBlock[0] && !(autocompleteSelectedIndex > 0)) {
           e.preventDefault();
