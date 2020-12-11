@@ -755,6 +755,8 @@ class Doc extends React.Component {
       }
 
       if(e.key === 'Enter' && e.type === 'keydown') {
+        e.preventDefault(); // testing this
+        selectedBlock[0].innerText = "TESTING";
         // if the current line is not empty, prevent default and continue the string in a newline
         if(selectedBlock && selectedBlock[0] && !(autocompleteSelectedIndex > 0)) {
           e.preventDefault();
@@ -769,7 +771,8 @@ class Doc extends React.Component {
             }
           } else {
             // if the line is empty, start a new block
-            const initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
+            let initialContent = sel.anchorNode.nextSibling && sel.anchorNode.nextSibling.data && sel.anchorNode.nextSibling.data.replace(/\u200B/g, '').trim();
+            initialContent += `--${sel.anchorNode.data}--|--${sel.anchorNode.tagName}--`;
             const id = shortid.generate();
             const newBlock = $(`<p id=${id}>${initialContent || '\u200B'}</p>`);
             doc[id] = initialContent || '';
