@@ -8,7 +8,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.15.1",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@fortawesome/react-fontawesome": "^0.1.12",
-    "async": "^3.2.0",
+    "async": "^3.2.2",
     "bulma": "^0.7.5",
     "bulma-switch": "^2.0.0",
     "dialog-polyfill": "^0.5.4",
